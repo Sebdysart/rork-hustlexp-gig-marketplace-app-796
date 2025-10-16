@@ -14,7 +14,6 @@ import GritCoin from '@/components/GritCoin';
 import XPAura from '@/components/XPAura';
 import InteractiveBadgeShowcase from '@/components/InteractiveBadgeShowcase';
 import UnifiedModeSwitcher from '@/components/UnifiedModeSwitcher';
-import AvailabilityToggle from '@/components/AvailabilityToggle';
 import TrophyShowcase from '@/components/TrophyShowcase';
 import { User } from '@/types';
 import { getAllUnlockedBadges } from '@/constants/badgeProgression';
@@ -250,8 +249,6 @@ export default function UnifiedProfile({
         style={styles.gradient}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {isOwnProfile && <AvailabilityToggle />}
-          
           <View style={styles.heroCard}>
             <LinearGradient
               colors={getBackgroundGradient()}
