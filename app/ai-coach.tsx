@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,6 +13,7 @@ import { analyzeUserProgress, getPersonalizedRecommendations, generateDailyQuest
 import { generateText } from '@rork/toolkit-sdk';
 
 export default function AICoachScreen() {
+  const insets = useSafeAreaInsets();
   const { currentUser, availableTasks } = useApp();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
@@ -91,13 +93,17 @@ Provide a helpful, encouraging answer (2-3 sentences). Be specific and actionabl
       <Stack.Screen
         options={{
           title: 'AI Coach',
-          headerStyle: { backgroundColor: Colors.surface },
+          headerTransparent: true,
+          headerBlurEffect: 'dark',
           headerTintColor: Colors.text,
           headerShadowVisible: false,
         }}
       />
       <LinearGradient colors={[Colors.background, Colors.surface]} style={styles.gradient}>
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 70 }]}
+        >
           <View style={styles.header}>
             <Brain size={40} color={premiumColors.neonViolet} />
             <Text style={styles.headerTitle}>Your AI Coach</Text>
@@ -280,6 +286,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  scrollContentWithInsets: {
+    paddingTop: 16,
   },
   header: {
     alignItems: 'center',
