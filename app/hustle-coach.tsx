@@ -206,12 +206,11 @@ User Question: ${userMessage}
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <LinearGradient
-        colors={[premiumColors.deepBlack, premiumColors.richBlack, '#0A1128']}
-        style={{ flex: 1 }}
-      >
-        <SafeAreaView style={styles.container} edges={['bottom']}>
+    <LinearGradient
+      colors={[premiumColors.deepBlack, premiumColors.richBlack, '#0A1128']}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
           <Stack.Screen
             options={{
               headerShown: true,
@@ -418,9 +417,8 @@ User Question: ${userMessage}
               </View>
             </View>
           </KeyboardAvoidingView>
-        </SafeAreaView>
-      </LinearGradient>
-    </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
