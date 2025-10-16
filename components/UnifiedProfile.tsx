@@ -750,106 +750,108 @@ export default function UnifiedProfile({
               </View>
             </View>
           </Modal>
-
-          <Modal
-            visible={badgeManagerVisible}
-            animationType="slide"
-            transparent={false}
-            onRequestClose={() => setBadgeManagerVisible(false)}
-          >
-            <View style={styles.badgeManagerContainer}>
-              <LinearGradient
-                colors={[Colors.background, Colors.surface]}
-                style={styles.badgeManagerGradient}
-              >
-                <View style={styles.badgeManagerHeader}>
-                  <View>
-                    <Text style={styles.badgeManagerTitle}>Badge Showcase</Text>
-                    <Text style={styles.badgeManagerSubtitle}>
-                      Select up to 6 badges ({selectedShowcaseBadges.length}/6)
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setBadgeManagerVisible(false)}>
-                    <X size={28} color={Colors.text} />
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView style={styles.badgeManagerScroll} contentContainerStyle={styles.badgeManagerContent}>
-                  {allBadgesFormatted.length === 0 ? (
-                    <View style={styles.noBadgesContainer}>
-                      <Trophy size={64} color={Colors.textSecondary} />
-                      <Text style={styles.noBadgesText}>No badges earned yet</Text>
-                      <Text style={styles.noBadgesSubtext}>Complete quests to unlock badges!</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.badgeGrid}>
-                      {allBadgesFormatted.map((badge) => {
-                        const isSelected = selectedShowcaseBadges.includes(badge.id);
-                        return (
-                          <TouchableOpacity
-                            key={badge.id}
-                            style={[
-                              styles.badgeSelectCard,
-                              isSelected && styles.badgeSelectCardActive,
-                            ]}
-                            onPress={() => handleToggleBadge(badge.id)}
-                          >
-                            {isSelected && (
-                              <View style={styles.badgeCheckmark}>
-                                <CheckCircle size={20} color={Colors.accent} fill={Colors.accent} />
-                              </View>
-                            )}
-                            <Text style={styles.badgeSelectIcon}>{badge.icon}</Text>
-                            <Text style={styles.badgeSelectName} numberOfLines={1}>{badge.name}</Text>
-                            <View style={[
-                              styles.badgeSelectRarity,
-                              { backgroundColor: getRarityColor(badge.rarity) },
-                            ]}>
-                              <Text style={styles.badgeSelectRarityText}>
-                                {badge.rarity.toUpperCase()}
-                              </Text>
-                            </View>
-                            {badge.tier > 1 && (
-                              <View style={styles.badgeTierIndicator}>
-                                <Text style={styles.badgeTierText}>Tier {badge.tier}</Text>
-                              </View>
-                            )}
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )}
-                </ScrollView>
-
-                <View style={styles.badgeManagerFooter}>
-                  <TouchableOpacity
-                    style={styles.badgeManagerCancelBtn}
-                    onPress={() => {
-                      setSelectedShowcaseBadges(user.showcasedBadges || []);
-                      setBadgeManagerVisible(false);
-                    }}
-                  >
-                    <Text style={styles.badgeManagerCancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.badgeManagerSaveBtn}
-                    onPress={handleSaveBadgeShowcase}
-                  >
-                    <LinearGradient
-                      colors={[Colors.primary, Colors.accent]}
-                      style={styles.badgeManagerSaveGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                    >
-                      <CheckCircle size={20} color={Colors.text} />
-                      <Text style={styles.badgeManagerSaveText}>Save Showcase</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              </LinearGradient>
-            </View>
-          </Modal>
         </>
+      )}
+
+      {isOwnProfile && (
+        <Modal
+          visible={badgeManagerVisible}
+          animationType="slide"
+          transparent={false}
+          onRequestClose={() => setBadgeManagerVisible(false)}
+        >
+          <View style={styles.badgeManagerContainer}>
+            <LinearGradient
+              colors={[Colors.background, Colors.surface]}
+              style={styles.badgeManagerGradient}
+            >
+              <View style={styles.badgeManagerHeader}>
+                <View>
+                  <Text style={styles.badgeManagerTitle}>Badge Showcase</Text>
+                  <Text style={styles.badgeManagerSubtitle}>
+                    Select up to 6 badges ({selectedShowcaseBadges.length}/6)
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setBadgeManagerVisible(false)}>
+                  <X size={28} color={Colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.badgeManagerScroll} contentContainerStyle={styles.badgeManagerContent}>
+                {allBadgesFormatted.length === 0 ? (
+                  <View style={styles.noBadgesContainer}>
+                    <Trophy size={64} color={Colors.textSecondary} />
+                    <Text style={styles.noBadgesText}>No badges earned yet</Text>
+                    <Text style={styles.noBadgesSubtext}>Complete quests to unlock badges!</Text>
+                  </View>
+                ) : (
+                  <View style={styles.badgeGrid}>
+                    {allBadgesFormatted.map((badge) => {
+                      const isSelected = selectedShowcaseBadges.includes(badge.id);
+                      return (
+                        <TouchableOpacity
+                          key={badge.id}
+                          style={[
+                            styles.badgeSelectCard,
+                            isSelected && styles.badgeSelectCardActive,
+                          ]}
+                          onPress={() => handleToggleBadge(badge.id)}
+                        >
+                          {isSelected && (
+                            <View style={styles.badgeCheckmark}>
+                              <CheckCircle size={20} color={Colors.accent} fill={Colors.accent} />
+                            </View>
+                          )}
+                          <Text style={styles.badgeSelectIcon}>{badge.icon}</Text>
+                          <Text style={styles.badgeSelectName} numberOfLines={1}>{badge.name}</Text>
+                          <View style={[
+                            styles.badgeSelectRarity,
+                            { backgroundColor: getRarityColor(badge.rarity) },
+                          ]}>
+                            <Text style={styles.badgeSelectRarityText}>
+                              {badge.rarity.toUpperCase()}
+                            </Text>
+                          </View>
+                          {badge.tier > 1 && (
+                            <View style={styles.badgeTierIndicator}>
+                              <Text style={styles.badgeTierText}>Tier {badge.tier}</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </ScrollView>
+
+              <View style={styles.badgeManagerFooter}>
+                <TouchableOpacity
+                  style={styles.badgeManagerCancelBtn}
+                  onPress={() => {
+                    setSelectedShowcaseBadges(user.showcasedBadges || []);
+                    setBadgeManagerVisible(false);
+                  }}
+                >
+                  <Text style={styles.badgeManagerCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.badgeManagerSaveBtn}
+                  onPress={handleSaveBadgeShowcase}
+                >
+                  <LinearGradient
+                    colors={[Colors.primary, Colors.accent]}
+                    style={styles.badgeManagerSaveGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <CheckCircle size={20} color={Colors.text} />
+                    <Text style={styles.badgeManagerSaveText}>Save Showcase</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
+        </Modal>
       )}
     </View>
   );
