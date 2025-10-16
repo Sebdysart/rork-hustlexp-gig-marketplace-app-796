@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Alert,
+  FlatList,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
@@ -56,8 +57,9 @@ export default function AITaskCreator() {
   const [enableAINegotiation, setEnableAINegotiation] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const [visibility, setVisibility] = useState<'public' | 'invite' | 'ai_match'>('public');
-  const [isPhysical, setIsPhysical] = useState(true);
+
+  const [showTrendingCarousel, setShowTrendingCarousel] = useState(false);
+  const [autoCompleteSuggestions, setAutoCompleteSuggestions] = useState<string[]>([]);
 
   const orbScale = useRef(new Animated.Value(1)).current;
   const orbOpacity = useRef(new Animated.Value(0.6)).current;
@@ -65,6 +67,25 @@ export default function AITaskCreator() {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const particleAnim = useRef(new Animated.Value(0)).current;
   const inputGlow = useRef(new Animated.Value(0)).current;
+  const carouselSlide = useRef(new Animated.Value(0)).current;
+  const backgroundGradientAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(backgroundGradientAnim, {
+          toValue: 1,
+          duration: 5000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(backgroundGradientAnim, {
+          toValue: 0,
+          duration: 5000,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, [backgroundGradientAnim]);
 
   const startOrbAnimation = useCallback(() => {
     Animated.loop(
@@ -132,6 +153,38 @@ export default function AITaskCreator() {
     }
   }, [aiSuggestion]);
 
+  useEffect(() => {
+    if (userInput.length > 3) {
+      const suggestions = [
+        'furniture assembly',
+        'grocery shopping',
+        'dog walking',
+        'house cleaning',
+        'lawn mowing',
+      ].filter(s => s.includes(userInput.toLowerCase()));
+      setAutoCompleteSuggestions(suggestions.slice(0, 3));
+    } else {
+      setAutoCompleteSuggestions([]);
+    }
+  }, [userInput]);
+
+  const trendingTasks = useMemo(() => [
+    { id: '1', title: 'Furniture Assembly', avgPay: '$50', demand: 'High', icon: '🪑' },
+    { id: '2', title: 'Grocery Delivery', avgPay: '$35', demand: 'High', icon: '🛒' },
+    { id: '3', title: 'House Cleaning', avgPay: '$80', demand: 'Medium', icon: '🧹' },
+    { id: '4', title: 'Dog Walking', avgPay: '$25', demand: 'Medium', icon: '🐕' },
+    { id: '5', title: 'Lawn Mowing', avgPay: '$45', demand: 'High', icon: '🌱' },
+  ], []);
+
+  const userAnalytics = useMemo(() => {
+    if (!currentUser) return null;
+    return {
+      lastPostAccepts: 3,
+      lastPostEarned: 150,
+      avgResponseTime: '2h',
+    };
+  }, [currentUser]);
+
 
 
   const handleSubmitPrompt = async () => {
@@ -197,7 +250,6 @@ export default function AITaskCreator() {
 
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: true,
-          playsInSpeakerModeIOS: true,
         });
       }
 
@@ -326,7 +378,7 @@ export default function AITaskCreator() {
         <Text style={styles.promptTitle}>What do you need done today?</Text>
       </LinearGradient>
       <Text style={styles.promptSubtitle}>
-        {currentUser?.name ? `Evening, ${currentUser.name.split(' ')[0]}` : 'Evening'} — Tell me your quest and I&apos;ll forge it into reality ✨
+        {currentUser?.name ? `Evening, ${currentUser.name.split(' ')[0]}!` : 'Evening!'} {userAnalytics ? `Your last post: ${userAnalytics.lastPostAccepts} accepts, ${userAnalytics.lastPostEarned} earned.` : 'Tell me your quest and I\'ll forge it into reality ✨'}
       </Text>
 
       <View style={styles.xpPreviewContainer}>
@@ -369,15 +421,38 @@ export default function AITaskCreator() {
               <TouchableOpacity
                 style={styles.exampleBubble}
                 onPress={() => setUserInput('Quick grocery run')}
+                accessible={true}
+                accessibilityLabel="Example task: Grocery run"
+                accessibilityRole="button"
               >
                 <Text style={styles.exampleBubbleText}>🛒 Grocery Run</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.exampleBubble}
                 onPress={() => setUserInput('Help moving furniture')}
+                accessible={true}
+                accessibilityLabel="Example task: Moving help"
+                accessibilityRole="button"
               >
                 <Text style={styles.exampleBubbleText}>📦 Moving Help</Text>
               </TouchableOpacity>
+            </View>
+          )}
+          {autoCompleteSuggestions.length > 0 && userInput.length > 3 && (
+            <View style={styles.autoCompleteContainer}>
+              {autoCompleteSuggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.autoCompleteItem}
+                  onPress={() => setUserInput(suggestion)}
+                  accessible={true}
+                  accessibilityLabel={`Auto-complete suggestion: ${suggestion}`}
+                  accessibilityRole="button"
+                >
+                  <Sparkles size={12} color={premiumColors.neonCyan} />
+                  <Text style={styles.autoCompleteText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
           )}
         </View>
@@ -437,21 +512,92 @@ export default function AITaskCreator() {
       <TouchableOpacity
         style={styles.inspireButton}
         onPress={() => {
-          const suggestions = [
-            'I need someone to walk my dog twice a day',
-            'Help me clean my garage this weekend',
-            'Need a tutor for high school math',
-            'Looking for someone to assemble IKEA furniture',
-            'Need grocery shopping and delivery',
-          ];
-          const random = suggestions[Math.floor(Math.random() * suggestions.length)];
-          setUserInput(random);
+          setShowTrendingCarousel(!showTrendingCarousel);
           triggerHaptic('light');
+          if (!showTrendingCarousel) {
+            Animated.spring(carouselSlide, {
+              toValue: 1,
+              useNativeDriver: true,
+            }).start();
+          } else {
+            Animated.spring(carouselSlide, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          }
         }}
+        accessible={true}
+        accessibilityLabel="Show trending tasks for inspiration"
+        accessibilityRole="button"
       >
         <Lightbulb size={20} color={premiumColors.neonAmber} />
-        <Text style={styles.inspireButtonText}>Inspire me</Text>
+        <Text style={styles.inspireButtonText}>{showTrendingCarousel ? 'Hide Trends' : 'Inspire me'}</Text>
       </TouchableOpacity>
+
+      {showTrendingCarousel && (
+        <Animated.View
+          style={[
+            styles.trendingCarousel,
+            {
+              opacity: carouselSlide,
+              transform: [
+                {
+                  translateY: carouselSlide.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <FlatList
+            data={trendingTasks}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.trendingList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.trendingCard}
+                onPress={() => {
+                  setUserInput(`I need help with ${item.title.toLowerCase()}`);
+                  setShowTrendingCarousel(false);
+                  triggerHaptic('medium');
+                }}
+                accessible={true}
+                accessibilityLabel={`Trending task: ${item.title}, average pay ${item.avgPay}, ${item.demand} demand`}
+                accessibilityRole="button"
+              >
+                <View style={styles.trendingCardHeader}>
+                  <Text style={styles.trendingIcon}>{item.icon}</Text>
+                  <View
+                    style={[
+                      styles.demandBadge,
+                      { backgroundColor: item.demand === 'High' ? premiumColors.neonGreen + '30' : premiumColors.neonAmber + '30' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.demandText,
+                        { color: item.demand === 'High' ? premiumColors.neonGreen : premiumColors.neonAmber },
+                      ]}
+                    >
+                      {item.demand}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.trendingTitle}>{item.title}</Text>
+                <Text style={styles.trendingPay}>{item.avgPay} avg</Text>
+                <View style={styles.createNowButton}>
+                  <Text style={styles.createNowText}>Create Now</Text>
+                  <Zap size={14} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </Animated.View>
+      )}
     </View>
   );
 
@@ -758,16 +904,31 @@ export default function AITaskCreator() {
         }}
       />
 
-      <LinearGradient
-        colors={[premiumColors.deepBlack, premiumColors.richBlack]}
-        style={styles.gradient}
-      >
+      <View style={styles.gradient}>
+        <View style={styles.particleBackground}>
+          {[...Array(15)].map((_, i) => (
+            <Animated.View
+              key={i}
+              style={[
+                styles.backgroundParticle,
+                {
+                  left: `${(i * 23) % 100}%`,
+                  top: `${(i * 17) % 100}%`,
+                  opacity: particleAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.1, 0.3, 0.1],
+                  }),
+                },
+              ]}
+            />
+          ))}
+        </View>
         <SafeAreaView edges={['bottom']} style={styles.safeArea}>
           {step === 'prompt' && renderPromptStep()}
           {step === 'draft' && renderDraftStep()}
           {step === 'customize' && renderCustomizeStep()}
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -779,6 +940,18 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+    backgroundColor: premiumColors.deepBlack,
+  },
+  particleBackground: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.15,
+  },
+  backgroundParticle: {
+    position: 'absolute' as const,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: premiumColors.neonCyan,
   },
   safeArea: {
     flex: 1,
@@ -983,6 +1156,96 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600' as const,
     color: premiumColors.neonAmber,
+  },
+  autoCompleteContainer: {
+    position: 'absolute' as const,
+    top: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: premiumColors.richBlack,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '40',
+    padding: 8,
+    gap: 4,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  autoCompleteItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  autoCompleteText: {
+    fontSize: 14,
+    color: premiumColors.neonCyan,
+    fontWeight: '600' as const,
+  },
+  trendingCarousel: {
+    marginTop: 20,
+    width: '100%',
+  },
+  trendingList: {
+    gap: 12,
+    paddingRight: 24,
+  },
+  trendingCard: {
+    width: 160,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  trendingCardHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 12,
+  },
+  trendingIcon: {
+    fontSize: 32,
+  },
+  demandBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  demandText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+  },
+  trendingTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  trendingPay: {
+    fontSize: 12,
+    color: premiumColors.neonGreen,
+    fontWeight: '600' as const,
+    marginBottom: 12,
+  },
+  createNowButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 4,
+    backgroundColor: premiumColors.neonCyan + '20',
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  createNowText: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: premiumColors.neonCyan,
   },
   draftContainer: {
     flex: 1,
