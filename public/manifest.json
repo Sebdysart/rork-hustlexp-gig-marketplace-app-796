@@ -1,0 +1,53 @@
+{
+  "name": "HustleXP - Gig Marketplace",
+  "short_name": "HustleXP",
+  "description": "A hyper-gamified gig marketplace connecting task creators and performers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0F1E",
+  "theme_color": "#8B5CF6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/assets/images/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/images/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Post Quest",
+      "short_name": "Post",
+      "description": "Create a new quest",
+      "url": "/post-task",
+      "icons": [
+        {
+          "src": "/assets/images/icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Adventure Map",
+      "short_name": "Map",
+      "description": "View available quests on map",
+      "url": "/adventure-map",
+      "icons": [
+        {
+          "src": "/assets/images/icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

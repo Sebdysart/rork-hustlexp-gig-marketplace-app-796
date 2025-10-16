@@ -1,0 +1,363 @@
+openapi: 3.0.0
+info:
+  title: HustleXP Badge & Trophy API
+  version: 1.0.0
+  description: API endpoints for badge and trophy management system
+
+servers:
+  - url: https://api.hustlexp.com/v1
+    description: Production server
+  - url: https://staging-api.hustlexp.com/v1
+    description: Staging server
+
+paths:
+  /badges:
+    get:
+      summary: Get all available badges
+      description: Returns the complete badge manifest
+      tags:
+        - Badges
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  badges:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Badge'
+                  total:
+                    type: integer
+                    example: 200
+
+  /users/{userId}/badges:
+    get:
+      summary: Get user's badge collection
+      description: Returns all badges for a specific user with unlock status
+      tags:
+        - User Badges
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unlockedBadges:
+                    type: array
+                    items:
+                      type: string
+                  badgeProgress:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/BadgeProgress'
+                  totalXP:
+                    type: integer
+                  totalGritCoins:
+                    type: integer
+
+  /users/{userId}/badges/award:
+    post:
+      summary: Award a badge to a user
+      description: Manually award a badge (admin only)
+      tags:
+        - User Badges
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                badgeId:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Badge awarded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  badge:
+                    $ref: '#/components/schemas/Badge'
+                  xpAwarded:
+                    type: integer
+                  gritCoinsAwarded:
+                    type: integer
+
+  /users/{userId}/badges/progress:
+    post:
+      summary: Update badge progress
+      description: Update progress for a specific badge
+      tags:
+        - User Badges
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                badgeId:
+                  type: string
+                progress:
+                  type: object
+                  properties:
+                    current:
+                      type: integer
+                    required:
+                      type: integer
+      responses:
+        '200':
+          description: Progress updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  badgeProgress:
+                    $ref: '#/components/schemas/BadgeProgress'
+                  badgeUnlocked:
+                    type: boolean
+
+  /trophies:
+    get:
+      summary: Get all trophies
+      description: Returns all available trophies
+      tags:
+        - Trophies
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trophies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Trophy'
+
+  /users/{userId}/trophies:
+    get:
+      summary: Get user's trophies
+      description: Returns all trophies for a specific user
+      tags:
+        - User Trophies
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unlockedTrophies:
+                    type: array
+                    items:
+                      type: string
+                  trophyProgress:
+                    type: object
+                  totalVisibilityBoost:
+                    type: integer
+
+  /moderation/flag:
+    post:
+      summary: Flag suspicious activity
+      description: Create a moderation ticket for suspicious badge activity
+      tags:
+        - Moderation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                badgeId:
+                  type: string
+                reason:
+                  type: string
+                severity:
+                  type: string
+                  enum: [low, medium, high]
+      responses:
+        '200':
+          description: Flag created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticketId:
+                    type: string
+                  status:
+                    type: string
+
+  /analytics/badge-event:
+    post:
+      summary: Track badge analytics event
+      description: Log a badge-related analytics event
+      tags:
+        - Analytics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  enum:
+                    - badge_viewed
+                    - badge_unlocked
+                    - badge_share
+                    - badge_progress_updated
+                    - trophy_unlocked
+                badgeId:
+                  type: string
+                userId:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '200':
+          description: Event tracked successfully
+
+components:
+  schemas:
+    Badge:
+      type: object
+      properties:
+        id:
+          type: string
+          example: badge_skill_cleaning_novice
+        title:
+          type: string
+          example: Cleanup Rookie
+        category:
+          type: string
+          example: Skill:Cleaning
+        tier:
+          type: string
+          enum: [Common, Uncommon, Rare, Epic, Legendary, Mythic]
+        description:
+          type: string
+          example: Complete 5 cleaning tasks.
+        unlock_condition:
+          type: object
+          properties:
+            type:
+              type: string
+            category:
+              type: string
+            count:
+              type: integer
+        xp_reward:
+          type: integer
+          example: 50
+        gritcoin_reward:
+          type: integer
+          example: 5
+        visual_asset:
+          type: string
+          example: cleaning_novice.svg
+        is_verification_required:
+          type: boolean
+        next_tier_badge_id:
+          type: string
+        unlock_message:
+          type: string
+        progress_hint:
+          type: string
+
+    BadgeProgress:
+      type: object
+      properties:
+        badgeId:
+          type: string
+        current:
+          type: integer
+        required:
+          type: integer
+        percentage:
+          type: number
+          format: float
+        isUnlocked:
+          type: boolean
+        unlockedAt:
+          type: string
+          format: date-time
+
+    Trophy:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        tier:
+          type: string
+          enum: [Bronze, Silver, Gold, Platinum, Diamond]
+        description:
+          type: string
+        unlock_condition:
+          type: object
+        xp_reward:
+          type: integer
+        gritcoin_reward:
+          type: integer
+        visual_asset:
+          type: string
+        visibility_boost:
+          type: integer
+        unlock_message:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
