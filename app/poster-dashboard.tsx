@@ -267,7 +267,7 @@ export default function PosterDashboard() {
         colors={[premiumColors.deepBlack, premiumColors.richBlack]}
         style={styles.gradient}
       >
-        <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+        <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
           <View style={styles.statsContainer}>
             <GlassCard style={styles.statsCard}>
               <View style={styles.statRow}>
