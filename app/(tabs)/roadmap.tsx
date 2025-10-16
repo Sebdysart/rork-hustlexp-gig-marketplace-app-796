@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { HUSTLER_JOURNEY, getTierForLevel, getProgressToNextTier, canPrestige } from '@/constants/hustlerJourney';
 import { getPrestigeDisplayName } from '@/utils/prestige';
-import { COLORS } from '@/constants/designTokens';
+import { COLORS, premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { RANK_TIERS, getRankForLevel } from '@/constants/ranks';
 import FeatureUnlockAnimation from '@/components/FeatureUnlockAnimation';
@@ -184,7 +184,7 @@ export default function RoadmapScreen() {
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={[COLORS.background.primary, COLORS.background.secondary] as [string, string, ...string[]]}
+          colors={[premiumColors.deepBlack, premiumColors.richBlack, premiumColors.charcoal] as [string, string, ...string[]]}
           style={styles.header}
         >
           <Text style={styles.tagline}>Your Hustler Journey</Text>
@@ -427,7 +427,7 @@ export default function RoadmapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background.primary,
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -435,18 +435,19 @@ const styles = StyleSheet.create({
   header: {
     padding: 24,
     paddingTop: 16,
+    paddingBottom: 32,
   },
   tagline: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: COLORS.text.primary,
+    color: '#FFFFFF',
     textAlign: 'center' as const,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: COLORS.text.secondary,
+    color: premiumColors.neonCyan,
     textAlign: 'center' as const,
     marginBottom: 24,
   },
@@ -507,17 +508,19 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 24,
+    backgroundColor: COLORS.background,
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: COLORS.text.primary,
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   sectionSubtitle: {
     fontSize: 16,
-    color: COLORS.text.secondary,
+    color: premiumColors.glassWhiteStrong,
     marginBottom: 24,
+    opacity: 0.8,
   },
   gamificationTitle: {
     marginTop: 32,
@@ -701,15 +704,16 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: COLORS.text.primary,
+    color: '#FFFFFF',
     textAlign: 'center' as const,
     marginBottom: 8,
   },
   featureDescription: {
     fontSize: 13,
-    color: COLORS.text.secondary,
+    color: premiumColors.glassWhiteStrong,
     textAlign: 'center' as const,
     lineHeight: 18,
+    opacity: 0.7,
   },
   featureCardLocked: {
     opacity: 0.6,
