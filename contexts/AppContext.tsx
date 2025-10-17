@@ -7,6 +7,7 @@ import { calculateLevel } from '@/utils/gamification';
 import { checkDailyStreak, updateUserStreak } from '@/utils/dailyStreak';
 import { GRIT_REWARDS } from '@/constants/economy';
 import { useNotifications } from './NotificationContext';
+import { hustleAI } from '@/utils/hustleAI';
 
 const STORAGE_KEYS = {
   CURRENT_USER: 'hustlexp_current_user',
@@ -252,6 +253,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setTasks(updatedTasks);
     await AsyncStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(updatedTasks));
 
+    hustleAI.trackExperiment({
+      experimentId: 'task_acceptance_v1',
+      userId: currentUser.id,
+      variant: 'control',
+      outcome: 'success',
+      metrics: {
+        taskPrice: task.payAmount,
+        xpReward: task.xpReward,
+        userLevel: currentUser.level,
+      },
+    }).catch(err => console.warn('[HUSTLEAI] Failed to track experiment:', err));
+
     if (addNotification) {
       addNotification(task.posterId, 'quest_accepted', {
         workerName: currentUser.name,
@@ -316,6 +329,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    const startTime = Date.now();
+    
     const updatedTasks = tasks.map(t => 
       t.id === taskId ? { ...t, status: 'completed' as const, completedAt: new Date().toISOString() } : t
     );
@@ -355,6 +370,22 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await updateUser(updatedUser);
     await AsyncStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(updatedTasks));
 
+    const completionTime = (Date.now() - startTime) / 60000;
+    
+    hustleAI.submitFeedback({
+      userId: currentUser.id,
+      taskId: task.id,
+      predictionType: 'completion',
+      predictedValue: task.xpReward,
+      actualValue: task.xpReward * xpMultiplier,
+      context: {
+        category: task.category,
+        payAmount: task.payAmount,
+        completionTime,
+        hadPowerUps: xpBoost !== undefined || earningsBoost !== undefined,
+      },
+    }).catch(err => console.warn('[HUSTLEAI] Failed to submit feedback:', err));
+
     if (addNotification) {
       addNotification(currentUser.id, 'quest_completed', {
         taskTitle: task.title,
@@ -373,6 +404,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
 
     console.log(`Task completed. Commission: ${commission.toFixed(2)}, Net earnings: ${netEarnings.toFixed(2)}`);
+    console.log(`[HUSTLEAI] Feedback submitted for task completion`);
 
     return { leveledUp, newLevel };
   }, [currentUser, tasks, updateUser, addNotification, activePowerUps, checkAndUnlockFeatures]);

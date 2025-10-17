@@ -68,6 +68,122 @@ export interface CoachingResponse {
   tips: string[];
 }
 
+export interface FeedbackRequest {
+  userId: string;
+  taskId: string;
+  predictionType: 'match_score' | 'pricing' | 'duration' | 'completion';
+  predictedValue: number;
+  actualValue: number;
+  context?: Record<string, any>;
+}
+
+export interface FeedbackResponse {
+  recorded: boolean;
+  accuracy: number;
+  insights: string[];
+  recommendations: string[];
+}
+
+export interface UserProfileAI {
+  userId: string;
+  preferredCategories: string[];
+  avgTaskPrice: number;
+  peakActiveHours: number[];
+  acceptanceRate: number;
+  completionRate: number;
+  rejectionReasons: string[];
+  recommendations: string[];
+}
+
+export interface ExperimentTrackRequest {
+  experimentId: string;
+  userId: string;
+  variant: 'control' | 'test_a' | 'test_b';
+  outcome: 'success' | 'failure' | 'neutral';
+  metrics: Record<string, number>;
+}
+
+export interface CalibrationResponse {
+  currentThresholds: Record<string, number>;
+  recommendations: Array<{
+    threshold: string;
+    currentValue: number;
+    suggestedValue: number;
+    reasoning: string;
+    confidence: number;
+  }>;
+  appliedAt: string;
+}
+
+export interface FraudReportRequest {
+  userId: string;
+  reportedUserId: string;
+  fraudType: string;
+  description: string;
+  evidence: Record<string, any>;
+  taskId?: string;
+}
+
+export interface FraudReportResponse {
+  reportId: string;
+  confidence: number;
+  matchingPatterns: string[];
+  recommendedAction: 'investigate' | 'block' | 'monitor' | 'clear';
+  reasoning: string;
+}
+
+export interface TradeParseRequest {
+  userId: string;
+  input: string;
+}
+
+export interface TradeParseResponse {
+  success: boolean;
+  trade: {
+    title: string;
+    description: string;
+    tradeCategory: string;
+    jobType: string;
+    requiredCertifications: string[];
+    requiredTools: string[];
+    minimumBadgeLevel: string;
+    priceMin: number;
+    priceMax: number;
+    estimatedHours: number;
+    urgency: string;
+  };
+  confidence: number;
+}
+
+export interface TradeMatchResponse {
+  taskId: string;
+  matches: Array<{
+    userId: string;
+    matchScore: number;
+    certificationMatch: number;
+    toolMatch: number;
+    experienceLevel: string;
+    hourlyRate: number;
+    availability: string;
+  }>;
+  totalMatches: number;
+}
+
+export interface SquadSuggestionRequest {
+  jobDescription: string;
+}
+
+export interface SquadSuggestionResponse {
+  requiredTrades: Array<{
+    tradeCategory: string;
+    role: string;
+    estimatedHours: number;
+    reasoning: string;
+  }>;
+  totalEstimatedCost: { min: number; max: number };
+  projectTimeline: string;
+}
+
 class HustleAIClient {
   private baseURL: string;
 
@@ -287,6 +403,131 @@ class HustleAIClient {
 
   async checkHealth(): Promise<{ status: string; version: string }> {
     return this.makeRequest('/health');
+  }
+
+  async submitFeedback(feedback: FeedbackRequest): Promise<FeedbackResponse> {
+    try {
+      return await this.makeRequest<FeedbackResponse>('/feedback', 'POST', feedback);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Feedback submission failed:', error);
+      return {
+        recorded: false,
+        accuracy: 0,
+        insights: [],
+        recommendations: [],
+      };
+    }
+  }
+
+  async getUserProfileAI(userId: string): Promise<UserProfileAI> {
+    try {
+      return await this.makeRequest<UserProfileAI>(`/users/${userId}/profile/ai`);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Failed to fetch AI profile:', error);
+      return {
+        userId,
+        preferredCategories: [],
+        avgTaskPrice: 0,
+        peakActiveHours: [],
+        acceptanceRate: 0,
+        completionRate: 0,
+        rejectionReasons: [],
+        recommendations: [],
+      };
+    }
+  }
+
+  async trackExperiment(data: ExperimentTrackRequest): Promise<{ success: boolean }> {
+    try {
+      return await this.makeRequest<{ success: boolean }>('/experiments/track', 'POST', data);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Experiment tracking failed:', error);
+      return { success: false };
+    }
+  }
+
+  async getSystemCalibration(): Promise<CalibrationResponse> {
+    try {
+      return await this.makeRequest<CalibrationResponse>('/system/calibration');
+    } catch (error) {
+      console.warn('[HUSTLEAI] Failed to get system calibration:', error);
+      return {
+        currentThresholds: {},
+        recommendations: [],
+        appliedAt: new Date().toISOString(),
+      };
+    }
+  }
+
+  async reportFraud(report: FraudReportRequest): Promise<FraudReportResponse> {
+    try {
+      return await this.makeRequest<FraudReportResponse>('/fraud/report', 'POST', report);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Fraud report submission failed:', error);
+      return {
+        reportId: `report-${Date.now()}`,
+        confidence: 0,
+        matchingPatterns: [],
+        recommendedAction: 'monitor',
+        reasoning: 'Report submitted but AI analysis unavailable',
+      };
+    }
+  }
+
+  async parseTrade(userId: string, input: string): Promise<TradeParseResponse> {
+    try {
+      return await this.makeRequest<TradeParseResponse>('/trades/parse', 'POST', {
+        userId,
+        input,
+      });
+    } catch (error) {
+      console.warn('[HUSTLEAI] Trade parsing failed:', error);
+      throw error;
+    }
+  }
+
+  async getTradeMatches(tradeId: string): Promise<TradeMatchResponse> {
+    try {
+      return await this.makeRequest<TradeMatchResponse>(`/trades/${tradeId}/matches`);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Trade matching failed:', error);
+      throw error;
+    }
+  }
+
+  async suggestSquad(jobDescription: string): Promise<SquadSuggestionResponse> {
+    try {
+      return await this.makeRequest<SquadSuggestionResponse>('/trades/squad/suggest', 'POST', {
+        jobDescription,
+      });
+    } catch (error) {
+      console.warn('[HUSTLEAI] Squad suggestion failed:', error);
+      throw error;
+    }
+  }
+
+  async getTradeProgressionOptimization(userId: string): Promise<any> {
+    try {
+      return await this.makeRequest(`/trades/${userId}/optimize`);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Trade progression optimization failed:', error);
+      throw error;
+    }
+  }
+
+  async getDynamicTradePricing(params: {
+    tradeCategory: string;
+    jobType: string;
+    badgeLevel: string;
+    isPeakHour?: boolean;
+    isEmergency?: boolean;
+  }): Promise<any> {
+    try {
+      return await this.makeRequest('/trades/pricing', 'POST', params);
+    } catch (error) {
+      console.warn('[HUSTLEAI] Dynamic pricing failed:', error);
+      throw error;
+    }
   }
 }
 
