@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const API_BASE_URL = 'https://35e59b08-e7a7-448e-ae3a-4ff316aab102-00-31edtpdmpi4hm.picard.replit.dev/api';
+const API_BASE_URL = 'https://lunch-garden-dycejr.replit.app/api';
 
 export interface MatchFeedback {
   userId: string;
