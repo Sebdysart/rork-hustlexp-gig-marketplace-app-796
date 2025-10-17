@@ -10,7 +10,7 @@ import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
 import { analyzeUserProgress, getPersonalizedRecommendations, generateDailyQuestSuggestions } from '@/utils/aiRecommendations';
-import { generateText } from '@rork/toolkit-sdk';
+import { hustleAI } from '@/utils/hustleAI';
 
 export default function AICoachScreen() {
   const insets = useSafeAreaInsets();
@@ -54,27 +54,20 @@ export default function AICoachScreen() {
     triggerHaptic('medium');
 
     try {
-      const response = await generateText({
-        messages: [
-          {
-            role: 'user',
-            content: `You are an AI coach for HustleXP, a gamified gig economy app. Answer this user's question:
+      const response = await hustleAI.chat(currentUser.id, `You are an AI coach for HustleXP, a gamified gig economy app. Answer this user's question:
 
 User Profile:
 - Level ${currentUser.level}
 - ${currentUser.tasksCompleted} tasks completed
 - ${currentUser.reputationScore.toFixed(1)}⭐ rating
-- $${currentUser.earnings} earned
+- ${currentUser.earnings} earned
 - ${currentUser.streaks.current} day streak
 
 Question: "${question}"
 
-Provide a helpful, encouraging answer (2-3 sentences). Be specific and actionable.`,
-          },
-        ],
-      });
+Provide a helpful, encouraging answer (2-3 sentences). Be specific and actionable.`);
 
-      setAnswer(response.trim());
+      setAnswer(response.response.trim());
       triggerHaptic('success');
     } catch (error) {
       console.error('AI question error:', error);

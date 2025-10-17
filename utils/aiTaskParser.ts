@@ -1,4 +1,4 @@
-import { generateText, generateObject } from '@rork/toolkit-sdk';
+import { hustleAI } from './hustleAI';
 import { z } from 'zod';
 
 export interface AITaskSuggestion {
@@ -44,43 +44,11 @@ export async function parseTaskWithAI(userInput: string, category?: string): Pro
   try {
     console.log('[AI Task Parser] Parsing input:', userInput);
 
-    const systemPrompt = `You are an AI assistant for HustleXP, a gig economy platform. 
-Your job is to help users create task postings by understanding their needs and suggesting:
-- An engaging, clear title
-- A detailed description
-- Fair pricing based on market rates
-- Estimated duration
-- Required skills
-- Any safety or legal considerations
-
-Be helpful, ethical, and ensure all suggestions are legal and safe.
-${category ? `The user has pre-selected the category: ${category}` : ''}`;
-
-    const result = await generateObject({
-      messages: [
-        {
-          role: 'user',
-          content: `${systemPrompt}\n\nUser needs: ${userInput}`,
-        },
-      ],
-      schema: taskSchema,
-    });
+    const result = await hustleAI.parseTask('current-user', userInput);
 
     console.log('[AI Task Parser] Result:', result);
 
-    return {
-      title: result.title,
-      description: result.description,
-      category: result.category,
-      estimatedPay: {
-        min: result.estimatedPayMin,
-        max: result.estimatedPayMax,
-      },
-      estimatedDuration: result.estimatedDuration,
-      confidence: result.confidence,
-      suggestedSkills: result.suggestedSkills,
-      safetyNotes: result.safetyNotes,
-    };
+    return result;
   } catch (error) {
     console.error('[AI Task Parser] Error:', error);
     
@@ -102,16 +70,9 @@ ${category ? `The user has pre-selected the category: ${category}` : ''}`;
 
 export async function improveTaskDescription(currentDescription: string): Promise<string> {
   try {
-    const improved = await generateText({
-      messages: [
-        {
-          role: 'user',
-          content: `Improve this task description to be more clear, detailed, and professional while keeping the same meaning:\n\n${currentDescription}`,
-        },
-      ],
-    });
+    const response = await hustleAI.chat('system', `Improve this task description to be more clear, detailed, and professional while keeping the same meaning:\n\n${currentDescription}`);
 
-    return improved;
+    return response.response;
   } catch (error) {
     console.error('[AI Task Parser] Error improving description:', error);
     return currentDescription;
@@ -120,21 +81,9 @@ export async function improveTaskDescription(currentDescription: string): Promis
 
 export async function suggestPricing(taskDescription: string, category: string): Promise<{ min: number; max: number }> {
   try {
-    const pricingSchema = z.object({
-      min: z.number().describe('Minimum fair price in dollars'),
-      max: z.number().describe('Maximum fair price in dollars'),
-      reasoning: z.string().describe('Brief explanation of pricing'),
-    });
+    const response = await hustleAI.chat('system', `Based on current market rates for gig work, suggest fair pricing for this task:\n\nCategory: ${category}\nDescription: ${taskDescription}\n\nConsider complexity, time required, and skill level.\n\nReturn JSON with {min: number, max: number, reasoning: string}`);
 
-    const result = await generateObject({
-      messages: [
-        {
-          role: 'user',
-          content: `Based on current market rates for gig work, suggest fair pricing for this task:\n\nCategory: ${category}\nDescription: ${taskDescription}\n\nConsider complexity, time required, and skill level.`,
-        },
-      ],
-      schema: pricingSchema,
-    });
+    const result = JSON.parse(response.response);
 
     console.log('[AI Pricing] Suggestion:', result);
 

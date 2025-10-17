@@ -1,5 +1,5 @@
 import { User, Task } from '@/types';
-import { generateObject } from '@rork/toolkit-sdk';
+import { hustleAI } from './hustleAI';
 import { z } from 'zod';
 
 export interface WorkerMatch {
@@ -124,16 +124,12 @@ export async function findBestWorkers(
 
     console.log('[AI Matching] Requesting AI analysis for', workerSummaries.length, 'workers');
 
-    const result = await generateObject({
-      messages: [
-        {
-          role: 'user',
-          content: `You are an AI matching assistant for HustleXP. Analyze these workers and rank them for this task.
+    const response = await hustleAI.chat('system', `You are an AI matching assistant for HustleXP. Analyze these workers and rank them for this task.
 
 Task: ${task.title}
 Category: ${task.category}
 Description: ${task.description}
-Pay: $${task.payAmount}
+Pay: ${task.payAmount}
 
 Available Workers:
 ${JSON.stringify(workerSummaries, null, 2)}
@@ -151,15 +147,15 @@ For each match, provide:
 - 2-3 key strengths
 - Any concerns (optional)
 
-Be fair and unbiased. Prioritize quality and reliability.`,
-        },
-      ],
-      schema: matchSchema,
-    });
+Be fair and unbiased. Prioritize quality and reliability.
+
+Return JSON: {matches: Array<{userId, score, reasoning, strengths, concerns?}>}`);
+
+    const result = JSON.parse(response.response);
 
     console.log('[AI Matching] AI analysis complete:', result.matches.length, 'matches');
 
-    return result.matches.map((match) => {
+    return result.matches.map((match: any) => {
       const workerData = nearbyWorkers.find((w) => w.worker.id === match.userId);
       return {
         ...match,
@@ -191,11 +187,7 @@ export async function explainMatch(
   try {
     console.log('[AI Matching] Explaining match for worker:', worker.name);
 
-    const explanation = await generateObject({
-      messages: [
-        {
-          role: 'user',
-          content: `Explain why this worker is a ${matchScore}% match for this task in 1-2 sentences.
+    const response = await hustleAI.chat('system', `Explain why this worker is a ${matchScore}% match for this task in 1-2 sentences.
 
 Worker: ${worker.name}
 - Level ${worker.level}
@@ -204,17 +196,11 @@ Worker: ${worker.name}
 
 Task: ${task.title}
 Category: ${task.category}
-Pay: $${task.payAmount}
+Pay: ${task.payAmount}
 
-Be concise and positive. Focus on their strengths.`,
-        },
-      ],
-      schema: z.object({
-        explanation: z.string(),
-      }),
-    });
+Be concise and positive. Focus on their strengths.`);
 
-    return explanation.explanation;
+    return response.response;
   } catch (error) {
     console.error('[AI Matching] Error explaining match:', error);
     return `${matchScore}% match based on experience, rating, and location.`;
