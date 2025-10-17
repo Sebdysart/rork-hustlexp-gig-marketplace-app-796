@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platfo
 import { Stack, useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import COLORS from '@/constants/colors';
-import { BarChart, Users, Briefcase, MessageSquare, TrendingUp, DollarSign, Award, AlertTriangle } from 'lucide-react-native';
+import { BarChart, Users, Briefcase, MessageSquare, TrendingUp, DollarSign, Award, AlertTriangle, Server } from 'lucide-react-native';
 
 type TabType = 'overview' | 'users' | 'tasks' | 'reports' | 'analytics';
 
@@ -146,6 +146,14 @@ export default function AdminDashboard() {
           COLORS.legendary
         )}
       </View>
+
+      <TouchableOpacity
+        style={styles.backendTestButton}
+        onPress={() => router.push('/backend-test')}
+      >
+        <Server size={20} color={COLORS.info} />
+        <Text style={styles.backendTestText}>Test HustleAI Backend Connection</Text>
+      </TouchableOpacity>
 
       <Text style={styles.sectionTitle}>Task Status Breakdown</Text>
       <View style={styles.breakdownCard}>
@@ -822,5 +830,22 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: COLORS.success,
     marginTop: 8,
+  },
+  backendTestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.info + '20',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.info + '40',
+  },
+  backendTestText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: COLORS.info,
   },
 });

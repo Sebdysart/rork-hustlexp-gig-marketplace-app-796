@@ -3,10 +3,10 @@
  * Connects to your Replit-hosted AI engine
  */
 
-const HUSTLEAI_DEV_URL = 'https://35e59b08-e7a7-448e-ae3a-4ff316aab102-00-31edtpdmpi4hm.picard.replit.dev/api';
-const HUSTLEAI_PROD_URL = process.env.EXPO_PUBLIC_HUSTLEAI_URL || HUSTLEAI_DEV_URL;
+const HUSTLEAI_PROD_URL = 'https://lunch-garden-dycejr.replit.app/api';
+const HUSTLEAI_DEV_URL = process.env.EXPO_PUBLIC_HUSTLEAI_URL || HUSTLEAI_PROD_URL;
 
-const API_BASE_URL = __DEV__ ? HUSTLEAI_DEV_URL : HUSTLEAI_PROD_URL;
+const API_BASE_URL = HUSTLEAI_PROD_URL;
 
 export interface ChatMessage {
   userId: string;
