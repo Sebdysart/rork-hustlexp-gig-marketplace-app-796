@@ -1,0 +1,93 @@
+═══════════════════════════════════════════════════════════════
+🎯 COPY THIS TO REPLIT CHAT TO TEST YOUR BACKEND
+═══════════════════════════════════════════════════════════════
+
+Test all 17 HustleAI endpoints to confirm they're working. Run these commands in sequence:
+
+1. First, get a real user UUID from your database:
+```
+SELECT id FROM users LIMIT 1;
+```
+
+2. Then test each endpoint category:
+
+CORE AI ENDPOINTS (7):
+- Health check
+- AI chat with user
+- Parse natural language task ("walk my dog for $25")  
+- Match workers to tasks
+- Provide career coaching
+- Generate task content
+- Detect fraud patterns
+
+TRADE ENDPOINTS (5):
+- Parse trade job ("need electrician for commercial rewiring")
+- Match tradesmen to jobs
+- Suggest squad for multi-trade jobs
+- Optimize tradesman badge progression  
+- Calculate dynamic pricing with multipliers
+
+AI LEARNING ENDPOINTS (5):
+- Submit feedback (AI learns from prediction vs actual)
+- Fetch AI user profile (learned preferences)
+- Track A/B experiments
+- Get system calibration recommendations
+- Report fraud patterns for learning
+
+3. Expected results:
+✅ All 17 should return HTTP 200
+✅ Response times should be 150-300ms
+✅ AI responses should be relevant and detailed
+✅ Trade endpoints should parse certifications/tools
+✅ Learning endpoints should record/return data
+
+4. Success criteria:
+- No 404 errors (endpoint missing)
+- No 422 errors (validation failed)  
+- No 500 errors (server crash)
+- Response times < 300ms
+- AI generates sensible responses
+
+═══════════════════════════════════════════════════════════════
+📝 SIMPLIFIED TEST (Copy to Replit Shell)
+═══════════════════════════════════════════════════════════════
+
+# Replace USER_ID with actual UUID from step 1
+USER_ID="your-uuid-here"
+
+# Test feedback loop (AI learning)
+curl -X POST https://$REPLIT_DEV_DOMAIN/api/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"'$USER_ID'","taskId":"task-123","predictionType":"duration","predictedValue":2.5,"actualValue":3.0}'
+
+# Test AI user profile  
+curl https://$REPLIT_DEV_DOMAIN/api/users/$USER_ID/profile/ai
+
+# Test task parsing
+curl -X POST https://$REPLIT_DEV_DOMAIN/api/tasks/parse \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"'$USER_ID'","input":"Walk my dog for $25 tomorrow"}'
+
+# Test trade parsing
+curl -X POST https://$REPLIT_DEV_DOMAIN/api/trades/parse \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"'$USER_ID'","input":"Need electrician for commercial rewiring. Master cert required. $3000-6000"}'
+
+# Test squad suggestion
+curl -X POST https://$REPLIT_DEV_DOMAIN/api/trades/squad/suggest \
+  -H "Content-Type: application/json" \
+  -d '{"jobDescription":"Kitchen remodel: electrical, plumbing, cabinets, tile"}'
+
+# Test A/B experiment
+curl -X POST https://$REPLIT_DEV_DOMAIN/api/experiments/track \
+  -H "Content-Type: application/json" \
+  -d '{"experimentId":"test_v1","userId":"'$USER_ID'","variant":"control","outcome":"success","metrics":{}}'
+
+# Test calibration
+curl https://$REPLIT_DEV_DOMAIN/api/system/calibration
+
+═══════════════════════════════════════════════════════════════
+
+If all 7 commands return JSON data (not errors), your backend is READY! ✅
+
+═══════════════════════════════════════════════════════════════
