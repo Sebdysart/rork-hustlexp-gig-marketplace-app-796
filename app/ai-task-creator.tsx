@@ -612,7 +612,7 @@ export default function AITaskCreator() {
       >
         <View style={styles.draftHeader}>
           <View style={styles.aiLabel}>
-            <Sparkles size={16} color={premiumColors.neonCyan} />
+            <Sparkles size={18} color={premiumColors.neonCyan} />
             <Text style={styles.aiLabelText}>AI Generated</Text>
           </View>
           <View
@@ -621,10 +621,17 @@ export default function AITaskCreator() {
               {
                 backgroundColor:
                   aiSuggestion.confidence === 'high'
-                    ? premiumColors.neonGreen + '20'
+                    ? premiumColors.neonGreen + '30'
                     : aiSuggestion.confidence === 'medium'
-                    ? premiumColors.neonAmber + '20'
-                    : premiumColors.neonMagenta + '20',
+                    ? premiumColors.neonAmber + '30'
+                    : premiumColors.neonMagenta + '30',
+                borderWidth: 1,
+                borderColor:
+                  aiSuggestion.confidence === 'high'
+                    ? premiumColors.neonGreen + '60'
+                    : aiSuggestion.confidence === 'medium'
+                    ? premiumColors.neonAmber + '60'
+                    : premiumColors.neonMagenta + '60',
               },
             ]}
           >
@@ -646,44 +653,64 @@ export default function AITaskCreator() {
           </View>
         </View>
 
-        <GlassCard style={styles.draftCard}>
-          <Text style={styles.draftTitle}>{aiSuggestion.title}</Text>
-          <Text style={styles.draftDescription}>{aiSuggestion.description}</Text>
+        <View style={styles.mainCard}>
+          <LinearGradient
+            colors={[premiumColors.neonCyan + '15', premiumColors.neonViolet + '15']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cardGradient}
+          >
+            <View style={styles.cardContent}>
+              <Text style={styles.draftTitle}>{aiSuggestion.title}</Text>
+              
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.descriptionLabel}>Looking for help with:</Text>
+                <Text style={styles.draftDescription}>{aiSuggestion.description}</Text>
+              </View>
 
-          <View style={styles.draftMetrics}>
-            <View style={styles.metricItem}>
-              <DollarSign size={20} color={premiumColors.neonGreen} />
-              <Text style={styles.metricLabel}>Estimated Pay</Text>
-              <Text style={styles.metricValue}>
-                ${aiSuggestion.estimatedPay.min} - ${aiSuggestion.estimatedPay.max}
-              </Text>
-            </View>
-
-            <View style={styles.metricItem}>
-              <Clock size={20} color={premiumColors.neonAmber} />
-              <Text style={styles.metricLabel}>Duration</Text>
-              <Text style={styles.metricValue}>{aiSuggestion.estimatedDuration}</Text>
-            </View>
-          </View>
-
-          {aiSuggestion.safetyNotes && (
-            <View style={styles.safetyNote}>
-              <Shield size={20} color={premiumColors.neonCyan} />
-              <Text style={styles.safetyText}>{aiSuggestion.safetyNotes}</Text>
-            </View>
-          )}
-
-          <View style={styles.skillsContainer}>
-            <Text style={styles.skillsLabel}>Required Skills:</Text>
-            <View style={styles.skillsList}>
-              {aiSuggestion.suggestedSkills.map((skill, index) => (
-                <View key={index} style={styles.skillBadge}>
-                  <Text style={styles.skillText}>{skill}</Text>
+              <View style={styles.draftMetrics}>
+                <View style={styles.metricItem}>
+                  <View style={styles.metricIconWrapper}>
+                    <DollarSign size={24} color={premiumColors.neonGreen} />
+                  </View>
+                  <Text style={styles.metricLabel}>Estimated Pay</Text>
+                  <Text style={styles.metricValue}>
+                    ${aiSuggestion.estimatedPay.min} - ${aiSuggestion.estimatedPay.max}
+                  </Text>
                 </View>
-              ))}
+
+                <View style={styles.metricItem}>
+                  <View style={styles.metricIconWrapper}>
+                    <Clock size={24} color={premiumColors.neonAmber} />
+                  </View>
+                  <Text style={styles.metricLabel}>Duration</Text>
+                  <Text style={styles.metricValue}>{aiSuggestion.estimatedDuration}</Text>
+                </View>
+              </View>
+
+              {aiSuggestion.safetyNotes && (
+                <View style={styles.safetyNote}>
+                  <Shield size={22} color={premiumColors.neonCyan} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.safetyNoteTitle}>Safety Note</Text>
+                    <Text style={styles.safetyText}>{aiSuggestion.safetyNotes}</Text>
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.skillsContainer}>
+                <Text style={styles.skillsLabel}>Required Skills:</Text>
+                <View style={styles.skillsList}>
+                  {aiSuggestion.suggestedSkills.map((skill, index) => (
+                    <View key={index} style={styles.skillBadge}>
+                      <Text style={styles.skillText}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
             </View>
-          </View>
-        </GlassCard>
+          </LinearGradient>
+        </View>
 
         <View style={styles.draftActions}>
           <TouchableOpacity
@@ -693,8 +720,13 @@ export default function AITaskCreator() {
               triggerHaptic('light');
             }}
           >
-            <Edit3 size={20} color={premiumColors.neonCyan} />
-            <Text style={styles.customizeButtonText}>Customize</Text>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.03)']}
+              style={styles.customizeButtonGradient}
+            >
+              <Edit3 size={22} color={premiumColors.neonCyan} />
+              <Text style={styles.customizeButtonText}>Customize</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -706,7 +738,7 @@ export default function AITaskCreator() {
               colors={[premiumColors.neonGreen, premiumColors.neonCyan]}
               style={styles.confirmButtonGradient}
             >
-              <Check size={20} color="#FFFFFF" />
+              <Check size={22} color="#FFFFFF" />
               <Text style={styles.confirmButtonText}>Post Task</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -720,7 +752,7 @@ export default function AITaskCreator() {
             triggerHaptic('light');
           }}
         >
-          <X size={20} color={Colors.textSecondary} />
+          <X size={18} color={Colors.textSecondary} />
           <Text style={styles.rejectButtonText}>Start over</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -1252,87 +1284,137 @@ const styles = StyleSheet.create({
   },
   draftContent: {
     padding: 20,
+    paddingTop: 12,
   },
   draftHeader: {
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   aiLabel: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    gap: 6,
-    backgroundColor: premiumColors.neonCyan + '20',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    gap: 8,
+    backgroundColor: premiumColors.neonCyan + '25',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '50',
   },
   aiLabelText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700' as const,
     color: premiumColors.neonCyan,
+    letterSpacing: 0.5,
   },
   confidenceBadge: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
   },
   confidenceText: {
-    fontSize: 12,
-    fontWeight: '700' as const,
+    fontSize: 13,
+    fontWeight: '800' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
   },
-  draftCard: {
-    padding: 20,
-    marginBottom: 20,
+  mainCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  cardGradient: {
+    padding: 2,
+  },
+  cardContent: {
+    backgroundColor: premiumColors.richBlack,
+    borderRadius: 18,
+    padding: 24,
   },
   draftTitle: {
-    fontSize: 24,
-    fontWeight: '800' as const,
+    fontSize: 28,
+    fontWeight: '900' as const,
     color: Colors.text,
-    marginBottom: 12,
-    lineHeight: 30,
+    marginBottom: 20,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+  },
+  descriptionContainer: {
+    marginBottom: 24,
+  },
+  descriptionLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
   },
   draftDescription: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    lineHeight: 24,
-    marginBottom: 20,
+    fontSize: 17,
+    color: '#FFFFFF',
+    lineHeight: 26,
+    fontWeight: '400' as const,
   },
   draftMetrics: {
     flexDirection: 'row' as const,
-    gap: 16,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 24,
   },
   metricItem: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 18,
+    borderRadius: 16,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  metricIconWrapper: {
+    marginBottom: 10,
   },
   metricLabel: {
     fontSize: 12,
     color: Colors.textSecondary,
+    marginBottom: 6,
+    textAlign: 'center' as const,
   },
   metricValue: {
-    fontSize: 16,
-    fontWeight: '700' as const,
+    fontSize: 18,
+    fontWeight: '800' as const,
     color: Colors.text,
+    textAlign: 'center' as const,
   },
   safetyNote: {
     flexDirection: 'row' as const,
-    gap: 12,
-    backgroundColor: premiumColors.neonCyan + '10',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
+    gap: 14,
+    backgroundColor: premiumColors.neonCyan + '15',
+    padding: 18,
+    borderRadius: 14,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '30',
+  },
+  safetyNoteTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: premiumColors.neonCyan,
+    marginBottom: 4,
   },
   safetyText: {
-    flex: 1,
     fontSize: 14,
-    color: premiumColors.neonCyan,
-    lineHeight: 20,
+    color: '#FFFFFF',
+    lineHeight: 21,
+    opacity: 0.9,
   },
   skillsContainer: {
     gap: 12,
@@ -1341,21 +1423,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.text,
+    marginBottom: 4,
   },
   skillsList: {
     flexDirection: 'row' as const,
     flexWrap: 'wrap' as const,
-    gap: 8,
+    gap: 10,
   },
   skillBadge: {
-    backgroundColor: premiumColors.neonViolet + '20',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    backgroundColor: premiumColors.neonViolet + '25',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: premiumColors.neonViolet + '50',
   },
   skillText: {
-    fontSize: 12,
-    fontWeight: '600' as const,
+    fontSize: 13,
+    fontWeight: '700' as const,
     color: premiumColors.neonViolet,
   },
   draftActions: {
@@ -1365,37 +1450,45 @@ const styles = StyleSheet.create({
   },
   customizeButton: {
     flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan + '50',
+  },
+  customizeButtonGradient: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    paddingVertical: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: premiumColors.neonCyan + '40',
+    gap: 10,
+    paddingVertical: 18,
   },
   customizeButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
+    fontSize: 17,
+    fontWeight: '800' as const,
     color: premiumColors.neonCyan,
   },
   confirmButton: {
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
+    shadowColor: premiumColors.neonGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   confirmButtonGradient: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 8,
-    paddingVertical: 16,
+    gap: 10,
+    paddingVertical: 18,
   },
   confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '800' as const,
+    fontSize: 17,
+    fontWeight: '900' as const,
     color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   rejectButton: {
     flexDirection: 'row' as const,
@@ -1403,9 +1496,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     gap: 8,
     paddingVertical: 16,
+    marginTop: 8,
   },
   rejectButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.textSecondary,
   },
