@@ -169,10 +169,29 @@ class HustleAIClient {
 
   async parseTask(userId: string, input: string): Promise<TaskParseResponse> {
     try {
-      return await this.makeRequest<TaskParseResponse>('/tasks/parse', 'POST', {
+      const response = await this.makeRequest<any>('/tasks/parse', 'POST', {
         userId,
         input,
       });
+      
+      if (response.success && response.task) {
+        return {
+          title: response.task.title,
+          description: response.task.description || input,
+          category: response.task.category,
+          estimatedPay: {
+            min: response.task.priceMin || 20,
+            max: response.task.priceMax || 50,
+          },
+          estimatedDuration: response.task.duration || '1-2 hours',
+          confidence: (response.task.confidence || 'medium') as 'low' | 'medium' | 'high',
+          suggestedSkills: response.task.skills || [],
+          safetyNotes: response.task.safetyNotes,
+          xpReward: response.task.xpValue || 50,
+        };
+      }
+      
+      return response as TaskParseResponse;
     } catch (error) {
       console.warn('[HUSTLEAI] Falling back to mock task parsing');
       return this.mockParseTask(input);
