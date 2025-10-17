@@ -50,7 +50,7 @@ export async function parseTaskWithAI(userInput: string, category?: string): Pro
 
     return result;
   } catch (error) {
-    console.error('[AI Task Parser] Error:', error);
+    console.warn('[AI Task Parser] Using fallback parser (backend unavailable)');
     
     return {
       title: 'Task: ' + userInput.slice(0, 50),
@@ -74,7 +74,7 @@ export async function improveTaskDescription(currentDescription: string): Promis
 
     return response.response;
   } catch (error) {
-    console.error('[AI Task Parser] Error improving description:', error);
+    console.warn('[AI Task Parser] Could not improve description (backend unavailable)');
     return currentDescription;
   }
 }
@@ -92,7 +92,7 @@ export async function suggestPricing(taskDescription: string, category: string):
       max: result.max,
     };
   } catch (error) {
-    console.error('[AI Pricing] Error:', error);
+    console.warn('[AI Pricing] Using default pricing (backend unavailable)');
     return { min: 20, max: 50 };
   }
 }

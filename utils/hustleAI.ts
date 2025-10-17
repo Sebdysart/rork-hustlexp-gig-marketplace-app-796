@@ -114,14 +114,15 @@ class HustleAIClient {
       console.log('[HUSTLEAI] Response received');
       return data;
     } catch (error) {
-      console.error('[HUSTLEAI] Request failed:', error);
+      console.warn('[HUSTLEAI] Backend unavailable, using mock response');
       
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error('Request timeout - backend not responding');
         }
         if (error.message.includes('Failed to fetch')) {
-          throw new Error('Cannot reach backend - check if Replit instance is running and published');
+          console.warn('[HUSTLEAI] Replit backend not reachable - ensure it is published and running');
+          throw new Error('Backend unavailable');
         }
       }
       throw error;
