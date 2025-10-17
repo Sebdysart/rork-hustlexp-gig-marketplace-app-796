@@ -15,6 +15,8 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
   const [aiProfile, setAIProfile] = useState<AIUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUserId, setLastUserId] = useState<string | null>(null);
 
   const loadCachedProfile = useCallback(async (userId: string) => {
     try {
@@ -49,14 +51,22 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
   }, []);
 
   const fetchProfile = useCallback(async (userId: string, forceRefresh = false) => {
-    if (isLoading) return;
+    if (isLoading) {
+      console.log('[AIProfile] Already loading, skipping duplicate request');
+      return;
+    }
 
-    if (!forceRefresh) {
+    if (lastUserId === userId && !forceRefresh) {
       const hadCache = await loadCachedProfile(userId);
-      if (hadCache) return;
+      if (hadCache) {
+        console.log('[AIProfile] Using cache for same user');
+        return;
+      }
     }
 
     setIsLoading(true);
+    setError(null);
+    setLastUserId(userId);
     console.log('[AIProfile] Fetching AI profile for user:', userId);
 
     try {
@@ -67,15 +77,20 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
         setLastFetched(new Date().toISOString());
         await saveCachedProfile(userId, profile);
         console.log('[AIProfile] Profile fetched successfully');
+        setError(null);
       } else {
-        console.log('[AIProfile] No profile data returned');
+        const errorMsg = 'No profile data returned from API';
+        console.log('[AIProfile]', errorMsg);
+        setError(errorMsg);
       }
-    } catch (error) {
-      console.error('[AIProfile] Error fetching profile:', error);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch profile';
+      console.error('[AIProfile] Error fetching profile:', errorMsg);
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, loadCachedProfile, saveCachedProfile]);
+  }, [isLoading, lastUserId, loadCachedProfile, saveCachedProfile]);
 
   const getTaskInsight = useCallback((taskCategory: string, taskPrice: number): string | null => {
     if (!aiProfile) return null;
@@ -143,6 +158,7 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
     aiProfile,
     isLoading,
     lastFetched,
+    error,
     fetchProfile,
     getTaskInsight,
     shouldShowTask,
@@ -152,6 +168,7 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
     aiProfile,
     isLoading,
     lastFetched,
+    error,
     fetchProfile,
     getTaskInsight,
     shouldShowTask,

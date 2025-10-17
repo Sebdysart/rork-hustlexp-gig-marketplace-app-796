@@ -191,7 +191,7 @@ export class AIFeedbackService {
     }
   }
 
-  async fetchAIProfile(userId: string): Promise<AIUserProfile | null> {
+  async fetchAIProfile(userId: string, retryCount = 0): Promise<AIUserProfile | null> {
     console.log('[AIFeedback] Fetching AI profile for user:', userId);
     
     try {
@@ -201,6 +201,16 @@ export class AIFeedbackService {
           'Content-Type': 'application/json',
         },
       });
+
+      if (response.status === 429) {
+        if (retryCount < 3) {
+          const backoffMs = Math.pow(2, retryCount) * 1000;
+          console.log(`[AIFeedback] Rate limited. Retrying in ${backoffMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          return this.fetchAIProfile(userId, retryCount + 1);
+        }
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
