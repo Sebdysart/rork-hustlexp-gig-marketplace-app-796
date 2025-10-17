@@ -11,6 +11,7 @@ import {
   ScheduleSlot,
   TaskLifecycleStatus
 } from '@/types';
+import { useAILearning } from '@/utils/aiLearningIntegration';
 
 const STORAGE_KEY = 'hustlexp_task_lifecycle';
 
@@ -19,6 +20,7 @@ export const [TaskLifecycleProvider, useTaskLifecycle] = createContextHook(() =>
   const [taskVerifications, setTaskVerifications] = useState<Record<string, TaskVerification>>({});
   const [taskCompletions, setTaskCompletions] = useState<Record<string, TaskCompletion>>({});
   const [activeTimers, setActiveTimers] = useState<Record<string, number>>({});
+  const { submitTaskCompletion } = useAILearning();
 
   const loadData = async () => {
     try {
@@ -355,7 +357,12 @@ export const [TaskLifecycleProvider, useTaskLifecycle] = createContextHook(() =>
     paymentAmount: number,
     posterRating?: number,
     posterReview?: string,
-    workerNotes?: string
+    workerNotes?: string,
+    userId?: string,
+    matchScore?: number,
+    pricingFair?: boolean,
+    predictedDuration?: number,
+    predictedPrice?: number
   ) => {
     const progress = taskProgresses[taskId];
     if (!progress) return;
@@ -366,6 +373,7 @@ export const [TaskLifecycleProvider, useTaskLifecycle] = createContextHook(() =>
     const hours = Math.floor(durationMs / (1000 * 60 * 60));
     const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
     const totalDuration = `${hours}h ${minutes}m`;
+    const completionTimeHours = hours + (minutes / 60);
 
     const allSubtasksCompleted = progress.subtasks.every(st => st.completed);
     const accuracyScore = allSubtasksCompleted ? 98 : 85;
@@ -396,8 +404,22 @@ export const [TaskLifecycleProvider, useTaskLifecycle] = createContextHook(() =>
 
     await saveData(updatedProgresses, taskVerifications, updatedCompletions);
 
+    if (userId && posterRating !== undefined) {
+      await submitTaskCompletion(
+        userId,
+        taskId,
+        posterRating,
+        matchScore || 85,
+        completionTimeHours,
+        pricingFair !== undefined ? pricingFair : true,
+        predictedDuration,
+        predictedPrice,
+        paymentAmount
+      );
+    }
+
     return completion;
-  }, [taskProgresses, taskVerifications, taskCompletions]);
+  }, [taskProgresses, taskVerifications, taskCompletions, submitTaskCompletion]);
 
   const getTaskProgress = useCallback((taskId: string) => {
     return taskProgresses[taskId];

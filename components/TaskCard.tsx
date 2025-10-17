@@ -1,16 +1,18 @@
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { MapPin, DollarSign, Zap, Calendar, Radio, Shield, Clock } from 'lucide-react-native';
+import { MapPin, DollarSign, Zap, Calendar, Radio, Shield, Clock, Brain } from 'lucide-react-native';
 import { Task, User } from '@/types';
 import Colors from '@/constants/colors';
 import { premiumColors, neonGlow, spacing, borderRadius, typography } from '@/constants/designTokens';
 import { useRef, useEffect } from 'react';
 import GlassCard from './GlassCard';
+import { useAIProfile } from '@/contexts/AIProfileContext';
 
 interface TaskCardProps {
   task: Task;
   onPress: () => void;
   poster?: User;
   currentUserLocation?: { lat: number; lng: number };
+  showAIInsight?: boolean;
 }
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -25,9 +27,10 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-export default function TaskCard({ task, onPress, poster, currentUserLocation }: TaskCardProps) {
+export default function TaskCard({ task, onPress, poster, currentUserLocation, showAIInsight = true }: TaskCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const { getTaskInsight } = useAIProfile();
 
   useEffect(() => {
     Animated.loop(
@@ -112,6 +115,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation }:
     : task.distance;
 
   const urgencyPill = getUrgencyPill();
+  const aiInsight = showAIInsight ? getTaskInsight(task.category, task.payAmount) : null;
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -175,6 +179,13 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation }:
           )}
         </View>
         <Text style={styles.description} numberOfLines={2}>{task.description}</Text>
+
+        {aiInsight && (
+          <View style={styles.aiInsightRow}>
+            <Brain size={12} color={premiumColors.neonPurple} />
+            <Text style={styles.aiInsightText}>{aiInsight}</Text>
+          </View>
+        )}
 
         {task.aiTags && task.aiTags.length > 0 && (
           <View style={styles.aiTagsRow}>
@@ -357,5 +368,23 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: Colors.success,
+  },
+  aiInsightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: premiumColors.neonPurple + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: premiumColors.neonPurple + '30',
+  },
+  aiInsightText: {
+    fontSize: typography.sizes.sm,
+    color: premiumColors.neonPurple,
+    fontWeight: typography.weights.medium,
+    flex: 1,
   },
 });
