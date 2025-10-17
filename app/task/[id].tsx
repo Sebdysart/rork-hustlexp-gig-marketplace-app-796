@@ -4,6 +4,7 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, DollarSign, Calendar, Clock, User, Star, Zap, CheckCircle, Shield, Award, MessageCircle } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useAILearning } from '@/utils/aiLearningIntegration';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import Confetti from '@/components/Confetti';
@@ -13,8 +14,10 @@ import { premiumColors } from '@/constants/designTokens';
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { tasks, users, currentUser, acceptTask } = useApp();
+  const { submitMatchRejection } = useAILearning();
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
+  const [viewStartTime] = useState<number>(Date.now());
   
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -39,6 +42,24 @@ export default function TaskDetailScreen() {
       ])
     ).start();
   }, [pulseAnim]);
+
+  useEffect(() => {
+    return () => {
+      const timeViewed = (Date.now() - viewStartTime) / 1000;
+      const isWorker = currentUser?.role === 'worker' || currentUser?.role === 'both';
+      const canAcceptTask = isWorker && task?.status === 'open' && task?.posterId !== currentUser?.id;
+      
+      if (currentUser && task && canAcceptTask && !isAccepting && timeViewed > 3) {
+        submitMatchRejection(
+          currentUser.id,
+          task.id,
+          85,
+          88,
+          'viewed_not_accepted'
+        );
+      }
+    };
+  }, [viewStartTime, currentUser, task, isAccepting, submitMatchRejection]);
 
   if (!task || !poster) {
     return (
@@ -176,15 +197,15 @@ export default function TaskDetailScreen() {
             </View>
             <View style={styles.detailRow}>
               <Calendar size={20} color={Colors.textSecondary} />
-              <Text style={styles.detailText}>{formatDate(task.dateTime)}</Text>
+              <Text style={styles.detailText}>{formatDate(task.dateTime ||  '')}</Text>
             </View>
             <View style={styles.detailRow}>
               <Clock size={20} color={Colors.textSecondary} />
-              <Text style={styles.detailText}>{formatTime(task.dateTime)}</Text>
+              <Text style={styles.detailText}>{formatTime(task.dateTime || '')}</Text>
             </View>
           </View>
 
-          {task.extras.length > 0 && (
+          {task.extras && task.extras.length > 0 && (
             <View style={styles.extrasSection}>
               <Text style={styles.sectionTitle}>Extras</Text>
               <View style={styles.extrasList}>
