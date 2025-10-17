@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles, TrendingUp, Map, Zap, Search, Bookmark, Trophy, Users, Flame, Brain, Wand2, Briefcase, Mic, Lightbulb, Power, Heart, Plus } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useAIProfile } from '@/contexts/AIProfileContext';
 import Colors from '@/constants/colors';
 
 import FloatingHUD from '@/components/FloatingHUD';
@@ -43,6 +44,7 @@ interface TaskOffer {
 export default function HomeScreen() {
   const { currentUser, availableTasks, myTasks, updateAvailabilityStatus } = useApp();
   const { settings, canAcceptMoreQuests, getRemainingQuests, dailyQuestsCompleted } = useSettings();
+  const { fetchProfile, aiProfile } = useAIProfile();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
   const [showBurnoutModal, setShowBurnoutModal] = useState<boolean>(false);
@@ -117,6 +119,13 @@ export default function HomeScreen() {
       setShowBurnoutModal(true);
     }
   }, [dailyQuestsCompleted, settings.burnoutWarningsEnabled]);
+
+  useEffect(() => {
+    if (currentUser) {
+      console.log('[Home] Fetching AI profile for user:', currentUser.id);
+      fetchProfile(currentUser.id);
+    }
+  }, [currentUser, fetchProfile]);
 
   const handleStreakPress = () => {
     triggerHaptic('success');

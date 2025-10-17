@@ -10,6 +10,7 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { SquadContext } from "@/contexts/SquadContext";
 import { TaskLifecycleProvider } from "@/contexts/TaskLifecycleContext";
 import { OfferContext } from "@/contexts/OfferContext";
+import { AIProfileProvider } from "@/contexts/AIProfileContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
@@ -75,14 +76,16 @@ export default function RootLayout() {
           <SettingsProvider>
             <NotificationProvider>
               <AppProvider>
-                <TaskLifecycleProvider>
-                  <SquadContext>
-                    <OfferContext>
-                      <SplashScreenManager />
-                      <RootLayoutNav />
-                    </OfferContext>
-                  </SquadContext>
-                </TaskLifecycleProvider>
+                <AIProfileProvider>
+                  <TaskLifecycleProvider>
+                    <SquadContext>
+                      <OfferContext>
+                        <SplashScreenManager />
+                        <RootLayoutNav />
+                      </OfferContext>
+                    </SquadContext>
+                  </TaskLifecycleProvider>
+                </AIProfileProvider>
               </AppProvider>
             </NotificationProvider>
           </SettingsProvider>

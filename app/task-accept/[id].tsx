@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock, MapPin, DollarSign, Zap, X } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useTaskLifecycle } from '@/contexts/TaskLifecycleContext';
+import { useAILearning } from '@/utils/aiLearningIntegration';
 import HustleAIAssistant from '@/components/HustleAIAssistant';
 import NeonButton from '@/components/NeonButton';
 import GlassCard from '@/components/GlassCard';
@@ -16,8 +17,9 @@ import { ScheduleSlot } from '@/types';
 export default function TaskAcceptScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { tasks, acceptTask } = useApp();
+  const { tasks, acceptTask, currentUser } = useApp();
   const { initializeTaskProgress, startTask, scheduleTask, generateScheduleSlots } = useTaskLifecycle();
+  const { submitMatchAcceptance } = useAILearning();
   
   const [showAI, setShowAI] = useState(false);
   const [aiMessage, setAiMessage] = useState('');
@@ -56,6 +58,15 @@ export default function TaskAcceptScreen() {
     await initializeTaskProgress(task.id, task.title, task.estimatedDuration);
     await startTask(task.id);
     
+    if (currentUser) {
+      await submitMatchAcceptance(
+        currentUser.id,
+        task.id,
+        85,
+        88
+      );
+    }
+    
     setAiMessage('Great! Let\'s get started. Opening your task dashboard...');
     setShowAI(true);
     
@@ -78,6 +89,15 @@ export default function TaskAcceptScreen() {
     await acceptTask(task.id);
     await initializeTaskProgress(task.id, task.title, task.estimatedDuration);
     await scheduleTask(task.id, selectedSlot.startTime);
+    
+    if (currentUser) {
+      await submitMatchAcceptance(
+        currentUser.id,
+        task.id,
+        85,
+        88
+      );
+    }
     
     setShowScheduleModal(false);
     setAiMessage(`Perfect! Task scheduled for ${new Date(selectedSlot.startTime).toLocaleString()}. I'll remind you when it's time!`);
