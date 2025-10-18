@@ -99,7 +99,7 @@ export default function AIChatScreen() {
       <Stack.Screen
         options={{
           title: 'Hustle AI',
-          headerStyle: { backgroundColor: colors.surface.elevated },
+          headerStyle: { backgroundColor: colors.background.secondary },
           headerTintColor: colors.text.primary,
         }}
       />
@@ -157,7 +157,7 @@ export default function AIChatScreen() {
                                 )}
                                 {task.xpValue && (
                                   <View style={styles.xpBadge}>
-                                    <Zap size={12} color={colors.accent.gold} />
+                                    <Zap size={12} color="#FFD700" />
                                     <Text style={styles.xpText}>
                                       {task.xpValue} XP
                                     </Text>
@@ -178,7 +178,7 @@ export default function AIChatScreen() {
 
           {loading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={colors.accent.primary} />
+              <ActivityIndicator size="small" color={colors.accent.cyan} />
             </View>
           )}
         </ScrollView>
@@ -231,11 +231,11 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: colors.accent.primary,
+    backgroundColor: colors.accent.cyan,
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surface.elevated,
+    backgroundColor: colors.background.secondary,
   },
   messageText: {
     fontSize: 15,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   taskPrice: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: colors.accent.gold,
+    color: "#FFD700",
   },
   xpBadge: {
     flexDirection: 'row',
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   xpText: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: colors.accent.gold,
+    color: "#FFD700",
   },
   loadingContainer: {
     alignSelf: 'flex-start',
@@ -308,9 +308,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 12,
-    backgroundColor: colors.surface.elevated,
+    backgroundColor: colors.background.secondary,
     borderTopWidth: 1,
-    borderTopColor: colors.border.default,
+    borderTopColor: colors.border.primary,
     gap: 8,
   },
   input: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.accent.primary,
+    backgroundColor: colors.accent.cyan,
     alignItems: 'center',
     justifyContent: 'center',
   },
