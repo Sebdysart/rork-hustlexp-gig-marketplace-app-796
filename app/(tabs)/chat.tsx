@@ -21,7 +21,7 @@ export default function ChatScreen() {
     if (!currentUser) return [];
 
     const hustleAIMessages = messages.filter(m => m.isHustleAI && m.senderId === 'hustleai');
-    const hustleAIConversations = currentUser.activeMode !== 'business' && hustleAIMessages.length > 0 ? [{
+    const hustleAIConversations = currentUser.activeMode !== 'business' ? [{
       task: {
         id: 'hustleai',
         title: 'Task Offers',
@@ -106,7 +106,11 @@ export default function ChatScreen() {
       <TouchableOpacity
         onPress={() => {
           triggerHaptic('light');
-          router.push(`/chat/${item.task.id}`);
+          if (item.task.id === 'hustleai') {
+            router.push('/chat/hustleai');
+          } else {
+            router.push(`/chat/${item.task.id}`);
+          }
         }}
         activeOpacity={0.9}
         testID={`chat-${item.task.id}`}
