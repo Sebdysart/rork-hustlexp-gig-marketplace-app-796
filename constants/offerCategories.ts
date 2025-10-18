@@ -300,6 +300,22 @@ export const OFFER_CATEGORIES: OfferCategory[] = [
       pro: 'Deep clean or post-construction. All rooms + windows + appliances.',
     },
   },
+  {
+    id: 'niche',
+    name: 'Niche & Random',
+    icon: '✨',
+    subcategories: ['Unique Tasks', 'Special Requests', 'Creative Gigs', 'Odd Jobs', 'One-Time Tasks'],
+    exampleTitles: [
+      'Need Help With Unusual Task',
+      'Creative or Unique Request',
+      'One-Time Special Project',
+    ],
+    exampleScopes: {
+      starter: 'Simple unusual task (up to 1 hour). Basic requirements.',
+      standard: 'Moderate complexity unique task (up to 3 hours). Some planning needed.',
+      pro: 'Complex or creative project. Full consultation + custom solution.',
+    },
+  },
 ];
 
 export const DEFAULT_TIER_TEMPLATES = {
