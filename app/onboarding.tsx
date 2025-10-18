@@ -1168,40 +1168,42 @@ export default function OnboardingScreen() {
               </View>
             </View>
 
-            <ScrollView style={styles.categoriesScroll} showsVerticalScrollIndicator={false}>
-              <View style={styles.categoriesGrid}>
-                {OFFER_CATEGORIES.slice(0, 8).map((category) => {
-                  const isSelected = preferredCategories.includes(category.id);
-                  return (
-                    <TouchableOpacity
-                      key={category.id}
-                      style={styles.categoryCard}
-                      onPress={() => {
-                        triggerHaptic('selection');
-                        if (isSelected) {
-                          setPreferredCategories(preferredCategories.filter(c => c !== category.id));
-                        } else {
-                          setPreferredCategories([...preferredCategories, category.id]);
-                        }
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <BlurView intensity={isSelected ? 40 : 20} tint="dark" style={styles.categoryBlur}>
-                        <View style={[styles.categoryContent, isSelected && styles.categorySelected]}>
-                          <Text style={styles.categoryIcon}>{category.icon}</Text>
-                          <Text style={styles.categoryName}>{category.name}</Text>
-                          {isSelected && (
-                            <View style={styles.categoryCheck}>
-                              <Sparkles size={12} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
-                            </View>
-                          )}
-                        </View>
-                      </BlurView>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </ScrollView>
+            <View style={styles.form}>
+              <ScrollView style={styles.categoriesScroll} showsVerticalScrollIndicator={false}>
+                <View style={styles.categoriesGrid}>
+                  {OFFER_CATEGORIES.map((category) => {
+                    const isSelected = preferredCategories.includes(category.id);
+                    return (
+                      <TouchableOpacity
+                        key={category.id}
+                        style={styles.categoryCard}
+                        onPress={() => {
+                          triggerHaptic('selection');
+                          if (isSelected) {
+                            setPreferredCategories(preferredCategories.filter(c => c !== category.id));
+                          } else {
+                            setPreferredCategories([...preferredCategories, category.id]);
+                          }
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <BlurView intensity={isSelected ? 40 : 20} tint="dark" style={styles.categoryBlur}>
+                          <View style={[styles.categoryContent, isSelected && styles.categorySelected]}>
+                            <Text style={styles.categoryIcon}>{category.icon}</Text>
+                            <Text style={styles.categoryName}>{category.name}</Text>
+                            {isSelected && (
+                              <View style={styles.categoryCheck}>
+                                <Sparkles size={12} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
+                              </View>
+                            )}
+                          </View>
+                        </BlurView>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
 
             <Animated.View
               style={{
@@ -2412,8 +2414,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.3 }],
   },
   categoriesScroll: {
-    flex: 1,
-    marginBottom: spacing.lg,
+    maxHeight: SCREEN_HEIGHT * 0.5,
   },
   categoriesGrid: {
     flexDirection: 'row',
