@@ -1585,7 +1585,11 @@ export default function OnboardingScreen() {
               </View>
             </View>
 
-            <ScrollView style={styles.tradesScroll} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              style={styles.tradesScroll} 
+              contentContainerStyle={styles.tradesScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.tradesGrid}>
                 {TRADES.map((trade) => {
                   const isSelected = selectedTrades.includes(trade.id);
@@ -2073,7 +2077,9 @@ const styles = StyleSheet.create({
   },
   tradesScroll: {
     flex: 1,
-    marginBottom: spacing.lg,
+  },
+  tradesScrollContent: {
+    paddingBottom: spacing.lg,
   },
   tradesGrid: {
     flexDirection: 'row',
