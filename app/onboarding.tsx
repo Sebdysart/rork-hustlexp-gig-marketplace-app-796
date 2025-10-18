@@ -190,15 +190,17 @@ export default function OnboardingScreen() {
 
   const calculateRecommendedMode = (): 'everyday' | 'tradesmen' | 'business' => {
     const avgPrice = (priceRange[0] + priceRange[1]) / 2;
-    const hasWeekendAvailability = availability.includes('weekend');
-    const hasManyCategories = preferredCategories.length >= 3;
+    const hasFlexibility = availability.includes('flexible');
+    const hasWeekendOnly = availability.includes('weekend') && availability.length === 1;
+    const isHighSkill = avgPrice > 300;
+    const isLowBudget = avgPrice < 75;
     
-    if (avgPrice < 100 && maxDistance <= 5) {
-      return 'everyday';
-    } else if (avgPrice > 200 || hasManyCategories) {
+    if (isHighSkill && preferredCategories.length >= 2) {
       return 'tradesmen';
-    } else if (hasWeekendAvailability && avgPrice > 150) {
+    } else if (hasWeekendOnly || (avgPrice >= 150 && preferredCategories.length <= 2)) {
       return 'business';
+    } else if (isLowBudget || maxDistance <= 5 || hasFlexibility) {
+      return 'everyday';
     }
     
     return 'everyday';
