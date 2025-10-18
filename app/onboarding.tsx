@@ -8,6 +8,7 @@ import { Sparkles, Briefcase, Hammer, Zap, Star, Crown, Users, DollarSign, Trend
 import { useApp } from '@/contexts/AppContext';
 import { UserRole } from '@/types';
 import { TradeCategory, TRADES } from '@/constants/tradesmen';
+import { OFFER_CATEGORIES } from '@/constants/offerCategories';
 import Colors from '@/constants/colors';
 import Confetti from '@/components/Confetti';
 import { triggerHaptic } from '@/utils/haptics';
@@ -22,6 +23,10 @@ export default function OnboardingScreen() {
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [tutorialIndex, setTutorialIndex] = useState<number>(0);
   const [step, setStep] = useState<number>(1);
+  const [preferredCategories, setPreferredCategories] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([20, 500]);
+  const [maxDistance, setMaxDistance] = useState<number>(10);
+  const [availability, setAvailability] = useState<string[]>([]);
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -30,6 +35,7 @@ export default function OnboardingScreen() {
   const questSneakAnim = useRef(new Animated.Value(0)).current;
 
   const [selectedMode, setSelectedMode] = useState<'everyday' | 'tradesmen' | 'business' | null>(null);
+  const [recommendedMode, setRecommendedMode] = useState<'everyday' | 'tradesmen' | 'business' | null>(null);
   const [selectedTrades, setSelectedTrades] = useState<TradeCategory[]>([]);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
@@ -139,7 +145,7 @@ export default function OnboardingScreen() {
   }, [glowAnim, logoRotateAnim, particleAnims, ctaPulseAnim]);
 
   useEffect(() => {
-    const progress = step / 3;
+    const progress = step / 6;
     Animated.spring(progressBarAnim, {
       toValue: progress,
       tension: 50,
@@ -148,77 +154,77 @@ export default function OnboardingScreen() {
     }).start();
   }, [step, progressBarAnim]);
 
-  const handleContinue = () => {
-    if (step === 1 && name.trim()) {
-      triggerHaptic('medium');
+  const transitionToNextStep = () => {
+    triggerHaptic('medium');
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: -SCREEN_WIDTH,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setStep(step + 1);
+      slideAnim.setValue(SCREEN_WIDTH);
       
       Animated.parallel([
         Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
           toValue: 0,
-          duration: 300,
+          tension: 50,
+          friction: 8,
           useNativeDriver: true,
         }),
-        Animated.timing(slideAnim, {
-          toValue: -SCREEN_WIDTH,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setStep(2);
-        slideAnim.setValue(SCREEN_WIDTH);
-        
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.spring(slideAnim, {
-            toValue: 0,
-            tension: 50,
-            friction: 8,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      });
-    } else if (step === 2 && selectedMode) {
+      ]).start();
+    });
+  };
+
+  const calculateRecommendedMode = (): 'everyday' | 'tradesmen' | 'business' => {
+    const avgPrice = (priceRange[0] + priceRange[1]) / 2;
+    const hasWeekendAvailability = availability.includes('weekend');
+    const hasManyCategories = preferredCategories.length >= 3;
+    
+    if (avgPrice < 100 && maxDistance <= 5) {
+      return 'everyday';
+    } else if (avgPrice > 200 || hasManyCategories) {
+      return 'tradesmen';
+    } else if (hasWeekendAvailability && avgPrice > 150) {
+      return 'business';
+    }
+    
+    return 'everyday';
+  };
+
+  const handleContinue = () => {
+    if (step === 1 && name.trim()) {
+      transitionToNextStep();
+    } else if (step === 2 && email.trim() && password.trim()) {
+      transitionToNextStep();
+    } else if (step === 3) {
+      transitionToNextStep();
+    } else if (step === 4 && preferredCategories.length > 0) {
+      transitionToNextStep();
+    } else if (step === 5 && availability.length > 0) {
+      const recommended = calculateRecommendedMode();
+      setRecommendedMode(recommended);
+      transitionToNextStep();
+    } else if (step === 6 && selectedMode) {
       if (selectedMode === 'tradesmen') {
-        triggerHaptic('medium');
-        
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(slideAnim, {
-            toValue: -SCREEN_WIDTH,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          setStep(3);
-          slideAnim.setValue(SCREEN_WIDTH);
-          
-          Animated.parallel([
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.spring(slideAnim, {
-              toValue: 0,
-              tension: 50,
-              friction: 8,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        });
+        transitionToNextStep();
       } else {
-        triggerHaptic('medium');
+        triggerHaptic('success');
         setShowTutorial(true);
       }
-    } else if (step === 3 && selectedTrades.length > 0) {
+    } else if (step === 7 && selectedTrades.length > 0) {
       triggerHaptic('success');
       setShowConfetti(true);
       setShowTutorial(true);
@@ -833,7 +839,7 @@ export default function OnboardingScreen() {
                   />
                 </Animated.View>
               </View>
-              <Text style={styles.progressText}>Step {step} of 3</Text>
+              <Text style={styles.progressText}>Step {step} of 6</Text>
             </View>
 
             <Animated.View
@@ -870,6 +876,489 @@ export default function OnboardingScreen() {
         ) : step === 2 ? (
           <>
             <View style={styles.header}>
+              <Text style={styles.pathTitle}>Secure Your Account</Text>
+              <Text style={styles.pathSubtitle}>Set up your credentials</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressBarAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </View>
+                <Text style={styles.progressText}>Step {step} of 6</Text>
+              </View>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email Address</Text>
+                <Animated.View
+                  style={{
+                    transform: [{
+                      scale: inputFocusAnims.email.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.02],
+                      }),
+                    }],
+                  }}
+                >
+                <BlurView intensity={30} tint="dark" style={styles.inputBlur}>
+                  <View style={styles.inputWrapper}>
+                    <View style={styles.inputIconBg}>
+                      <Lock size={18} color={premiumColors.neonCyan} strokeWidth={2.5} />
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="your.email@example.com"
+                      placeholderTextColor={premiumColors.glassWhiteStrong}
+                      value={email}
+                      onChangeText={setEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      returnKeyType="next"
+                      onFocus={() => {
+                        Animated.spring(inputFocusAnims.email, {
+                          toValue: 1,
+                          tension: 100,
+                          friction: 7,
+                          useNativeDriver: true,
+                        }).start();
+                      }}
+                      onBlur={() => {
+                        Animated.spring(inputFocusAnims.email, {
+                          toValue: 0,
+                          tension: 100,
+                          friction: 7,
+                          useNativeDriver: true,
+                        }).start();
+                      }}
+                    />
+                  </View>
+                </BlurView>
+                </Animated.View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Create Password</Text>
+                <Animated.View
+                  style={{
+                    transform: [{
+                      scale: inputFocusAnims.password.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.02],
+                      }),
+                    }],
+                  }}
+                >
+                <BlurView intensity={30} tint="dark" style={styles.inputBlur}>
+                  <View style={styles.inputWrapper}>
+                    <View style={styles.inputIconBg}>
+                      <Shield size={18} color={premiumColors.neonCyan} strokeWidth={2.5} />
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Make it epic!"
+                      placeholderTextColor={premiumColors.glassWhiteStrong}
+                      value={password}
+                      onChangeText={handlePasswordChange}
+                      secureTextEntry
+                      returnKeyType="go"
+                      onSubmitEditing={handleContinue}
+                      onFocus={() => {
+                        Animated.spring(inputFocusAnims.password, {
+                          toValue: 1,
+                          tension: 100,
+                          friction: 7,
+                          useNativeDriver: true,
+                        }).start();
+                      }}
+                      onBlur={() => {
+                        Animated.spring(inputFocusAnims.password, {
+                          toValue: 0,
+                          tension: 100,
+                          friction: 7,
+                          useNativeDriver: true,
+                        }).start();
+                      }}
+                    />
+                  </View>
+                </BlurView>
+                {password.length > 0 && (
+                  <View style={styles.strengthContainer}>
+                    <View style={styles.strengthBar}>
+                      <Animated.View
+                        style={[
+                          styles.strengthBarFill,
+                          {
+                            width: strengthBarAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0%', '100%'],
+                            }),
+                            backgroundColor: getStrengthColor(),
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.strengthText, { color: getStrengthColor() }]}>
+                      {getStrengthText()}
+                    </Text>
+                  </View>
+                )}
+                </Animated.View>
+              </View>
+
+              <View style={styles.securityBadge}>
+                <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2.5} />
+                <Text style={styles.securityText}>Your info is secure with 256-bit encryption</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.aiOptInContainer}
+                onPress={() => setAiNudgesOptIn(!aiNudgesOptIn)}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.checkbox, aiNudgesOptIn && styles.checkboxActive]}>
+                  {aiNudgesOptIn && <Sparkles size={14} color={premiumColors.deepBlack} fill={premiumColors.deepBlack} />}
+                </View>
+                <Text style={styles.aiOptInText}>Enable AI nudges (adjust in Wellbeing Settings later)</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Animated.View
+              style={{
+                transform: [{ scale: email.trim() && password.trim() ? ctaPulseAnim : 1 }],
+              }}
+            >
+            <TouchableOpacity
+              style={[styles.button, (!email.trim() || !password.trim()) && styles.buttonDisabled]}
+              onPress={handleContinue}
+              disabled={!email.trim() || !password.trim()}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={email.trim() && password.trim() ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Zap size={24} color={email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={email.trim() && password.trim() ? premiumColors.deepBlack : 'transparent'} />
+                <Text style={[styles.buttonText, (!email.trim() || !password.trim()) && styles.buttonTextDisabled]}>Continue 🔒</Text>
+                <Sparkles size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} />
+              </LinearGradient>
+            </TouchableOpacity>
+            </Animated.View>
+          </>
+        ) : step === 3 ? (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.pathTitle}>Set Your Location</Text>
+              <Text style={styles.pathSubtitle}>Help us find tasks nearby</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressBarAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </View>
+                <Text style={styles.progressText}>Step {step} of 6</Text>
+              </View>
+            </View>
+
+            <View style={styles.form}>
+              <BlurView intensity={40} tint="dark" style={styles.locationCard}>
+                <Text style={styles.locationIcon}>📍</Text>
+                <Text style={styles.locationTitle}>Max Distance</Text>
+                <Text style={styles.locationValue}>{maxDistance} miles</Text>
+                <View style={styles.sliderContainer}>
+                  <Text style={styles.sliderLabel}>1 mi</Text>
+                  <View style={styles.sliderTrack}>
+                    <Animated.View style={[styles.sliderFill, { width: `${(maxDistance / 25) * 100}%` }]} />
+                    <View style={styles.sliderThumbWrapper}>
+                      {[1, 5, 10, 15, 25].map((val) => (
+                        <TouchableOpacity
+                          key={val}
+                          onPress={() => {
+                            setMaxDistance(val);
+                            triggerHaptic('selection');
+                          }}
+                          style={[styles.sliderThumb, maxDistance === val && styles.sliderThumbActive]}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <Text style={styles.sliderLabel}>25 mi</Text>
+                </View>
+              </BlurView>
+            </View>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleContinue}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Zap size={24} color={premiumColors.deepBlack} strokeWidth={3} fill={premiumColors.deepBlack} />
+                <Text style={styles.buttonText}>Continue 📍</Text>
+                <Sparkles size={22} color={premiumColors.deepBlack} strokeWidth={3} />
+              </LinearGradient>
+            </TouchableOpacity>
+          </>
+        ) : step === 4 ? (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.pathTitle}>Task Categories</Text>
+              <Text style={styles.pathSubtitle}>What type of work interests you?</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressBarAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </View>
+                <Text style={styles.progressText}>Step {step} of 6</Text>
+              </View>
+            </View>
+
+            <ScrollView style={styles.categoriesScroll} showsVerticalScrollIndicator={false}>
+              <View style={styles.categoriesGrid}>
+                {OFFER_CATEGORIES.slice(0, 8).map((category) => {
+                  const isSelected = preferredCategories.includes(category.id);
+                  return (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={styles.categoryCard}
+                      onPress={() => {
+                        triggerHaptic('selection');
+                        if (isSelected) {
+                          setPreferredCategories(preferredCategories.filter(c => c !== category.id));
+                        } else {
+                          setPreferredCategories([...preferredCategories, category.id]);
+                        }
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <BlurView intensity={isSelected ? 40 : 20} tint="dark" style={styles.categoryBlur}>
+                        <View style={[styles.categoryContent, isSelected && styles.categorySelected]}>
+                          <Text style={styles.categoryIcon}>{category.icon}</Text>
+                          <Text style={styles.categoryName}>{category.name}</Text>
+                          {isSelected && (
+                            <View style={styles.categoryCheck}>
+                              <Sparkles size={12} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
+                            </View>
+                          )}
+                        </View>
+                      </BlurView>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+
+            <Animated.View
+              style={{
+                transform: [{ scale: preferredCategories.length > 0 ? ctaPulseAnim : 1 }],
+              }}
+            >
+            <TouchableOpacity
+              style={[styles.button, preferredCategories.length === 0 && styles.buttonDisabled]}
+              onPress={handleContinue}
+              disabled={preferredCategories.length === 0}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={preferredCategories.length > 0 ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Sparkles size={22} color={preferredCategories.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={preferredCategories.length > 0 ? premiumColors.deepBlack : 'transparent'} />
+                <Text style={[styles.buttonText, preferredCategories.length === 0 && styles.buttonTextDisabled]}>Continue 🎯</Text>
+                <Zap size={22} color={preferredCategories.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={preferredCategories.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
+              </LinearGradient>
+            </TouchableOpacity>
+            </Animated.View>
+          </>
+        ) : step === 5 ? (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.pathTitle}>Price & Availability</Text>
+              <Text style={styles.pathSubtitle}>When can you hustle?</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressBarAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </View>
+                <Text style={styles.progressText}>Step {step} of 6</Text>
+              </View>
+            </View>
+
+            <View style={styles.form}>
+              <BlurView intensity={40} tint="dark" style={styles.priceCard}>
+                <Text style={styles.priceTitle}>💰 Price Range</Text>
+                <Text style={styles.priceValue}>${priceRange[0]} - ${priceRange[1]}</Text>
+                <View style={styles.priceSliders}>
+                  <View style={styles.priceSliderRow}>
+                    <Text style={styles.priceLabel}>Min: ${priceRange[0]}</Text>
+                    <View style={styles.priceButtons}>
+                      {[20, 50, 100, 200].map((val) => (
+                        <TouchableOpacity
+                          key={val}
+                          onPress={() => {
+                            setPriceRange([val, Math.max(val + 50, priceRange[1])]);
+                            triggerHaptic('selection');
+                          }}
+                          style={[styles.priceButton, priceRange[0] === val && styles.priceButtonActive]}
+                        >
+                          <Text style={[styles.priceButtonText, priceRange[0] === val && styles.priceButtonTextActive]}>${val}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                  <View style={styles.priceSliderRow}>
+                    <Text style={styles.priceLabel}>Max: ${priceRange[1]}</Text>
+                    <View style={styles.priceButtons}>
+                      {[100, 250, 500, 1000].map((val) => (
+                        <TouchableOpacity
+                          key={val}
+                          onPress={() => {
+                            setPriceRange([Math.min(priceRange[0], val - 50), val]);
+                            triggerHaptic('selection');
+                          }}
+                          style={[styles.priceButton, priceRange[1] === val && styles.priceButtonActive]}
+                        >
+                          <Text style={[styles.priceButtonText, priceRange[1] === val && styles.priceButtonTextActive]}>${val}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              </BlurView>
+
+              <BlurView intensity={40} tint="dark" style={styles.availabilityCard}>
+                <Text style={styles.availabilityTitle}>⏰ When Are You Free?</Text>
+                <View style={styles.availabilityGrid}>
+                  {['weekday_morning', 'weekday_afternoon', 'weekday_evening', 'weekend', 'flexible'].map((time) => {
+                    const isSelected = availability.includes(time);
+                    const labels: Record<string, string> = {
+                      weekday_morning: '🌅 Weekday AM',
+                      weekday_afternoon: '☀️ Weekday PM',
+                      weekday_evening: '🌙 Weekday Eve',
+                      weekend: '🎉 Weekend',
+                      flexible: '⚡ Flexible',
+                    };
+                    return (
+                      <TouchableOpacity
+                        key={time}
+                        onPress={() => {
+                          triggerHaptic('selection');
+                          if (isSelected) {
+                            setAvailability(availability.filter(a => a !== time));
+                          } else {
+                            setAvailability([...availability, time]);
+                          }
+                        }}
+                        style={[styles.availabilityChip, isSelected && styles.availabilityChipActive]}
+                      >
+                        <Text style={[styles.availabilityChipText, isSelected && styles.availabilityChipTextActive]}>
+                          {labels[time]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </BlurView>
+            </View>
+
+            <Animated.View
+              style={{
+                transform: [{ scale: availability.length > 0 ? ctaPulseAnim : 1 }],
+              }}
+            >
+            <TouchableOpacity
+              style={[styles.button, availability.length === 0 && styles.buttonDisabled]}
+              onPress={handleContinue}
+              disabled={availability.length === 0}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={availability.length > 0 ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Sparkles size={22} color={availability.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={availability.length > 0 ? premiumColors.deepBlack : 'transparent'} />
+                <Text style={[styles.buttonText, availability.length === 0 && styles.buttonTextDisabled]}>AI Analyze Me 🤖</Text>
+                <Zap size={22} color={availability.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={availability.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
+              </LinearGradient>
+            </TouchableOpacity>
+            </Animated.View>
+          </>
+        ) : step === 6 ? (
+          <>
+            <View style={styles.header}>
               <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
                 <LinearGradient
                   colors={[premiumColors.neonMagenta, premiumColors.neonViolet, premiumColors.neonCyan]}
@@ -885,8 +1374,8 @@ export default function OnboardingScreen() {
                   </View>
                 </LinearGradient>
               </Animated.View>
-              <Text style={styles.pathTitle}>Choose Your Path</Text>
-              <Text style={styles.pathSubtitle}>How will you level up your hustle?</Text>
+              <Text style={styles.pathTitle}>AI Recommends Your Path</Text>
+              <Text style={styles.pathSubtitle}>Based on your preferences, but you choose!</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -908,7 +1397,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 3</Text>
+                <Text style={styles.progressText}>Step {step} of 6</Text>
               </View>
             </View>
 
@@ -943,6 +1432,7 @@ export default function OnboardingScreen() {
                 },
               ].map((option) => {
                 const isSelected = selectedMode === option.mode;
+                const isRecommended = recommendedMode === option.mode;
                 const IconComponent = option.icon;
                 const cardScale = roleCardScales[option.mode];
                 const cardGlow = roleCardGlows[option.mode];
@@ -965,9 +1455,9 @@ export default function OnboardingScreen() {
                       accessibilityRole="button"
                       accessibilityState={{ selected: isSelected }}
                     >
-                      <BlurView intensity={isSelected ? 50 : 25} tint="dark" style={styles.roleCardBlur}>
+                      <BlurView intensity={isSelected ? 50 : isRecommended ? 40 : 25} tint="dark" style={styles.roleCardBlur}>
                         <LinearGradient
-                          colors={isSelected ? [option.gradient[0] + '60', option.gradient[1] + '40', 'transparent'] as const : [premiumColors.glassDark + '40', 'transparent'] as const}
+                          colors={isSelected ? [option.gradient[0] + '60', option.gradient[1] + '40', 'transparent'] as const : isRecommended ? [option.gradient[0] + '40', option.gradient[1] + '20', 'transparent'] as const : [premiumColors.glassDark + '40', 'transparent'] as const}
                           style={styles.roleCardGradient}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
@@ -976,6 +1466,7 @@ export default function OnboardingScreen() {
                             style={[
                               styles.roleCard, 
                               isSelected && styles.roleCardSelected,
+                              isRecommended && styles.roleCardRecommended,
                               {
                                 shadowOpacity: cardGlow.interpolate({
                                   inputRange: [0, 1],
@@ -988,6 +1479,12 @@ export default function OnboardingScreen() {
                               },
                             ]}
                           >
+                            {isRecommended && (
+                              <View style={styles.aiRecommendBadge}>
+                                <Sparkles size={16} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} strokeWidth={2.5} />
+                                <Text style={styles.aiRecommendText}>AI Pick</Text>
+                              </View>
+                            )}
                             <View style={[styles.roleIconContainer, isSelected && { backgroundColor: option.accentColor + '20' }]}>
                               <IconComponent size={32} color={isSelected ? option.accentColor : premiumColors.glassWhiteStrong} strokeWidth={2.5} />
                             </View>
@@ -1044,7 +1541,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
             </Animated.View>
           </>
-        ) : (
+        ) : step === 7 ? (
           <>
             <View style={styles.header}>
               <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
@@ -1082,7 +1579,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 3 - Final Step!</Text>
+                <Text style={styles.progressText}>Step 7 of 7 - Final Step!</Text>
               </View>
             </View>
 
@@ -1148,7 +1645,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
             </Animated.View>
           </>
-        )}
+        ) : null}
           </Animated.View>
         </View>
       </KeyboardAvoidingView>
@@ -1832,5 +2329,254 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
     lineHeight: 16,
+  },
+  locationCard: {
+    padding: spacing.xl,
+    borderRadius: borderRadius.xxl,
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan + '40',
+    alignItems: 'center',
+  },
+  locationIcon: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  locationTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: spacing.xs,
+  },
+  locationValue: {
+    fontSize: 36,
+    fontWeight: '900' as const,
+    color: premiumColors.neonCyan,
+    marginBottom: spacing.lg,
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    gap: spacing.md,
+  },
+  sliderLabel: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  sliderTrack: {
+    flex: 1,
+    height: 8,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: borderRadius.full,
+    position: 'relative',
+  },
+  sliderFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    height: '100%',
+    backgroundColor: premiumColors.neonCyan,
+    borderRadius: borderRadius.full,
+  },
+  sliderThumbWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 2,
+  },
+  sliderThumb: {
+    width: 16,
+    height: 16,
+    borderRadius: borderRadius.full,
+    backgroundColor: premiumColors.glassWhiteStrong,
+    borderWidth: 2,
+    borderColor: premiumColors.glassDark,
+  },
+  sliderThumbActive: {
+    backgroundColor: premiumColors.neonCyan,
+    borderColor: premiumColors.neonCyan,
+    transform: [{ scale: 1.3 }],
+  },
+  categoriesScroll: {
+    flex: 1,
+    marginBottom: spacing.lg,
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'center',
+  },
+  categoryCard: {
+    width: (SCREEN_WIDTH - spacing.xxxl * 2 - spacing.md) / 2,
+    aspectRatio: 1.3,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  categoryBlur: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  categoryContent: {
+    flex: 1,
+    padding: spacing.lg,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  categorySelected: {
+    borderColor: premiumColors.neonCyan,
+    borderWidth: 3,
+    backgroundColor: premiumColors.neonCyan + '15',
+  },
+  categoryIcon: {
+    fontSize: 42,
+    marginBottom: spacing.sm,
+  },
+  categoryName: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  categoryCheck: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+  },
+  priceCard: {
+    padding: spacing.xl,
+    borderRadius: borderRadius.xxl,
+    borderWidth: 2,
+    borderColor: premiumColors.neonAmber + '40',
+    marginBottom: spacing.md,
+  },
+  priceTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: spacing.xs,
+    textAlign: 'center',
+  },
+  priceValue: {
+    fontSize: 32,
+    fontWeight: '900' as const,
+    color: premiumColors.neonAmber,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  priceSliders: {
+    gap: spacing.md,
+  },
+  priceSliderRow: {
+    gap: spacing.sm,
+  },
+  priceLabel: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginBottom: spacing.xs,
+  },
+  priceButtons: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  priceButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: premiumColors.glassDark,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+  },
+  priceButtonActive: {
+    backgroundColor: premiumColors.neonAmber + '20',
+    borderColor: premiumColors.neonAmber,
+  },
+  priceButtonText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  priceButtonTextActive: {
+    color: premiumColors.neonAmber,
+  },
+  availabilityCard: {
+    padding: spacing.xl,
+    borderRadius: borderRadius.xxl,
+    borderWidth: 2,
+    borderColor: premiumColors.neonMagenta + '40',
+  },
+  availabilityTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  availabilityGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'center',
+  },
+  availabilityChip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    backgroundColor: premiumColors.glassDark,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+  },
+  availabilityChipActive: {
+    backgroundColor: premiumColors.neonMagenta + '20',
+    borderColor: premiumColors.neonMagenta,
+  },
+  availabilityChipText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  availabilityChipTextActive: {
+    color: premiumColors.neonMagenta,
+  },
+  roleCardRecommended: {
+    borderColor: premiumColors.neonAmber,
+    borderWidth: 3,
+    backgroundColor: premiumColors.neonAmber + '15',
+  },
+  aiRecommendBadge: {
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: premiumColors.deepBlack,
+    borderRadius: borderRadius.full,
+    borderWidth: 2,
+    borderColor: premiumColors.neonAmber,
+    ...neonGlow.subtle,
+    shadowColor: premiumColors.neonAmber,
+  },
+  aiRecommendText: {
+    fontSize: 11,
+    fontWeight: '800' as const,
+    color: premiumColors.neonAmber,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
   },
 });
