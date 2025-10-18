@@ -225,7 +225,11 @@ export default function SquadDetailScreen() {
               <Text style={styles.projectTitle}>Current Project</Text>
             </View>
             <Text style={styles.projectName}>{squad.currentProject.title}</Text>
-            <Text style={styles.projectLocation}>{squad.currentProject.location.address}</Text>
+            <Text style={styles.projectLocation}>
+              {typeof squad.currentProject.location === 'string' 
+                ? squad.currentProject.location 
+                : squad.currentProject.location?.address || 'Location not specified'}
+            </Text>
             <Text style={styles.projectTime}>
               Started {new Date(squad.currentProject.startedAt).toLocaleString()}
             </Text>
