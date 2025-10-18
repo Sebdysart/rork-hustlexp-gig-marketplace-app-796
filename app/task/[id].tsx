@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Image, 
 import { useState, useRef, useEffect } from 'react';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, DollarSign, Calendar, Clock, User, Star, Zap, CheckCircle, Shield, Award, MessageCircle } from 'lucide-react-native';
+import { MapPin, DollarSign, Calendar, Clock, User, Star, Zap, CheckCircle, Shield, Award, MessageCircle, AlertTriangle, ShieldCheck } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useAILearning } from '@/utils/aiLearningIntegration';
 import Colors from '@/constants/colors';
@@ -10,6 +10,9 @@ import { triggerHaptic } from '@/utils/haptics';
 import Confetti from '@/components/Confetti';
 import GlassCard from '@/components/GlassCard';
 import { premiumColors } from '@/constants/designTokens';
+import { scanTaskSafety, getRiskColor, SafetyScanResult } from '@/utils/aiSafetyScanner';
+import { suggestTaskBundles, TaskBundle } from '@/utils/aiTaskBundling';
+import TaskBundleSuggestions from '@/components/TaskBundleSuggestions';
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,6 +21,9 @@ export default function TaskDetailScreen() {
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
   const [viewStartTime] = useState<number>(Date.now());
+  const [safetyScan, setSafetyScan] = useState<SafetyScanResult | null>(null);
+  const [showSafetyDetails, setShowSafetyDetails] = useState<boolean>(false);
+  const [taskBundles, setTaskBundles] = useState<TaskBundle[]>([]);
   
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -25,6 +31,40 @@ export default function TaskDetailScreen() {
   const task = tasks.find(t => t.id === id);
   const poster = task ? users.find(u => u.id === task.posterId) : null;
   const worker = task?.workerId ? users.find(u => u.id === task.workerId) : null;
+
+  useEffect(() => {
+    if (task && poster) {
+      const performScan = async () => {
+        const posterHistory = poster.posterProfile ? {
+          tasksPosted: poster.posterProfile.tasksPosted,
+          cancelRate: 0.1,
+          avgRating: poster.posterProfile.avgRating,
+          strikes: poster.strikes?.length || 0
+        } : undefined;
+
+        const result = await scanTaskSafety(task, posterHistory);
+        setSafetyScan(result);
+      };
+      performScan();
+    }
+  }, [task, poster]);
+
+  useEffect(() => {
+    if (task && currentUser) {
+      const isWorkerRole = currentUser.role === 'worker' || currentUser.role === 'both';
+      const canAcceptTask = isWorkerRole && task.status === 'open' && task.posterId !== currentUser.id;
+      
+      if (canAcceptTask) {
+        const suggestBundles = async () => {
+          const openTasks = tasks.filter(t => t.status === 'open' && t.id !== task.id);
+          const userLocation = currentUser.location || task.location;
+          const bundles = await suggestTaskBundles(task, openTasks, userLocation, currentUser);
+          setTaskBundles(bundles);
+        };
+        suggestBundles();
+      }
+    }
+  }, [task, tasks, currentUser]);
 
   useEffect(() => {
     Animated.loop(
@@ -176,6 +216,83 @@ export default function TaskDetailScreen() {
 
           <Text style={styles.title}>{task.title}</Text>
           <Text style={styles.description}>{task.description}</Text>
+
+          {safetyScan && canAccept && (
+            <TouchableOpacity
+              onPress={() => {
+                setShowSafetyDetails(!showSafetyDetails);
+                triggerHaptic('light');
+              }}
+            >
+              <GlassCard
+                variant={safetyScan.overallRisk === 'low' ? 'dark' : 'darkStrong'}
+                neonBorder
+                glowColor={safetyScan.overallRisk === 'low' || safetyScan.overallRisk === 'critical' ? 'neonGreen' : 'neonAmber'}
+                style={styles.safetyCard}
+              >
+                <View style={styles.safetyHeader}>
+                  {safetyScan.overallRisk === 'low' ? (
+                    <ShieldCheck size={24} color={getRiskColor(safetyScan.overallRisk)} />
+                  ) : (
+                    <AlertTriangle size={24} color={getRiskColor(safetyScan.overallRisk)} />
+                  )}
+                  <View style={styles.safetyHeaderText}>
+                    <Text style={styles.safetyTitle}>AI Safety Scan</Text>
+                    <Text style={[styles.safetyRiskLabel, { color: getRiskColor(safetyScan.overallRisk) }]}>
+                      {safetyScan.overallRisk.toUpperCase()} RISK
+                    </Text>
+                  </View>
+                </View>
+
+                {showSafetyDetails && (
+                  <View style={styles.safetyDetails}>
+                    {safetyScan.flags.length > 0 && (
+                      <View style={styles.flagsSection}>
+                        <Text style={styles.flagsTitle}>⚠️ Concerns Detected:</Text>
+                        {safetyScan.flags.map((flag, index) => (
+                          <View key={index} style={styles.flagItem}>
+                            <Text style={[styles.flagLevel, { color: getRiskColor(flag.level) }]}>•</Text>
+                            <View style={styles.flagContent}>
+                              <Text style={styles.flagMessage}>{flag.message}</Text>
+                              <Text style={styles.flagRecommendation}>{flag.recommendation}</Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    <View style={styles.recommendationsSection}>
+                      {safetyScan.recommendations.map((rec, index) => (
+                        <Text key={index} style={styles.recommendationText}>{rec}</Text>
+                      ))}
+                    </View>
+
+                    {safetyScan.shouldBlock && (
+                      <View style={styles.blockWarning}>
+                        <Shield size={16} color={Colors.error} />
+                        <Text style={styles.blockWarningText}>
+                          We strongly recommend avoiding this task.
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                <Text style={styles.safetyTapHint}>
+                  {showSafetyDetails ? 'Tap to hide details' : 'Tap to view details'}
+                </Text>
+              </GlassCard>
+            </TouchableOpacity>
+          )}
+
+          {taskBundles.length > 0 && canAccept && (
+            <TaskBundleSuggestions
+              bundles={taskBundles}
+              onSelectBundle={(bundle) => {
+                console.log('Selected bundle:', bundle);
+              }}
+            />
+          )}
 
           <View style={styles.infoGrid}>
             <GlassCard variant="dark" neonBorder glowColor="neonCyan" style={styles.infoCard}>
@@ -617,5 +734,98 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.text,
+  },
+  safetyCard: {
+    padding: 16,
+    marginBottom: 20,
+    overflow: 'visible',
+  },
+  safetyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  safetyHeaderText: {
+    flex: 1,
+  },
+  safetyTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  safetyRiskLabel: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+  },
+  safetyDetails: {
+    marginTop: 16,
+    gap: 12,
+  },
+  flagsSection: {
+    gap: 8,
+  },
+  flagsTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  flagItem: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  flagLevel: {
+    fontSize: 20,
+    fontWeight: '900' as const,
+    lineHeight: 20,
+  },
+  flagContent: {
+    flex: 1,
+    gap: 4,
+  },
+  flagMessage: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  flagRecommendation: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontStyle: 'italic' as const,
+  },
+  recommendationsSection: {
+    backgroundColor: Colors.card + '80',
+    borderRadius: 12,
+    padding: 12,
+    gap: 6,
+  },
+  recommendationText: {
+    fontSize: 13,
+    color: Colors.text,
+    lineHeight: 18,
+  },
+  blockWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.error + '20',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.error + '40',
+  },
+  blockWarningText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.error,
+  },
+  safetyTapHint: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic' as const,
   },
 });
