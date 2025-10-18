@@ -1,11 +1,14 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Modal, TextInput, Alert } from 'react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Zap, TrendingUp, DollarSign, Download, Calendar, Clock, CheckCircle, X } from 'lucide-react-native';
+import { Zap, TrendingUp, DollarSign, Download, Calendar, Clock, CheckCircle, X, TrendingDown, Sparkles } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { predictWeeklyEarnings, predictMonthlyEarnings } from '@/utils/aiPredictiveEarnings';
+import { premiumColors } from '@/constants/designTokens';
+import GlassCard from '@/components/GlassCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_WIDTH = SCREEN_WIDTH - 64;
@@ -58,6 +61,40 @@ export default function WalletScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
   const [showPayoutModal, setShowPayoutModal] = useState<boolean>(false);
   const [payoutAmount, setPayoutAmount] = useState<string>('');
+  const [predictions, setPredictions] = useState<{
+    weekly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable' };
+    monthly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable' };
+  } | null>(null);
+
+  useEffect(() => {
+    if (currentUser && myAcceptedTasks.length > 0) {
+      const getPredictions = async () => {
+        try {
+          const weeklyPred = predictWeeklyEarnings(currentUser, myAcceptedTasks);
+          const monthlyPred = predictMonthlyEarnings(currentUser, myAcceptedTasks);
+          
+          const weeklyTrend: 'up' | 'down' | 'stable' = weeklyPred.projected > walletData.thisWeek * 4 ? 'up' : 'stable';
+          const monthlyTrend: 'up' | 'down' | 'stable' = monthlyPred.projected > walletData.thisMonth * 4 ? 'up' : 'stable';
+          
+          setPredictions({
+            weekly: { 
+              amount: weeklyPred.projected, 
+              confidence: weeklyPred.confidence / 100, 
+              trend: weeklyTrend 
+            },
+            monthly: { 
+              amount: monthlyPred.projected, 
+              confidence: monthlyPred.confidence / 100, 
+              trend: monthlyTrend 
+            },
+          });
+        } catch (error) {
+          console.error('Failed to get predictions:', error);
+        }
+      };
+      getPredictions();
+    }
+  }, [currentUser, myAcceptedTasks]);
 
   const walletData = useMemo(() => {
     if (!currentUser) return null;
@@ -258,6 +295,53 @@ export default function WalletScreen() {
               </View>
             </View>
           </View>
+
+          {predictions && (
+            <GlassCard variant="dark" style={styles.predictionsCard}>
+              <View style={styles.predictionsHeader}>
+                <Sparkles size={20} color={premiumColors.neonCyan} />
+                <Text style={styles.predictionsTitle}>AI Earnings Predictions</Text>
+              </View>
+
+              <View style={styles.predictionRow}>
+                <View style={styles.predictionItem}>
+                  <Text style={styles.predictionLabel}>Next Week</Text>
+                  <Text style={styles.predictionAmount}>${predictions.weekly.amount.toFixed(2)}</Text>
+                  <View style={styles.predictionMeta}>
+                    {predictions.weekly.trend === 'up' ? (
+                      <TrendingUp size={14} color={premiumColors.neonGreen} />
+                    ) : predictions.weekly.trend === 'down' ? (
+                      <TrendingDown size={14} color={premiumColors.neonAmber} />
+                    ) : null}
+                    <Text style={styles.predictionConfidence}>
+                      {(predictions.weekly.confidence * 100).toFixed(0)}% confident
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.predictionDivider} />
+
+                <View style={styles.predictionItem}>
+                  <Text style={styles.predictionLabel}>Next Month</Text>
+                  <Text style={styles.predictionAmount}>${predictions.monthly.amount.toFixed(2)}</Text>
+                  <View style={styles.predictionMeta}>
+                    {predictions.monthly.trend === 'up' ? (
+                      <TrendingUp size={14} color={premiumColors.neonGreen} />
+                    ) : predictions.monthly.trend === 'down' ? (
+                      <TrendingDown size={14} color={premiumColors.neonAmber} />
+                    ) : null}
+                    <Text style={styles.predictionConfidence}>
+                      {(predictions.monthly.confidence * 100).toFixed(0)}% confident
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={styles.predictionDisclaimer}>
+                Predictions based on your task history, completion rate, and market trends
+              </Text>
+            </GlassCard>
+          )}
 
           <View style={styles.commissionInfo}>
             <Text style={styles.commissionText}>
@@ -591,5 +675,60 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  predictionsCard: {
+    padding: 20,
+    marginBottom: 16,
+  },
+  predictionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  predictionsTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  predictionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  predictionItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  predictionLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  predictionAmount: {
+    fontSize: 28,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: 6,
+  },
+  predictionMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  predictionConfidence: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  predictionDivider: {
+    width: 1,
+    backgroundColor: premiumColors.glassWhite,
+    marginHorizontal: 16,
+  },
+  predictionDisclaimer: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    fontStyle: 'italic' as const,
   },
 });

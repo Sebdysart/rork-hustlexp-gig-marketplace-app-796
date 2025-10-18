@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, PanResponder, Modal, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, PanResponder, Modal } from 'react-native';
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, MapPin, Clock, DollarSign, TrendingUp, Filter, Sparkles, Target, CheckCircle, X, ChevronRight, Flame, Star } from 'lucide-react-native';
@@ -9,6 +9,8 @@ import { triggerHaptic } from '@/utils/haptics';
 import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { Task, TaskCategory } from '@/types';
+import { suggestTaskBundles, type TaskBundle } from '@/utils/aiTaskBundling';
+import { Alert } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = 120;
@@ -234,6 +236,7 @@ export default function TasksScreen() {
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const [comboStreak, setComboStreak] = useState<number>(0);
   const [showComboAnimation, setShowComboAnimation] = useState<boolean>(false);
+  const [taskBundles, setTaskBundles] = useState<TaskBundle[]>([]);
 
   const filteredTasks = useMemo(() => {
     if (!currentUser) return [];
@@ -285,6 +288,14 @@ export default function TasksScreen() {
 
     return filtered;
   }, [availableTasks, currentUser, activeFilter, sortBy]);
+
+  useEffect(() => {
+    if (currentTask && currentUser && filteredTasks.length > 1) {
+      suggestTaskBundles(currentTask, filteredTasks, currentUser.location, currentUser)
+        .then(bundles => setTaskBundles(bundles))
+        .catch(err => console.error('Failed to generate bundles:', err));
+    }
+  }, [currentTask, currentUser, filteredTasks]);
 
   const currentTask = filteredTasks[currentTaskIndex];
   const currentPoster = currentTask ? users.find(u => u.id === currentTask.posterId) : undefined;
@@ -507,6 +518,34 @@ export default function TasksScreen() {
               }
             </Text>
           </View>
+
+          {taskBundles.length > 0 && (
+            <View style={styles.bundlesCard}>
+              <View style={styles.bundlesHeader}>
+                <Sparkles size={18} color={premiumColors.neonCyan} />
+                <Text style={styles.bundlesTitle}>Smart Bundling</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {taskBundles.map(bundle => (
+                  <TouchableOpacity
+                    key={bundle.id}
+                    style={styles.bundleChip}
+                    onPress={() => {
+                      triggerHaptic('medium');
+                      Alert.alert(
+                        '🎁 Task Bundle',
+                        `${bundle.reasoning}\n\nTotal: ${bundle.totalPay} + ${bundle.totalXP} XP`,
+                        [{ text: 'Got it' }]
+                      );
+                    }}
+                  >
+                    <Text style={styles.bundleCount}>{bundle.tasks.length} tasks</Text>
+                    <Text style={styles.bundlePay}>${bundle.totalPay}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           <View style={styles.swipeContainer}>
             {currentTask ? (
@@ -1190,5 +1229,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  bundlesCard: {
+    backgroundColor: premiumColors.neonCyan + '15',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '30',
+  },
+  bundlesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  bundlesTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  bundleChip: {
+    backgroundColor: premiumColors.richBlack,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '40',
+  },
+  bundleCount: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 2,
+  },
+  bundlePay: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: premiumColors.neonCyan,
   },
 });

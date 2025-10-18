@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Scale, MessageCircle, FileText, Camera, Send, CheckCircle2, Clock, AlertCircle } from 'lucide-react-native';
+import { Scale, MessageCircle, FileText, Camera, Send, CheckCircle2, Clock, AlertCircle, Sparkles, Lightbulb } from 'lucide-react-native';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -9,6 +9,8 @@ import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
 import { DISPUTE_CATEGORIES, getDisputeStatusColor, getDisputeStatusLabel, type DisputeCategory } from '@/constants/disputes';
+import { analyzeDispute, type DisputeAnalysis } from '@/utils/aiDisputeAssistant';
+import type { Dispute } from '@/constants/disputes';
 
 export default function DisputesScreen() {
   const { currentUser, tasks } = useApp();
@@ -16,12 +18,57 @@ export default function DisputesScreen() {
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+  const [aiSuggestion, setAiSuggestion] = useState<string>('');
+  const [showAISuggestion, setShowAISuggestion] = useState<boolean>(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
 
   if (!currentUser) return null;
 
   const userTasks = tasks.filter(
     t => t.posterId === currentUser.id || t.workerId === currentUser.id
   );
+
+  const handleGetAISuggestion = async () => {
+    if (!selectedCategory || !description.trim()) {
+      Alert.alert('Need Information', 'Please select a category and provide a description first.');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    triggerHaptic('medium');
+
+    try {
+      const mockDispute: Dispute = {
+        id: 'temp',
+        taskId: selectedTaskId,
+        reporterId: currentUser.id,
+        category: selectedCategory,
+        title: '',
+        description,
+        status: 'open',
+        createdAt: new Date().toISOString(),
+        evidence: [],
+      };
+      
+      const analysis = await analyzeDispute(mockDispute);
+      const topSuggestion = analysis.suggestions[0];
+      
+      setAiSuggestion(topSuggestion.reasoning);
+      setShowAISuggestion(true);
+      triggerHaptic('success');
+
+      Alert.alert(
+        '💡 AI Resolution Suggestion',
+        `${topSuggestion.reasoning}\n\nRecommended Action: ${topSuggestion.recommendedAction}\n\nFairness Score: ${topSuggestion.fairnessScore}%\n\nConfidence: ${topSuggestion.confidence}%`,
+        [{ text: 'Got it', style: 'default' }]
+      );
+    } catch (error) {
+      console.error('AI suggestion error:', error);
+      Alert.alert('AI Error', 'Could not generate suggestion. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const handleSubmitDispute = () => {
     if (!selectedCategory || !title.trim() || !description.trim() || !selectedTaskId) {
@@ -116,6 +163,44 @@ export default function DisputesScreen() {
               <Text style={styles.sectionTitle}>File a Dispute</Text>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.aiSuggestionButton}
+            onPress={handleGetAISuggestion}
+            disabled={isGeneratingAI}
+          >
+            <LinearGradient
+              colors={[premiumColors.neonViolet, premiumColors.neonCyan]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.aiSuggestionGradient}
+            >
+              {isGeneratingAI ? (
+                <ActivityIndicator color={Colors.text} />
+              ) : (
+                <Sparkles size={18} color={Colors.text} />
+              )}
+              <Text style={styles.aiSuggestionButtonText}>
+                {isGeneratingAI ? 'AI Analyzing...' : 'Get AI Resolution Suggestion'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {showAISuggestion && aiSuggestion && (
+            <GlassCard variant="darkStrong" neonBorder glowColor="neonCyan" style={styles.aiResultCard}>
+              <View style={styles.aiResultHeader}>
+                <Lightbulb size={18} color={premiumColors.neonCyan} />
+                <Text style={styles.aiResultTitle}>AI Suggestion</Text>
+              </View>
+              <Text style={styles.aiResultText}>{aiSuggestion}</Text>
+              <TouchableOpacity
+                style={styles.dismissButton}
+                onPress={() => setShowAISuggestion(false)}
+              >
+                <Text style={styles.dismissButtonText}>Dismiss</Text>
+              </TouchableOpacity>
+            </GlassCard>
+          )}
 
           <GlassCard variant="dark" style={styles.formCard}>
             <Text style={styles.formLabel}>Select Task</Text>
@@ -672,5 +757,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  aiSuggestionButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  aiSuggestionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+  },
+  aiSuggestionButtonText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  aiResultCard: {
+    padding: 16,
+    marginBottom: 16,
+  },
+  aiResultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  aiResultTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  aiResultText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  dismissButton: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: premiumColors.neonCyan + '20',
+  },
+  dismissButtonText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: premiumColors.neonCyan,
   },
 });
