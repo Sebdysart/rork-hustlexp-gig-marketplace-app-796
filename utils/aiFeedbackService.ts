@@ -120,12 +120,11 @@ export class AIFeedbackService {
   }
 
   async submitMatchFeedback(feedback: MatchFeedback): Promise<FeedbackResponse> {
-    console.log('[AIFeedback] Submitting match feedback:', JSON.stringify(feedback));
-    
-    if (!feedback.action) {
-      console.error('[AIFeedback] ERROR: Missing action field in feedback!');
-      return { success: false, error: 'Missing action field' };
-    }
+    const safeFeedback = {
+      ...feedback,
+      action: feedback.action || 'match_accept',
+    };
+    console.log('[AIFeedback] Submitting match feedback:', JSON.stringify(safeFeedback));
     
     try {
       const response = await fetch(`${API_BASE_URL}/feedback`, {
@@ -133,7 +132,7 @@ export class AIFeedbackService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(feedback),
+        body: JSON.stringify(safeFeedback),
       });
 
       if (!response.ok) {
@@ -147,18 +146,17 @@ export class AIFeedbackService {
       return { success: true, ...data };
     } catch (error) {
       console.error('[AIFeedback] Failed to submit match feedback:', error);
-      this.queueFeedback(feedback);
+      this.queueFeedback(safeFeedback);
       return { success: false, error: String(error) };
     }
   }
 
   async submitCompletionFeedback(feedback: CompletionFeedback): Promise<FeedbackResponse> {
-    console.log('[AIFeedback] Submitting completion feedback:', JSON.stringify(feedback));
-    
-    if (!feedback.action) {
-      console.error('[AIFeedback] ERROR: Missing action field in feedback!');
-      return { success: false, error: 'Missing action field' };
-    }
+    const safeFeedback = {
+      ...feedback,
+      action: feedback.action || 'task_complete',
+    };
+    console.log('[AIFeedback] Submitting completion feedback:', JSON.stringify(safeFeedback));
     
     try {
       const response = await fetch(`${API_BASE_URL}/feedback`, {
@@ -166,7 +164,7 @@ export class AIFeedbackService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(feedback),
+        body: JSON.stringify(safeFeedback),
       });
 
       if (!response.ok) {
@@ -180,18 +178,17 @@ export class AIFeedbackService {
       return { success: true, ...data };
     } catch (error) {
       console.error('[AIFeedback] Failed to submit completion feedback:', error);
-      this.queueFeedback(feedback);
+      this.queueFeedback(safeFeedback);
       return { success: false, error: String(error) };
     }
   }
 
   async submitTradeFeedback(feedback: TradeFeedback): Promise<FeedbackResponse> {
-    console.log('[AIFeedback] Submitting trade feedback:', JSON.stringify(feedback));
-    
-    if (!feedback.action) {
-      console.error('[AIFeedback] ERROR: Missing action field in feedback!');
-      return { success: false, error: 'Missing action field' };
-    }
+    const safeFeedback = {
+      ...feedback,
+      action: feedback.action || 'trade_complete',
+    };
+    console.log('[AIFeedback] Submitting trade feedback:', JSON.stringify(safeFeedback));
     
     try {
       const response = await fetch(`${API_BASE_URL}/feedback`, {
@@ -199,7 +196,7 @@ export class AIFeedbackService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(feedback),
+        body: JSON.stringify(safeFeedback),
       });
 
       if (!response.ok) {
@@ -213,7 +210,7 @@ export class AIFeedbackService {
       return { success: true, ...data };
     } catch (error) {
       console.error('[AIFeedback] Failed to submit trade feedback:', error);
-      this.queueFeedback(feedback);
+      this.queueFeedback(safeFeedback);
       return { success: false, error: String(error) };
     }
   }

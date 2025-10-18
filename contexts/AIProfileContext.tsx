@@ -97,7 +97,7 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
 
     const preferredCategory = Array.isArray(aiProfile.preferredCategories)
       ? aiProfile.preferredCategories.find(
-          c => c.category.toLowerCase() === taskCategory.toLowerCase()
+          c => c?.category?.toLowerCase() === taskCategory.toLowerCase()
         )
       : undefined;
 
@@ -105,11 +105,11 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
       return `You usually accept ${taskCategory} tasks`;
     }
 
-    if (taskPrice >= aiProfile.priceRange.min && taskPrice <= aiProfile.priceRange.max) {
+    if (aiProfile.priceRange && taskPrice >= aiProfile.priceRange.min && taskPrice <= aiProfile.priceRange.max) {
       return `Price matches your typical range (${aiProfile.priceRange.min}-${aiProfile.priceRange.max})`;
     }
 
-    return Array.isArray(aiProfile.aiInsights) && aiProfile.aiInsights.length > 0
+    return (Array.isArray(aiProfile.aiInsights) && aiProfile.aiInsights.length > 0)
       ? aiProfile.aiInsights[0]
       : null;
   }, [aiProfile]);
@@ -119,11 +119,11 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
 
     const { categories, priceMin, priceMax } = aiProfile.recommendedFilters;
 
-    if (Array.isArray(categories) && categories.length > 0 && !categories.includes(taskCategory)) {
+    if (Array.isArray(categories) && (categories?.length || 0) > 0 && !categories.includes(taskCategory)) {
       return false;
     }
 
-    if (taskPrice < priceMin || taskPrice > priceMax) {
+    if (typeof priceMin === 'number' && typeof priceMax === 'number' && (taskPrice < priceMin || taskPrice > priceMax)) {
       return false;
     }
 
@@ -134,10 +134,10 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
     if (!aiProfile || !Array.isArray(aiProfile.preferredCategories)) return 0;
 
     const pref = aiProfile.preferredCategories.find(
-      c => c.category.toLowerCase() === category.toLowerCase()
+      c => c?.category?.toLowerCase() === category.toLowerCase()
     );
 
-    return pref ? pref.frequency : 0;
+    return pref?.frequency || 0;
   }, [aiProfile]);
 
   const isActiveTime = useCallback((): boolean => {
@@ -147,12 +147,12 @@ export const [AIProfileProvider, useAIProfile] = createContextHook(() => {
     const currentHour = now.getHours();
     const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
 
-    const hourPattern = Array.isArray(aiProfile.acceptancePatterns?.timeOfDay)
-      ? aiProfile.acceptancePatterns.timeOfDay.find(p => p.hour === currentHour)
+    const hourPattern = Array.isArray(aiProfile?.acceptancePatterns?.timeOfDay)
+      ? aiProfile.acceptancePatterns.timeOfDay.find(p => p?.hour === currentHour)
       : undefined;
 
-    const dayPattern = Array.isArray(aiProfile.acceptancePatterns?.dayOfWeek)
-      ? aiProfile.acceptancePatterns.dayOfWeek.find(p => p.day === currentDay)
+    const dayPattern = Array.isArray(aiProfile?.acceptancePatterns?.dayOfWeek)
+      ? aiProfile.acceptancePatterns.dayOfWeek.find(p => p?.day === currentDay)
       : undefined;
 
     return (hourPattern?.frequency || 0) > 0 || (dayPattern?.frequency || 0) > 0;
