@@ -5,40 +5,46 @@ const API_BASE_URL = 'https://lunch-garden-dycejr.replit.app/api';
 export interface MatchFeedback {
   userId: string;
   taskId: string;
-  feedbackType: 'match';
-  matchAccepted: boolean;
-  matchScore: number;
-  aiConfidence: number;
-  rejectionReason?: string;
+  action: 'match_accept' | 'match_reject';
+  taskDetails?: {
+    matchAccepted: boolean;
+    matchScore: number;
+    aiConfidence: number;
+    rejectionReason?: string;
+  };
 }
 
 export interface CompletionFeedback {
   userId: string;
   taskId: string;
-  feedbackType: 'completion';
-  rating: number;
-  matchScore: number;
-  actualScore: number;
-  completionTime: number;
-  pricingFair: boolean;
-  predictedDuration?: number;
-  predictedPrice?: number;
-  actualPrice?: number;
+  action: 'task_complete';
+  taskDetails?: {
+    rating: number;
+    matchScore: number;
+    actualScore: number;
+    completionTime: number;
+    pricingFair: boolean;
+    predictedDuration?: number;
+    predictedPrice?: number;
+    actualPrice?: number;
+  };
 }
 
 export interface TradeFeedback {
   userId: string;
   taskId: string;
-  feedbackType: 'trade_completion';
-  completionTime: number;
-  pricingFair: boolean;
-  certificationUsed?: string;
-  squadSize?: number;
-  metadata: {
-    aiEstimatedDuration?: number;
-    actualDuration: number;
-    aiEstimatedPrice?: number;
-    actualPrice: number;
+  action: 'trade_complete';
+  taskDetails?: {
+    completionTime: number;
+    pricingFair: boolean;
+    certificationUsed?: string;
+    squadSize?: number;
+    metadata: {
+      aiEstimatedDuration?: number;
+      actualDuration: number;
+      aiEstimatedPrice?: number;
+      actualPrice: number;
+    };
   };
 }
 

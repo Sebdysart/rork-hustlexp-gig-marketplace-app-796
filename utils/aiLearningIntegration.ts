@@ -14,10 +14,12 @@ export function useAILearning() {
     const feedback: MatchFeedback = {
       userId,
       taskId,
-      feedbackType: 'match',
-      matchAccepted: true,
-      matchScore,
-      aiConfidence,
+      action: 'match_accept',
+      taskDetails: {
+        matchAccepted: true,
+        matchScore,
+        aiConfidence,
+      },
     };
 
     const result = await aiFeedbackService.submitMatchFeedback(feedback);
@@ -45,11 +47,13 @@ export function useAILearning() {
     const feedback: MatchFeedback = {
       userId,
       taskId,
-      feedbackType: 'match',
-      matchAccepted: false,
-      matchScore,
-      aiConfidence,
-      rejectionReason,
+      action: 'match_reject',
+      taskDetails: {
+        matchAccepted: false,
+        matchScore,
+        aiConfidence,
+        rejectionReason,
+      },
     };
 
     const result = await aiFeedbackService.submitMatchFeedback(feedback);
@@ -83,15 +87,17 @@ export function useAILearning() {
     const feedback: CompletionFeedback = {
       userId,
       taskId,
-      feedbackType: 'completion',
-      rating,
-      matchScore,
-      actualScore,
-      completionTime: completionTimeHours,
-      pricingFair,
-      predictedDuration: predictedDurationHours,
-      predictedPrice,
-      actualPrice,
+      action: 'task_complete',
+      taskDetails: {
+        rating,
+        matchScore,
+        actualScore,
+        completionTime: completionTimeHours,
+        pricingFair,
+        predictedDuration: predictedDurationHours,
+        predictedPrice,
+        actualPrice,
+      },
     };
 
     const result = await aiFeedbackService.submitCompletionFeedback(feedback);
@@ -123,16 +129,18 @@ export function useAILearning() {
     const feedback: TradeFeedback = {
       userId,
       taskId,
-      feedbackType: 'trade_completion',
-      completionTime: completionTimeHours,
-      pricingFair,
-      certificationUsed,
-      squadSize,
-      metadata: {
-        aiEstimatedDuration: aiEstimatedDurationHours,
-        actualDuration: completionTimeHours,
-        aiEstimatedPrice,
-        actualPrice: actualPrice || 0,
+      action: 'trade_complete',
+      taskDetails: {
+        completionTime: completionTimeHours,
+        pricingFair,
+        certificationUsed,
+        squadSize,
+        metadata: {
+          aiEstimatedDuration: aiEstimatedDurationHours,
+          actualDuration: completionTimeHours,
+          aiEstimatedPrice,
+          actualPrice: actualPrice || 0,
+        },
       },
     };
 
