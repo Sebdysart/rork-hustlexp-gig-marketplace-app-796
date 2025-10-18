@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } f
 import { useState, useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, Info, Shield, Zap, MessageSquare, Users, DollarSign, ChevronRight } from 'lucide-react-native';
+import { Sparkles, Info, Shield, Zap, MessageSquare, Users, DollarSign, ChevronRight, Activity } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
@@ -276,6 +276,24 @@ export default function AISettingsScreen() {
                 />
               </View>
             </GlassCard>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Developer Tools</Text>
+            
+            <TouchableOpacity
+              style={styles.linkCard}
+              onPress={() => {
+                triggerHaptic('light');
+                router.push('/backend-test');
+              }}
+            >
+              <View style={styles.linkContent}>
+                <Activity size={20} color={premiumColors.neonCyan} />
+                <Text style={styles.linkText}>Backend Connection Test</Text>
+              </View>
+              <ChevronRight size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
