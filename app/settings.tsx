@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Ac
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Settings as SettingsIcon, Zap, Bell, Eye, RotateCcw, Info, ChevronRight, Gift, LogOut, Sparkles, Heart } from 'lucide-react-native';
+import { Settings as SettingsIcon, Zap, Bell, Eye, RotateCcw, Info, ChevronRight, Gift, LogOut, Sparkles, Heart, TestTube } from 'lucide-react-native';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -112,6 +112,26 @@ export default function SettingsScreen() {
               <Sparkles size={20} color={Colors.accent} />
               <Text style={styles.sectionTitle}>AI Features</Text>
             </View>
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => {
+                triggerHaptic('medium');
+                router.push('/backend-test');
+              }}
+              accessible
+              accessibilityLabel="Backend Test"
+              accessibilityHint="Tap to test backend integration"
+            >
+              <View style={styles.settingInfo}>
+                <TestTube size={20} color="#10B981" />
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={styles.settingLabel}>Backend Test</Text>
+                  <Text style={styles.settingDescription}>Test HustleAI backend connection</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.settingRow}
