@@ -530,15 +530,15 @@ export default function OnboardingScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={{
-            paddingTop: insets.top + 20,
-            paddingBottom: Math.max(insets.bottom + 120, 120),
-            paddingHorizontal: spacing.xl,
-          }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <View 
+          style={[
+            styles.scrollView,
+            {
+              paddingTop: insets.top + 20,
+              paddingBottom: insets.bottom + 20,
+              paddingHorizontal: spacing.xl,
+            }
+          ]}
         >
           <Animated.View 
             style={[
@@ -752,7 +752,7 @@ export default function OnboardingScreen() {
                 </Animated.View>
               </View>
               
-              {showQuestSneak && (
+              {showQuestSneak && !keyboardVisible && (
                 <Animated.View
                   style={[
                     styles.questSneakBanner,
@@ -789,10 +789,12 @@ export default function OnboardingScreen() {
                 </Animated.View>
               )}
 
-              <View style={styles.securityBadge} accessible={true} accessibilityLabel="Your information is secure with 256-bit encryption">
-                <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2.5} />
-                <Text style={styles.securityText}>Your info is secure with 256-bit encryption</Text>
-              </View>
+              {!keyboardVisible && (
+                <View style={styles.securityBadge} accessible={true} accessibilityLabel="Your information is secure with 256-bit encryption">
+                  <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2.5} />
+                  <Text style={styles.securityText}>Your info is secure with 256-bit encryption</Text>
+                </View>
+              )}
 
               <TouchableOpacity
                 style={styles.aiOptInContainer}
@@ -1148,7 +1150,7 @@ export default function OnboardingScreen() {
           </>
         )}
           </Animated.View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -1200,9 +1202,11 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    justifyContent: 'space-between',
   },
   contentWrapper: {
-    gap: spacing.md,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   content: {
     flex: 1,
@@ -1211,15 +1215,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
   iconContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
     position: 'relative',
   },
   iconGradientBg: {
-    width: 110,
-    height: 110,
+    width: 80,
+    height: 80,
     borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1229,8 +1232,8 @@ const styles = StyleSheet.create({
   },
   logoRing: {
     position: 'absolute',
-    width: 100,
-    height: 100,
+    width: 70,
+    height: 70,
     borderRadius: borderRadius.full,
     borderWidth: 2,
     borderColor: premiumColors.neonCyan,
@@ -1242,8 +1245,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   iconGlow: {
-    width: 85,
-    height: 85,
+    width: 60,
+    height: 60,
     borderRadius: borderRadius.full,
     backgroundColor: 'rgba(0, 255, 255, 0.08)',
     justifyContent: 'center',
@@ -1258,9 +1261,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     backgroundColor: 'rgba(0, 255, 255, 0.1)',
     borderRadius: borderRadius.full,
     borderWidth: 2,
@@ -1277,10 +1280,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase' as const,
   },
   title: {
-    fontSize: 38,
+    fontSize: 30,
     fontWeight: '900' as const,
     color: '#FFFFFF',
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
     textAlign: 'center',
     letterSpacing: -2,
     textShadowColor: premiumColors.neonCyan,
@@ -1329,20 +1332,19 @@ const styles = StyleSheet.create({
     shadowColor: premiumColors.neonMagenta,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: 'rgba(255, 255, 255, 0.75)',
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 18,
     letterSpacing: 0.5,
   },
   form: {
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   inputGroup: {
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   label: {
     fontSize: 14,
@@ -1366,23 +1368,23 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   inputIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: 'rgba(0, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
     borderWidth: 2,
     borderColor: 'rgba(0, 255, 255, 0.3)',
   },
   input: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.text,
     letterSpacing: 0.3,
@@ -1410,8 +1412,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   roleContainer: {
-    gap: spacing.md,
-    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   roleCardWrapper: {
     borderRadius: borderRadius.xxl,
