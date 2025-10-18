@@ -217,7 +217,36 @@ export class AIFeedbackService {
       }
 
       const data = await response.json();
-      console.log('[AIFeedback] AI profile fetched:', data);
+      console.log('[AIFeedback] AI profile response received:', data);
+      
+      if (data.success && data.aiProfile) {
+        const profile = data.aiProfile;
+        const mapped: AIUserProfile = {
+          userId: data.userId || userId,
+          totalTasks: profile.totalInteractions || 0,
+          preferredCategories: profile.preferredCategories || [],
+          priceRange: profile.preferredPriceRange || { min: 20, max: 200 },
+          acceptancePatterns: {
+            timeOfDay: profile.preferredHours?.map((hour: number) => ({ hour, frequency: 1 })) || [],
+            dayOfWeek: [],
+          },
+          rejectionReasons: [],
+          averageTaskDuration: 60,
+          lastActive: profile.lastUpdated || new Date().toISOString(),
+          aiInsights: profile.behavioralInsights || [],
+          recommendedFilters: profile.recommendedFilters || {
+            categories: [],
+            priceMin: 20,
+            priceMax: 200,
+            urgency: [],
+          },
+        };
+        
+        console.log('[AIFeedback] AI profile mapped successfully');
+        return mapped;
+      }
+      
+      console.log('[AIFeedback] Using legacy format');
       return data;
     } catch (error) {
       console.error('[AIFeedback] Failed to fetch AI profile:', error);
