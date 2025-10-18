@@ -23,6 +23,7 @@ export default function OnboardingScreen() {
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [tutorialIndex, setTutorialIndex] = useState<number>(0);
   const [step, setStep] = useState<number>(1);
+  const [userIntent, setUserIntent] = useState<'worker' | 'poster' | 'both' | null>(null);
   const [preferredCategories, setPreferredCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([20, 500]);
   const [maxDistance, setMaxDistance] = useState<number>(10);
@@ -145,14 +146,15 @@ export default function OnboardingScreen() {
   }, [glowAnim, logoRotateAnim, particleAnims, ctaPulseAnim]);
 
   useEffect(() => {
-    const progress = step / 6;
+    const totalSteps = userIntent === 'poster' ? 4 : 8;
+    const progress = step / totalSteps;
     Animated.spring(progressBarAnim, {
       toValue: progress,
       tension: 50,
       friction: 7,
       useNativeDriver: false,
     }).start();
-  }, [step, progressBarAnim]);
+  }, [step, progressBarAnim, userIntent]);
 
   const transitionToNextStep = () => {
     triggerHaptic('medium');
@@ -211,22 +213,34 @@ export default function OnboardingScreen() {
       transitionToNextStep();
     } else if (step === 2 && email.trim() && password.trim()) {
       transitionToNextStep();
-    } else if (step === 3) {
+    } else if (step === 3 && userIntent) {
+      if (userIntent === 'poster') {
+        setSelectedMode('business');
+        transitionToNextStep();
+      } else {
+        transitionToNextStep();
+      }
+    } else if (step === 4) {
+      if (userIntent === 'poster') {
+        triggerHaptic('success');
+        setShowTutorial(true);
+      } else {
+        transitionToNextStep();
+      }
+    } else if (step === 5 && preferredCategories.length > 0) {
       transitionToNextStep();
-    } else if (step === 4 && preferredCategories.length > 0) {
-      transitionToNextStep();
-    } else if (step === 5 && availability.length > 0) {
+    } else if (step === 6 && availability.length > 0) {
       const recommended = calculateRecommendedMode();
       setRecommendedMode(recommended);
       transitionToNextStep();
-    } else if (step === 6 && selectedMode) {
+    } else if (step === 7 && selectedMode) {
       if (selectedMode === 'tradesmen') {
         transitionToNextStep();
       } else {
         triggerHaptic('success');
         setShowTutorial(true);
       }
-    } else if (step === 7 && selectedTrades.length > 0) {
+    } else if (step === 8 && selectedTrades.length > 0) {
       triggerHaptic('success');
       setShowConfetti(true);
       setShowTutorial(true);
@@ -482,6 +496,10 @@ export default function OnboardingScreen() {
         </View>
       </View>
     );
+  };
+
+  const getTotalSteps = () => {
+    return userIntent === 'poster' ? 4 : 8;
   };
 
   return (
@@ -841,7 +859,7 @@ export default function OnboardingScreen() {
                   />
                 </Animated.View>
               </View>
-              <Text style={styles.progressText}>Step {step} of 6</Text>
+              <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
             </View>
 
             <Animated.View
@@ -901,7 +919,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 6</Text>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
               </View>
             </View>
 
@@ -1067,6 +1085,202 @@ export default function OnboardingScreen() {
         ) : step === 3 ? (
           <>
             <View style={styles.header}>
+              <Text style={styles.pathTitle}>What brings you here?</Text>
+              <Text style={styles.pathSubtitle}>Choose your primary goal</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressBarAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </View>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
+              </View>
+            </View>
+
+            <View style={styles.intentContainer}>
+              {[
+                {
+                  type: 'worker' as const,
+                  icon: Hammer,
+                  title: 'Complete Tasks',
+                  description: 'I want to work and earn money',
+                  gradient: [premiumColors.neonCyan, premiumColors.neonBlue],
+                  accentColor: premiumColors.neonCyan,
+                },
+                {
+                  type: 'poster' as const,
+                  icon: Building2,
+                  title: 'Post Tasks',
+                  description: 'I need workers for my projects',
+                  gradient: [premiumColors.neonMagenta, premiumColors.neonViolet],
+                  accentColor: premiumColors.neonMagenta,
+                },
+                {
+                  type: 'both' as const,
+                  icon: Users,
+                  title: 'Both',
+                  description: 'I want to do both',
+                  gradient: [premiumColors.neonAmber, '#FF6B00'],
+                  accentColor: premiumColors.neonAmber,
+                },
+              ].map((option) => {
+                const isSelected = userIntent === option.type;
+                const IconComponent = option.icon;
+
+                return (
+                  <TouchableOpacity
+                    key={option.type}
+                    style={styles.intentCardTouchable}
+                    onPress={() => {
+                      triggerHaptic('selection');
+                      setUserIntent(option.type);
+                      setShowConfetti(true);
+                      setTimeout(() => setShowConfetti(false), 2000);
+                    }}
+                    activeOpacity={0.9}
+                  >
+                    <BlurView intensity={isSelected ? 50 : 25} tint="dark" style={styles.intentCardBlur}>
+                      <LinearGradient
+                        colors={isSelected ? [option.gradient[0] + '60', option.gradient[1] + '40', 'transparent'] as const : [premiumColors.glassDark + '40', 'transparent'] as const}
+                        style={styles.intentCardGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <View style={[styles.intentCard, isSelected && { borderColor: option.accentColor, borderWidth: 3 }]}>
+                          <View style={[styles.intentIconContainer, isSelected && { backgroundColor: option.accentColor + '20' }]}>
+                            <IconComponent size={32} color={isSelected ? option.accentColor : premiumColors.glassWhiteStrong} strokeWidth={2.5} />
+                          </View>
+                          <Text style={[styles.intentTitle, isSelected && { color: option.accentColor }]}>{option.title}</Text>
+                          <Text style={styles.intentDescription}>{option.description}</Text>
+                          {isSelected && (
+                            <View style={styles.intentSelectedBadge}>
+                              <Sparkles size={18} color={option.accentColor} fill={option.accentColor} strokeWidth={2.5} />
+                            </View>
+                          )}
+                        </View>
+                      </LinearGradient>
+                    </BlurView>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Animated.View
+              style={{
+                transform: [{ scale: userIntent ? ctaPulseAnim : 1 }],
+              }}
+            >
+            <TouchableOpacity
+              style={[styles.button, !userIntent && styles.buttonDisabled]}
+              onPress={handleContinue}
+              disabled={!userIntent}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={userIntent ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Zap size={24} color={userIntent ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={userIntent ? premiumColors.deepBlack : 'transparent'} />
+                <Text style={[styles.buttonText, !userIntent && styles.buttonTextDisabled]}>Continue 🚀</Text>
+                <Sparkles size={22} color={userIntent ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} />
+              </LinearGradient>
+            </TouchableOpacity>
+            </Animated.View>
+          </>
+        ) : step === 4 && userIntent === 'poster' ? (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.pathTitle}>Set Your Location</Text>
+              <Text style={styles.pathSubtitle}>Help workers find your tasks</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressBarAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </View>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
+              </View>
+            </View>
+
+            <View style={styles.form}>
+              <BlurView intensity={40} tint="dark" style={styles.locationCard}>
+                <Text style={styles.locationIcon}>📍</Text>
+                <Text style={styles.locationTitle}>Max Distance</Text>
+                <Text style={styles.locationValue}>{maxDistance} miles</Text>
+                <View style={styles.sliderContainer}>
+                  <Text style={styles.sliderLabel}>1 mi</Text>
+                  <View style={styles.sliderTrack}>
+                    <Animated.View style={[styles.sliderFill, { width: `${(maxDistance / 25) * 100}%` }]} />
+                    <View style={styles.sliderThumbWrapper}>
+                      {[1, 5, 10, 15, 25].map((val) => (
+                        <TouchableOpacity
+                          key={val}
+                          onPress={() => {
+                            setMaxDistance(val);
+                            triggerHaptic('selection');
+                          }}
+                          style={[styles.sliderThumb, maxDistance === val && styles.sliderThumbActive]}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <Text style={styles.sliderLabel}>25 mi</Text>
+                </View>
+              </BlurView>
+            </View>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleContinue}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <Zap size={24} color={premiumColors.deepBlack} strokeWidth={3} fill={premiumColors.deepBlack} />
+                <Text style={styles.buttonText}>Begin Your Journey 💪</Text>
+                <Sparkles size={22} color={premiumColors.deepBlack} strokeWidth={3} />
+              </LinearGradient>
+            </TouchableOpacity>
+          </>
+        ) : step === 4 ? (
+          <>
+            <View style={styles.header}>
               <Text style={styles.pathTitle}>Set Your Location</Text>
               <Text style={styles.pathSubtitle}>Help us find tasks nearby</Text>
               <View style={styles.progressBarContainer}>
@@ -1090,7 +1304,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 6</Text>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
               </View>
             </View>
 
@@ -1138,7 +1352,7 @@ export default function OnboardingScreen() {
               </LinearGradient>
             </TouchableOpacity>
           </>
-        ) : step === 4 ? (
+        ) : step === 5 ? (
           <>
             <View style={styles.header}>
               <Text style={styles.pathTitle}>Task Categories</Text>
@@ -1164,7 +1378,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 6</Text>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
               </View>
             </View>
 
@@ -1229,7 +1443,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
             </Animated.View>
           </>
-        ) : step === 5 ? (
+        ) : step === 6 ? (
           <>
             <View style={styles.header}>
               <Text style={styles.pathTitle}>Price & Availability</Text>
@@ -1255,7 +1469,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 6</Text>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
               </View>
             </View>
 
@@ -1360,7 +1574,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
             </Animated.View>
           </>
-        ) : step === 6 ? (
+        ) : step === 7 ? (
           <>
             <View style={styles.header}>
               <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
@@ -1401,7 +1615,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step {step} of 6</Text>
+                <Text style={styles.progressText}>Step {step} of {getTotalSteps()}</Text>
               </View>
             </View>
 
@@ -1545,7 +1759,7 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
             </Animated.View>
           </>
-        ) : step === 7 ? (
+        ) : step === 8 ? (
           <>
             <View style={styles.header}>
               <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
@@ -1583,7 +1797,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step 7 of 7 - Final Step!</Text>
+                <Text style={styles.progressText}>Step 8 of 8 - Final Step!</Text>
               </View>
             </View>
 
@@ -1915,6 +2129,70 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     textAlign: 'center',
     letterSpacing: 0.5,
+  },
+  intentContainer: {
+    gap: spacing.md,
+  },
+  intentCardTouchable: {
+    borderRadius: borderRadius.xxl,
+    overflow: 'hidden',
+  },
+  intentCardBlur: {
+    borderRadius: borderRadius.xxl,
+    overflow: 'hidden',
+  },
+  intentCardGradient: {
+    borderRadius: borderRadius.xxl,
+  },
+  intentCard: {
+    padding: spacing.xl,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+    borderRadius: borderRadius.xxl,
+    alignItems: 'center',
+    position: 'relative',
+    minHeight: 140,
+    justifyContent: 'center',
+  },
+  intentIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: borderRadius.full,
+    backgroundColor: premiumColors.glassDark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+  },
+  intentTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  intentDescription: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: premiumColors.glassWhiteStrong,
+    textAlign: 'center',
+    lineHeight: 16,
+    opacity: 0.9,
+  },
+  intentSelectedBadge: {
+    position: 'absolute',
+    top: spacing.lg,
+    right: spacing.lg,
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: premiumColors.deepBlack,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan,
   },
   roleContainer: {
     gap: spacing.sm,
