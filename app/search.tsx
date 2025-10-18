@@ -9,11 +9,11 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal, X, DollarSign, Zap } from 'lucide-react-native';
+import { Search, SlidersHorizontal, X, DollarSign, Zap, MapPin, Calendar, Sparkles } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import TaskCard from '@/components/TaskCard';
 import { LinearGradient } from 'expo-linear-gradient';
+import { spacing, typography, borderRadius, premiumColors } from '@/constants/designTokens';
 
 type SearchFilter = {
   minPay?: number;
@@ -96,37 +96,38 @@ export default function SearchScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom']}>
       <Stack.Screen
         options={{
-          title: 'Search',
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: theme.text,
+          headerShown: false,
         }}
       />
 
-      <View style={styles.header}>
-        <View style={[styles.searchBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Search size={20} color={theme.textSecondary} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
-            placeholder={`Search ${searchType}...`}
-            placeholderTextColor={theme.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <X size={20} color={theme.textSecondary} />
-            </TouchableOpacity>
-          )}
-        </View>
+      <View style={styles.headerContainer}>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Search</Text>
+        <View style={styles.searchContainer}>
+          <View style={[styles.searchBar, { backgroundColor: theme.card }]}>
+            <Search size={20} color={theme.textSecondary} />
+            <TextInput
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholder={`Search ${searchType}...`}
+              placeholderTextColor={theme.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <X size={18} color={theme.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
 
-        <TouchableOpacity
-          style={[styles.filterButton, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <SlidersHorizontal size={20} color={hasActiveFilters ? theme.primary : theme.text} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, { backgroundColor: hasActiveFilters ? theme.primary : theme.card }]}
+            onPress={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal size={20} color={hasActiveFilters ? '#FFFFFF' : theme.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.tabs}>
@@ -280,13 +281,16 @@ export default function SearchScreen() {
         {searchType === 'tasks' ? (
           filteredTasks.length > 0 ? (
             filteredTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onPress={() => router.push(`/task/${task.id}`)} />
+              <TaskCardItem key={task.id} task={task} onPress={() => router.push(`/task/${task.id}`)} theme={theme} />
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Search size={64} color={theme.textSecondary} />
+              <View style={[styles.emptyIconContainer, { backgroundColor: theme.card }]}>
+                <Search size={48} color={theme.textSecondary} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>No quests found</Text>
               <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                {searchQuery ? 'No quests found' : 'Start searching for quests'}
+                {searchQuery ? 'Try adjusting your filters or search terms' : 'Start searching for quests'}
               </Text>
             </View>
           )
@@ -332,9 +336,12 @@ export default function SearchScreen() {
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Search size={64} color={theme.textSecondary} />
+              <View style={[styles.emptyIconContainer, { backgroundColor: theme.card }]}>
+                <Search size={48} color={theme.textSecondary} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>No hustlers found</Text>
               <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                {searchQuery ? 'No hustlers found' : 'Start searching for hustlers'}
+                {searchQuery ? 'Try a different search term' : 'Start searching for hustlers'}
               </Text>
             </View>
           )
@@ -344,54 +351,138 @@ export default function SearchScreen() {
   );
 }
 
+interface TaskCardItemProps {
+  task: any;
+  onPress: () => void;
+  theme: any;
+}
+
+function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
+  const daysUntilDue = Math.ceil(
+    (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={[styles.taskCard, { backgroundColor: theme.card }]}
+    >
+      <LinearGradient
+        colors={[
+          premiumColors.glassWhite,
+          'transparent',
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.taskGradient}
+      />
+
+      <View style={styles.taskContent}>
+        <View style={styles.taskHeader}>
+          <View style={[styles.taskIconContainer, { backgroundColor: premiumColors.glassWhite }]}>
+            <Sparkles size={20} color={premiumColors.neonCyan} />
+          </View>
+          <View style={styles.taskHeaderInfo}>
+            <Text style={[styles.taskTitle, { color: theme.text }]} numberOfLines={1}>
+              {task.title}
+            </Text>
+            <Text style={[styles.taskDescription, { color: theme.textSecondary }]} numberOfLines={2}>
+              {task.description}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.taskMeta}>
+          <View style={styles.taskMetaRow}>
+            <View style={styles.taskMetaItem}>
+              <MapPin size={14} color={theme.textSecondary} />
+              <Text style={[styles.taskMetaText, { color: theme.textSecondary }]}>
+                {task.location || 'Remote'}
+              </Text>
+            </View>
+            <View style={styles.taskMetaItem}>
+              <Calendar size={14} color={theme.textSecondary} />
+              <Text style={[styles.taskMetaText, { color: theme.textSecondary }]}>
+                {daysUntilDue > 0 ? `In ${daysUntilDue} days` : 'Today'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.taskFooter}>
+          <View style={[styles.taskPriceTag, { backgroundColor: premiumColors.neonGreen + '20' }]}>
+            <DollarSign size={16} color={premiumColors.neonGreen} />
+            <Text style={[styles.taskPrice, { color: premiumColors.neonGreen }]}>
+              ${task.payAmount}
+            </Text>
+          </View>
+          <View style={[styles.taskXPTag, { backgroundColor: premiumColors.neonAmber + '20' }]}>
+            <Zap size={16} color={premiumColors.neonAmber} />
+            <Text style={[styles.taskXP, { color: premiumColors.neonAmber }]}>
+              {task.xpReward} XP
+            </Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  headerContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  headerTitle: {
+    fontSize: typography.sizes.hero,
+    fontWeight: typography.weights.bold,
+    marginBottom: spacing.md,
+  },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    gap: spacing.md,
   },
   searchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.xl,
+    gap: spacing.md,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '500' as const,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
   },
   filterButton: {
-    padding: 12,
-    borderRadius: 16,
-    borderWidth: 1,
+    padding: spacing.md,
+    borderRadius: borderRadius.xl,
   },
   tabs: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
+    position: 'relative' as const,
   },
   activeTab: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
   },
   tabText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
   },
   filtersContainer: {
     padding: 16,
@@ -468,17 +559,110 @@ const styles = StyleSheet.create({
   },
   results: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: spacing.lg,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 64,
-    gap: 16,
+    paddingVertical: 80,
+    gap: spacing.lg,
+  },
+  emptyIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: borderRadius.xxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
   },
   emptyText: {
-    fontSize: 16,
-    fontWeight: '500' as const,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
+    textAlign: 'center' as const,
+    maxWidth: 280,
+  },
+  taskCard: {
+    borderRadius: borderRadius.xl,
+    marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  taskGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  taskContent: {
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  taskHeader: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  taskIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taskHeaderInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  taskTitle: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+  },
+  taskDescription: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.regular,
+    lineHeight: typography.sizes.sm * 1.4,
+  },
+  taskMeta: {
+    gap: spacing.sm,
+  },
+  taskMetaRow: {
+    flexDirection: 'row',
+    gap: spacing.lg,
+  },
+  taskMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  taskMetaText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+  },
+  taskFooter: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  taskPriceTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  taskPrice: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+  },
+  taskXPTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  taskXP: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
   },
   userCard: {
     borderRadius: 20,
