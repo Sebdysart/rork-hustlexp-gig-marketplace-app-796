@@ -58,16 +58,27 @@ export async function testBackendConnection() {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
-    const data = await response.json();
-    console.log('✅ AI Profile fetched:', data.success ? 'Success' : 'Failed');
-    if (data.success && data.aiProfile) {
-      console.log('   Categories count:', Array.isArray(data.aiProfile.preferredCategories) ? data.aiProfile.preferredCategories.length : 0);
-      results.aiProfile = true;
-    } else {
+    
+    if (!response.ok) {
+      console.error('❌ AI Profile HTTP error:', response.status, response.statusText);
       results.aiProfile = false;
+    } else {
+      const data = await response.json();
+      console.log('✅ AI Profile response:', JSON.stringify(data).substring(0, 200));
+      
+      if (data && data.success && data.aiProfile) {
+        const categories = data.aiProfile.preferredCategories;
+        const categoriesCount = Array.isArray(categories) ? categories.length : 0;
+        console.log('   Categories count:', categoriesCount);
+        results.aiProfile = true;
+      } else {
+        console.warn('⚠️ AI Profile: Unexpected response structure');
+        results.aiProfile = false;
+      }
     }
   } catch (error) {
-    console.error('❌ AI Profile failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('❌ AI Profile failed:', error instanceof Error ? error.message : String(error));
+    results.aiProfile = false;
   }
 
   try {

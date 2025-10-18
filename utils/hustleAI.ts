@@ -407,7 +407,20 @@ class HustleAIClient {
 
   async submitFeedback(feedback: FeedbackRequest): Promise<FeedbackResponse> {
     try {
-      return await this.makeRequest<FeedbackResponse>('/feedback', 'POST', feedback);
+      const backendFeedback = {
+        userId: feedback.userId,
+        taskId: feedback.taskId,
+        action: feedback.predictionType,
+        taskDetails: {
+          predictionType: feedback.predictionType,
+          predictedValue: feedback.predictedValue,
+          actualValue: feedback.actualValue,
+          ...feedback.context,
+        },
+      };
+      
+      console.log('[HUSTLEAI] Submitting feedback:', JSON.stringify(backendFeedback));
+      return await this.makeRequest<FeedbackResponse>('/feedback', 'POST', backendFeedback);
     } catch (error) {
       console.warn('[HUSTLEAI] Feedback submission failed:', error);
       return {
