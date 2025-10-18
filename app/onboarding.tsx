@@ -537,7 +537,7 @@ export default function OnboardingScreen() {
                 opacity: fadeAnim, 
                 transform: [{ translateX: slideAnim }, { scale: scaleAnim }],
                 paddingTop: insets.top + 20, 
-                paddingBottom: Math.max(insets.bottom + 20, 20)
+                paddingBottom: Math.max(insets.bottom + 40, 40)
               }
             ]}
           >
