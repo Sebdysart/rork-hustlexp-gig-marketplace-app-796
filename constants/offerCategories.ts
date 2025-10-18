@@ -13,6 +13,166 @@ export interface OfferCategory {
 
 export const OFFER_CATEGORIES: OfferCategory[] = [
   {
+    id: 'delivery',
+    name: 'Delivery',
+    icon: '📦',
+    subcategories: ['Package', 'Food', 'Groceries', 'Documents', 'Same-Day'],
+    exampleTitles: [
+      'Fast Package Delivery',
+      'Food & Grocery Delivery',
+      'Same-Day Document Courier',
+    ],
+    exampleScopes: {
+      starter: 'Local delivery (up to 5 miles). Basic pickup & dropoff.',
+      standard: 'Multi-stop delivery (up to 15 miles). Real-time tracking.',
+      pro: 'Priority delivery with photo proof & signature. Insurance available.',
+    },
+  },
+  {
+    id: 'errands',
+    name: 'Errands',
+    icon: '🏃',
+    subcategories: ['Shopping', 'Pickup', 'Returns', 'Waiting', 'Assistant'],
+    exampleTitles: [
+      'Personal Errand Runner',
+      'Shopping & Pickup Service',
+      'Wait in Line / Queue Service',
+    ],
+    exampleScopes: {
+      starter: 'Single errand (pickup, dropoff, or return). Up to 1 hour.',
+      standard: 'Multiple errands or shopping trip. Up to 3 hours.',
+      pro: 'Full-day assistant service. Multiple locations + complex tasks.',
+    },
+  },
+  {
+    id: 'photography',
+    name: 'Photography',
+    icon: '📸',
+    subcategories: ['Product', 'Event', 'Real Estate', 'Portrait', 'Food'],
+    exampleTitles: [
+      'Product Photography for E-commerce',
+      'Event & Party Photography',
+      'Real Estate Photos & Virtual Tours',
+    ],
+    exampleScopes: {
+      starter: 'Basic photo shoot (up to 20 photos). Quick editing included.',
+      standard: 'Full session (up to 50 photos). Professional editing & delivery.',
+      pro: 'Premium shoot + advanced editing + video. Same-day delivery.',
+    },
+  },
+  {
+    id: 'data_entry',
+    name: 'Data Entry',
+    icon: '⌨️',
+    subcategories: ['Typing', 'Spreadsheets', 'Research', 'CRM', 'Database'],
+    exampleTitles: [
+      'Fast & Accurate Data Entry',
+      'Excel & Spreadsheet Work',
+      'Web Research & Data Mining',
+    ],
+    exampleScopes: {
+      starter: 'Simple data entry (up to 100 records). Basic formatting.',
+      standard: 'Complex data entry (up to 500 records). Quality check included.',
+      pro: 'Large-scale data project (1000+ records). Database setup + automation.',
+    },
+  },
+  {
+    id: 'virtual_assistant',
+    name: 'Virtual Assistant',
+    icon: '💼',
+    subcategories: ['Email', 'Scheduling', 'Research', 'Admin', 'Customer Service'],
+    exampleTitles: [
+      'Professional Virtual Assistant',
+      'Email & Calendar Management',
+      'Customer Service Support',
+    ],
+    exampleScopes: {
+      starter: 'Basic admin tasks (up to 2 hours). Email sorting & scheduling.',
+      standard: 'Daily VA support (up to 5 hours). Multi-task handling.',
+      pro: 'Full-time VA (20+ hours/week). Project management + reports.',
+    },
+  },
+  {
+    id: 'moving',
+    name: 'Moving',
+    icon: '📦',
+    subcategories: ['Labor', 'Packing', 'Furniture', 'Junk Removal', 'Storage'],
+    exampleTitles: [
+      'Moving Labor & Furniture Help',
+      'Packing & Unpacking Service',
+      'Junk Removal & Hauling',
+    ],
+    exampleScopes: {
+      starter: 'Light moving (1-2 items). Up to 2 hours.',
+      standard: 'Full room move or furniture assembly. Up to 4 hours.',
+      pro: 'Complete moving service. Packing + loading + transport.',
+    },
+  },
+  {
+    id: 'pet_care',
+    name: 'Pet Care',
+    icon: '🐕',
+    subcategories: ['Walking', 'Sitting', 'Grooming', 'Training', 'Feeding'],
+    exampleTitles: [
+      'Dog Walking & Pet Sitting',
+      'Pet Grooming Service',
+      'In-Home Pet Care',
+    ],
+    exampleScopes: {
+      starter: 'Single walk or visit (30 min). Basic care.',
+      standard: 'Daily walks or pet sitting (multiple visits). Photo updates.',
+      pro: 'Extended pet care (overnight or multi-day). Full attention.',
+    },
+  },
+  {
+    id: 'tutoring',
+    name: 'Tutoring',
+    icon: '📚',
+    subcategories: ['Math', 'Science', 'Language', 'Test Prep', 'Music'],
+    exampleTitles: [
+      'Math & Science Tutoring',
+      'Language Learning Coach',
+      'Test Prep Specialist (SAT/ACT)',
+    ],
+    exampleScopes: {
+      starter: 'Single session (1 hour). Homework help & review.',
+      standard: 'Weekly sessions (4 hours/month). Custom lesson plans.',
+      pro: 'Intensive tutoring (8+ hours/month). Progress tracking + materials.',
+    },
+  },
+  {
+    id: 'content_creation',
+    name: 'Content',
+    icon: '✍️',
+    subcategories: ['Writing', 'Social Media', 'Video', 'Graphics', 'Blog'],
+    exampleTitles: [
+      'Social Media Content Creator',
+      'Blog Writing & SEO',
+      'Video Editing & Production',
+    ],
+    exampleScopes: {
+      starter: 'Single post or article (up to 500 words). Basic graphics.',
+      standard: 'Weekly content package (3-5 posts). Professional quality.',
+      pro: 'Full content strategy (10+ pieces). Video + graphics + copywriting.',
+    },
+  },
+  {
+    id: 'handyman',
+    name: 'Handyman',
+    icon: '🔨',
+    subcategories: ['Repair', 'Assembly', 'Install', 'Maintenance', 'Odd Jobs'],
+    exampleTitles: [
+      'General Handyman Service',
+      'Furniture Assembly',
+      'Home Repairs & Maintenance',
+    ],
+    exampleScopes: {
+      starter: 'Quick fix or assembly (up to 1 hour). Basic tools.',
+      standard: 'Multiple repairs or installs (up to 3 hours).',
+      pro: 'Full-day handyman service. Complex projects + materials.',
+    },
+  },
+  {
     id: 'electrical',
     name: 'Electrical',
     icon: '⚡',
