@@ -534,7 +534,7 @@ export default function OnboardingScreen() {
           style={styles.scrollView}
           contentContainerStyle={{
             paddingTop: insets.top + 20,
-            paddingBottom: Math.max(insets.bottom + 30, 30),
+            paddingBottom: Math.max(insets.bottom + 120, 120),
             paddingHorizontal: spacing.xl,
           }}
           showsVerticalScrollIndicator={false}
