@@ -120,7 +120,12 @@ export class AIFeedbackService {
   }
 
   async submitMatchFeedback(feedback: MatchFeedback): Promise<FeedbackResponse> {
-    console.log('[AIFeedback] Submitting match feedback:', feedback);
+    console.log('[AIFeedback] Submitting match feedback:', JSON.stringify(feedback));
+    
+    if (!feedback.action) {
+      console.error('[AIFeedback] ERROR: Missing action field in feedback!');
+      return { success: false, error: 'Missing action field' };
+    }
     
     try {
       const response = await fetch(`${API_BASE_URL}/feedback`, {
@@ -132,7 +137,9 @@ export class AIFeedbackService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('[AIFeedback] Error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
@@ -146,7 +153,12 @@ export class AIFeedbackService {
   }
 
   async submitCompletionFeedback(feedback: CompletionFeedback): Promise<FeedbackResponse> {
-    console.log('[AIFeedback] Submitting completion feedback:', feedback);
+    console.log('[AIFeedback] Submitting completion feedback:', JSON.stringify(feedback));
+    
+    if (!feedback.action) {
+      console.error('[AIFeedback] ERROR: Missing action field in feedback!');
+      return { success: false, error: 'Missing action field' };
+    }
     
     try {
       const response = await fetch(`${API_BASE_URL}/feedback`, {
@@ -158,7 +170,9 @@ export class AIFeedbackService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('[AIFeedback] Error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
@@ -172,7 +186,12 @@ export class AIFeedbackService {
   }
 
   async submitTradeFeedback(feedback: TradeFeedback): Promise<FeedbackResponse> {
-    console.log('[AIFeedback] Submitting trade feedback:', feedback);
+    console.log('[AIFeedback] Submitting trade feedback:', JSON.stringify(feedback));
+    
+    if (!feedback.action) {
+      console.error('[AIFeedback] ERROR: Missing action field in feedback!');
+      return { success: false, error: 'Missing action field' };
+    }
     
     try {
       const response = await fetch(`${API_BASE_URL}/feedback`, {
@@ -184,7 +203,9 @@ export class AIFeedbackService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('[AIFeedback] Error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
@@ -230,16 +251,22 @@ export class AIFeedbackService {
         const mapped: AIUserProfile = {
           userId: data.userId || userId,
           totalTasks: profile.totalInteractions || 0,
-          preferredCategories: profile.preferredCategories || [],
+          preferredCategories: Array.isArray(profile.preferredCategories) 
+            ? profile.preferredCategories 
+            : [],
           priceRange: profile.preferredPriceRange || { min: 20, max: 200 },
           acceptancePatterns: {
-            timeOfDay: profile.preferredHours?.map((hour: number) => ({ hour, frequency: 1 })) || [],
+            timeOfDay: Array.isArray(profile.preferredHours)
+              ? profile.preferredHours.map((hour: number) => ({ hour, frequency: 1 }))
+              : [],
             dayOfWeek: [],
           },
           rejectionReasons: [],
           averageTaskDuration: 60,
           lastActive: profile.lastUpdated || new Date().toISOString(),
-          aiInsights: profile.behavioralInsights || [],
+          aiInsights: Array.isArray(profile.behavioralInsights) 
+            ? profile.behavioralInsights 
+            : [],
           recommendedFilters: profile.recommendedFilters || {
             categories: [],
             priceMin: 20,
