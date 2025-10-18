@@ -32,28 +32,40 @@ export async function testBackendConnection() {
 
   try {
     console.log('\n3️⃣ Testing Feedback Submission...');
-    const feedback = await hustleAI.submitFeedback({
-      userId: 'test-user-123',
-      taskId: 'test-task-123',
-      predictionType: 'completion',
-      predictedValue: 85,
-      actualValue: 92,
-      context: {
-        category: 'delivery',
-        payAmount: 50,
-      },
+    const response = await fetch('https://lunch-garden-dycejr.replit.app/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: 'test-user-123',
+        taskId: 'test-task-123',
+        action: 'task_view',
+        taskDetails: {
+          category: 'delivery',
+          payAmount: 50,
+        },
+      }),
     });
-    console.log('✅ Feedback recorded:', feedback.recorded);
-    results.feedback = feedback.recorded;
+    const feedback = await response.json();
+    console.log('✅ Feedback recorded:', feedback.success);
+    results.feedback = feedback.success || false;
   } catch (error) {
     console.error('❌ Feedback failed:', error instanceof Error ? error.message : 'Unknown error');
   }
 
   try {
     console.log('\n4️⃣ Testing AI User Profile...');
-    const profile = await hustleAI.getUserProfileAI('test-user-123');
-    console.log('✅ AI Profile fetched. Categories:', profile.preferredCategories.length);
-    results.aiProfile = true;
+    const response = await fetch('https://lunch-garden-dycejr.replit.app/api/users/test-user-123/profile/ai', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json();
+    console.log('✅ AI Profile fetched:', data.success ? 'Success' : 'Failed');
+    if (data.success && data.aiProfile) {
+      console.log('   Categories count:', Array.isArray(data.aiProfile.preferredCategories) ? data.aiProfile.preferredCategories.length : 0);
+      results.aiProfile = true;
+    } else {
+      results.aiProfile = false;
+    }
   } catch (error) {
     console.error('❌ AI Profile failed:', error instanceof Error ? error.message : 'Unknown error');
   }
