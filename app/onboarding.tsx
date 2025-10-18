@@ -530,14 +530,22 @@ export default function OnboardingScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={{
+            paddingTop: insets.top + 20,
+            paddingBottom: Math.max(insets.bottom + 30, 30),
+            paddingHorizontal: spacing.xl,
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <Animated.View 
             style={[
-              styles.content, 
+              styles.contentWrapper, 
               { 
                 opacity: fadeAnim, 
                 transform: [{ translateX: slideAnim }, { scale: scaleAnim }],
-                paddingTop: insets.top + 20, 
-                paddingBottom: Math.max(insets.bottom + 40, 40)
               }
             ]}
           >
@@ -1140,6 +1148,7 @@ export default function OnboardingScreen() {
           </>
         )}
           </Animated.View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -1188,6 +1197,12 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentWrapper: {
+    gap: spacing.md,
   },
   content: {
     flex: 1,
