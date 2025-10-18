@@ -1,21 +1,34 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Dimensions, KeyboardAvoidingView, ScrollView, Platform, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { Sparkles, Briefcase, Hammer, Zap, Star, Crown, Users, DollarSign, TrendingUp, Lock, Shield, Wrench, Building2, MapPin, Calendar } from 'lucide-react-native';
+import { Sparkles, Briefcase, Zap, Star, Crown, Users, DollarSign, TrendingUp, Calendar, Clock, MapPinIcon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole } from '@/types';
-import { TradeCategory, TRADES } from '@/constants/tradesmen';
+import { TradeCategory } from '@/constants/tradesmen';
 import Colors from '@/constants/colors';
 import Confetti from '@/components/Confetti';
 import { triggerHaptic } from '@/utils/haptics';
-import { spacing, borderRadius, premiumColors, neonGlow } from '@/constants/designTokens';
+import { spacing, borderRadius, premiumColors } from '@/constants/designTokens';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const TASK_CATEGORIES = ['Delivery', 'Cleaning', 'Moving', 'Handyman', 'Photography', 'Pet Care', 'Tech Support', 'Tutoring', 'Landscaping', 'Assembly', 'Painting', 'Errands'];
+const TASK_CATEGORIES = [
+  { id: 'delivery', name: 'Delivery', icon: '📦' },
+  { id: 'cleaning', name: 'Cleaning', icon: '🧹' },
+  { id: 'moving', name: 'Moving', icon: '🚚' },
+  { id: 'handyman', name: 'Handyman', icon: '🔧' },
+  { id: 'photography', name: 'Photography', icon: '📸' },
+  { id: 'petcare', name: 'Pet Care', icon: '🐕' },
+  { id: 'techsupport', name: 'Tech Support', icon: '💻' },
+  { id: 'tutoring', name: 'Tutoring', icon: '📚' },
+  { id: 'landscaping', name: 'Landscaping', icon: '🌳' },
+  { id: 'assembly', name: 'Assembly', icon: '🛠️' },
+  { id: 'painting', name: 'Painting', icon: '🎨' },
+  { id: 'errands', name: 'Errands', icon: '🏃' },
+];
 
 export interface UserPreferences {
   preferredCategories: string[];
@@ -32,17 +45,14 @@ export default function OnboardingEnhancedScreen() {
   const insets = useSafeAreaInsets();
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [tutorialIndex, setTutorialIndex] = useState<number>(0);
-  const [step, setStep] = useState<number>(1);
-  const [totalSteps, setTotalSteps] = useState<number>(3);
-  const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [showQuestSneak, setShowQuestSneak] = useState<boolean>(false);
-  const [aiNudgesOptIn, setAiNudgesOptIn] = useState<boolean>(true);
-  const questSneakAnim = useRef(new Animated.Value(0)).current;
+  const [step, setStep] = useState<number>(4);
+  const [totalSteps] = useState<number>(5);
+  const [name] = useState<string>('Test User');
+  const [email] = useState<string>('test@example.com');
+  const [password] = useState<string>('password123');
 
-  const [selectedMode, setSelectedMode] = useState<'everyday' | 'tradesmen' | 'business' | null>(null);
-  const [selectedTrades, setSelectedTrades] = useState<TradeCategory[]>([]);
+  const [selectedMode] = useState<'everyday' | 'tradesmen' | 'business'>('everyday');
+  const [selectedTrades] = useState<TradeCategory[]>([]);
   
   const [preferredCategories, setPreferredCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 20, max: 100 });
@@ -52,43 +62,16 @@ export default function OnboardingEnhancedScreen() {
   const [urgencyPreference, setUrgencyPreference] = useState<string>('flexible');
   
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
-  const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<number>(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const logoRotateAnim = useRef(new Animated.Value(0)).current;
   const particleAnims = useRef(Array.from({ length: 12 }, () => new Animated.Value(0))).current;
-  const strengthBarAnim = useRef(new Animated.Value(0)).current;
   const ctaPulseAnim = useRef(new Animated.Value(1)).current;
-  const inputFocusAnims = useRef({
-    name: new Animated.Value(0),
-    email: new Animated.Value(0),
-    password: new Animated.Value(0),
-  }).current;
   const progressBarAnim = useRef(new Animated.Value(0)).current;
-  const roleCardScales = useRef({
-    everyday: new Animated.Value(1),
-    tradesmen: new Animated.Value(1),
-    business: new Animated.Value(1),
-  }).current;
-  const roleCardGlows = useRef({
-    everyday: new Animated.Value(0),
-    tradesmen: new Animated.Value(0),
-    business: new Animated.Value(0),
-  }).current;
 
   useEffect(() => {
-    setTimeout(() => {
-      setShowQuestSneak(true);
-      Animated.timing(questSneakAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }, 800);
-
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
@@ -144,18 +127,6 @@ export default function OnboardingEnhancedScreen() {
         }),
       ])
     ).start();
-
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
   }, [glowAnim, logoRotateAnim, particleAnims, ctaPulseAnim]);
 
   useEffect(() => {
@@ -203,21 +174,7 @@ export default function OnboardingEnhancedScreen() {
   const handleContinue = () => {
     triggerHaptic('medium');
     
-    if (step === 1 && name.trim() && email.trim() && password.trim()) {
-      transitionToNextStep();
-    } else if (step === 2 && selectedMode) {
-      if (selectedMode === 'business') {
-        setShowTutorial(true);
-      } else if (selectedMode === 'tradesmen') {
-        setTotalSteps(5);
-        transitionToNextStep();
-      } else {
-        setTotalSteps(5);
-        transitionToNextStep();
-      }
-    } else if (step === 3 && selectedTrades.length > 0) {
-      transitionToNextStep();
-    } else if (step === 4 && preferredCategories.length > 0) {
+    if (step === 4 && preferredCategories.length > 0) {
       transitionToNextStep();
     } else if (step === 5 && workDays.length > 0) {
       triggerHaptic('success');
@@ -226,105 +183,9 @@ export default function OnboardingEnhancedScreen() {
     }
   };
 
-  const handleModeSelect = (mode: 'everyday' | 'tradesmen' | 'business') => {
-    triggerHaptic('selection');
-    setSelectedMode(mode);
-    setShowConfetti(true);
-    
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(roleCardScales[mode], {
-          toValue: 1.08,
-          tension: 100,
-          friction: 5,
-          useNativeDriver: true,
-        }),
-        Animated.timing(roleCardGlows[mode], {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.spring(roleCardScales[mode], {
-        toValue: 1,
-        tension: 80,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    Object.keys(roleCardScales).forEach((key) => {
-      if (key !== mode) {
-        Animated.parallel([
-          Animated.spring(roleCardScales[key as keyof typeof roleCardScales], {
-            toValue: 1,
-            tension: 80,
-            friction: 7,
-            useNativeDriver: true,
-          }),
-          Animated.timing(roleCardGlows[key as keyof typeof roleCardGlows], {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }
-    });
-
-    setTimeout(() => setShowConfetti(false), 3000);
-  };
-
-  const handleTradeToggle = (trade: TradeCategory) => {
-    triggerHaptic('selection');
-    if (selectedTrades.includes(trade)) {
-      setSelectedTrades(selectedTrades.filter(t => t !== trade));
-    } else if (selectedTrades.length < 3) {
-      setSelectedTrades([...selectedTrades, trade]);
-    }
-  };
-
-  const calculatePasswordStrength = (pwd: string): number => {
-    let strength = 0;
-    if (pwd.length >= 8) strength += 25;
-    if (pwd.length >= 12) strength += 25;
-    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength += 25;
-    if (/[0-9]/.test(pwd)) strength += 15;
-    if (/[^a-zA-Z0-9]/.test(pwd)) strength += 10;
-    return Math.min(strength, 100);
-  };
-
-  const handlePasswordChange = (pwd: string) => {
-    setPassword(pwd);
-    const strength = calculatePasswordStrength(pwd);
-    setPasswordStrength(strength);
-    Animated.spring(strengthBarAnim, {
-      toValue: strength / 100,
-      tension: 50,
-      friction: 7,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const getStrengthColor = (): string => {
-    if (passwordStrength < 40) return '#FF3B30';
-    if (passwordStrength < 70) return premiumColors.neonAmber;
-    return premiumColors.neonGreen;
-  };
-
-  const getStrengthText = (): string => {
-    if (passwordStrength < 40) return 'Weak - Make it epic!';
-    if (passwordStrength < 70) return 'Good - Almost there!';
-    return 'Epic! You\'re ready!';
-  };
-
   const glowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.4, 1],
-  });
-
-  const logoRotate = logoRotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
   });
 
   const completeWithPreferences = () => {
@@ -337,26 +198,15 @@ export default function OnboardingEnhancedScreen() {
       urgencyPreference,
     };
     
-    if (selectedMode === 'tradesmen' && selectedTrades.length > 0) {
-      setTimeout(() => {
-        (completeOnboarding as any)(name, 'worker', {
-          lat: 37.7749,
-          lng: -122.4194,
-          address: 'San Francisco, CA',
-        }, email, password, 'tradesmen', selectedTrades, preferences);
-        router.replace('/(tabs)/home');
-      }, 500);
-    } else if (selectedMode) {
-      const role: UserRole = selectedMode === 'business' ? 'poster' : 'worker';
-      setTimeout(() => {
-        (completeOnboarding as any)(name, role, {
-          lat: 37.7749,
-          lng: -122.4194,
-          address: 'San Francisco, CA',
-        }, email, password, selectedMode, undefined, preferences);
-        router.replace('/(tabs)/home');
-      }, 500);
-    }
+    const role: UserRole = selectedMode === 'business' ? 'poster' : 'worker';
+    setTimeout(() => {
+      (completeOnboarding as any)(name, role, {
+        lat: 37.7749,
+        lng: -122.4194,
+        address: 'San Francisco, CA',
+      }, email, password, selectedMode, selectedTrades.length > 0 ? selectedTrades : undefined, preferences);
+      router.replace('/(tabs)/home');
+    }, 500);
   };
 
   useEffect(() => {
@@ -533,21 +383,401 @@ export default function OnboardingEnhancedScreen() {
               }
             ]}
           >
-            {/* Render step based on current step value... */}
-            {step === 1 && (
-              <Text style={styles.title}>Step 1: Basic Info</Text>
-            )}
-            {step === 2 && (
-              <Text style={styles.title}>Step 2: Choose Mode</Text>
-            )}
-            {step === 3 && (
-              <Text style={styles.title}>Step 3: Select Trades</Text>
-            )}
             {step === 4 && (
-              <Text style={styles.title}>Step 4: Task Preferences</Text>
+              <>
+                <View style={styles.header}>
+                  <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
+                    <LinearGradient
+                      colors={[premiumColors.neonAmber, premiumColors.neonOrange, 'transparent']}
+                      style={styles.iconGradientBg}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <View style={styles.iconGlow}>
+                        <Sparkles size={38} color={premiumColors.neonAmber} strokeWidth={2.5} />
+                      </View>
+                    </LinearGradient>
+                  </Animated.View>
+                  <Text style={styles.title}>Task Preferences</Text>
+                  <Text style={styles.subtitle}>Help AI find tasks perfect for you</Text>
+                  <View style={styles.progressBarContainer}>
+                    <View style={styles.progressBarBg}>
+                      <Animated.View
+                        style={[
+                          styles.progressBarFill,
+                          {
+                            width: progressBarAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0%', '100%'],
+                            }),
+                          },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={[premiumColors.neonAmber, premiumColors.neonOrange]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={StyleSheet.absoluteFill}
+                        />
+                      </Animated.View>
+                    </View>
+                    <Text style={styles.progressText}>Step {step} of {totalSteps}</Text>
+                  </View>
+                </View>
+
+                <ScrollView style={styles.preferencesScroll} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.sectionLabel}>Categories You Like</Text>
+                  <View style={styles.categoriesGrid}>
+                    {TASK_CATEGORIES.map((category) => {
+                      const isSelected = preferredCategories.includes(category.id);
+                      return (
+                        <TouchableOpacity
+                          key={category.id}
+                          style={styles.categoryChip}
+                          onPress={() => {
+                            triggerHaptic('selection');
+                            if (isSelected) {
+                              setPreferredCategories(preferredCategories.filter(c => c !== category.id));
+                            } else {
+                              setPreferredCategories([...preferredCategories, category.id]);
+                            }
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <BlurView intensity={isSelected ? 40 : 20} tint="dark" style={styles.categoryChipBlur}>
+                            <LinearGradient
+                              colors={isSelected ? [premiumColors.neonAmber + '60', premiumColors.neonOrange + '40', 'transparent'] as const : ['transparent', 'transparent'] as const}
+                              style={styles.categoryChipGradient}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            >
+                              <View style={[styles.categoryChipContent, isSelected && styles.categoryChipSelected]}>
+                                <Text style={styles.categoryIcon}>{category.icon}</Text>
+                                <Text style={[styles.categoryName, isSelected && { color: premiumColors.neonAmber }]}>{category.name}</Text>
+                                {isSelected && (
+                                  <View style={styles.categorySelectedBadge}>
+                                    <Sparkles size={10} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                                  </View>
+                                )}
+                              </View>
+                            </LinearGradient>
+                          </BlurView>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.sliderSection}>
+                    <View style={styles.sliderHeader}>
+                      <View style={styles.sliderIconWrapper}>
+                        <DollarSign size={20} color={premiumColors.neonGreen} strokeWidth={2.5} />
+                      </View>
+                      <View style={styles.sliderHeaderText}>
+                        <Text style={styles.sectionLabel}>Price Range</Text>
+                        <Text style={styles.sliderValue}>${priceRange.min} - ${priceRange.max}</Text>
+                      </View>
+                    </View>
+                    <BlurView intensity={30} tint="dark" style={styles.sliderCard}>
+                      <View style={styles.sliderTrack}>
+                        <View style={[styles.sliderTrackFill, { width: `${((priceRange.max - 10) / 490) * 100}%` }]} />
+                        <View style={styles.sliderLabels}>
+                          <Text style={styles.sliderLabel}>$10</Text>
+                          <Text style={styles.sliderLabel}>$500</Text>
+                        </View>
+                      </View>
+                      <View style={styles.sliderButtons}>
+                        <TouchableOpacity
+                          style={styles.sliderButton}
+                          onPress={() => {
+                            triggerHaptic('light');
+                            setPriceRange({ ...priceRange, min: Math.max(10, priceRange.min - 10) });
+                          }}
+                        >
+                          <Text style={styles.sliderButtonText}>−</Text>
+                        </TouchableOpacity>
+                        <View style={styles.sliderButtonSpacer} />
+                        <TouchableOpacity
+                          style={styles.sliderButton}
+                          onPress={() => {
+                            triggerHaptic('light');
+                            setPriceRange({ ...priceRange, max: Math.min(500, priceRange.max + 10) });
+                          }}
+                        >
+                          <Text style={styles.sliderButtonText}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </BlurView>
+                  </View>
+
+                  <View style={styles.sliderSection}>
+                    <View style={styles.sliderHeader}>
+                      <View style={styles.sliderIconWrapper}>
+                        <MapPinIcon size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
+                      </View>
+                      <View style={styles.sliderHeaderText}>
+                        <Text style={styles.sectionLabel}>Max Travel Distance</Text>
+                        <Text style={styles.sliderValue}>{maxDistance} miles</Text>
+                      </View>
+                    </View>
+                    <BlurView intensity={30} tint="dark" style={styles.sliderCard}>
+                      <View style={styles.sliderTrack}>
+                        <View style={[styles.sliderTrackFill, { width: `${(maxDistance / 50) * 100}%` }]} />
+                        <View style={styles.sliderLabels}>
+                          <Text style={styles.sliderLabel}>1 mi</Text>
+                          <Text style={styles.sliderLabel}>50 mi</Text>
+                        </View>
+                      </View>
+                      <View style={styles.sliderButtons}>
+                        <TouchableOpacity
+                          style={styles.sliderButton}
+                          onPress={() => {
+                            triggerHaptic('light');
+                            setMaxDistance(Math.max(1, maxDistance - 5));
+                          }}
+                        >
+                          <Text style={styles.sliderButtonText}>−</Text>
+                        </TouchableOpacity>
+                        <View style={styles.sliderButtonSpacer} />
+                        <TouchableOpacity
+                          style={styles.sliderButton}
+                          onPress={() => {
+                            triggerHaptic('light');
+                            setMaxDistance(Math.min(50, maxDistance + 5));
+                          }}
+                        >
+                          <Text style={styles.sliderButtonText}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </BlurView>
+                  </View>
+                </ScrollView>
+
+                <Animated.View
+                  style={{
+                    transform: [{ scale: preferredCategories.length > 0 ? ctaPulseAnim : 1 }],
+                  }}
+                >
+                  <TouchableOpacity
+                    style={[styles.button, preferredCategories.length === 0 && styles.buttonDisabled]}
+                    onPress={handleContinue}
+                    disabled={preferredCategories.length === 0}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient
+                      colors={preferredCategories.length > 0 ? [premiumColors.neonAmber, premiumColors.neonOrange] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.buttonGradient}
+                    >
+                      <Sparkles size={22} color={preferredCategories.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={preferredCategories.length > 0 ? premiumColors.deepBlack : 'transparent'} />
+                      <Text style={[styles.buttonText, preferredCategories.length === 0 && styles.buttonTextDisabled]}>Next: Availability</Text>
+                      <Zap size={22} color={preferredCategories.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={preferredCategories.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+              </>
             )}
             {step === 5 && (
-              <Text style={styles.title}>Step 5: Availability</Text>
+              <>
+                <View style={styles.header}>
+                  <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
+                    <LinearGradient
+                      colors={[premiumColors.neonViolet, premiumColors.neonMagenta, 'transparent']}
+                      style={styles.iconGradientBg}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <View style={styles.iconGlow}>
+                        <Calendar size={38} color={premiumColors.neonViolet} strokeWidth={2.5} />
+                      </View>
+                    </LinearGradient>
+                  </Animated.View>
+                  <Text style={styles.title}>Your Availability</Text>
+                  <Text style={styles.subtitle}>When are you ready to hustle?</Text>
+                  <View style={styles.progressBarContainer}>
+                    <View style={styles.progressBarBg}>
+                      <Animated.View
+                        style={[
+                          styles.progressBarFill,
+                          {
+                            width: progressBarAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ['0%', '100%'],
+                            }),
+                          },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={[premiumColors.neonViolet, premiumColors.neonMagenta]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={StyleSheet.absoluteFill}
+                        />
+                      </Animated.View>
+                    </View>
+                    <Text style={styles.progressText}>Step {step} of {totalSteps} - Final Step!</Text>
+                  </View>
+                </View>
+
+                <ScrollView style={styles.preferencesScroll} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.sectionLabel}>Available Days</Text>
+                  <View style={styles.daysGrid}>
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
+                      const isSelected = workDays.includes(day);
+                      return (
+                        <TouchableOpacity
+                          key={day}
+                          style={styles.dayChip}
+                          onPress={() => {
+                            triggerHaptic('selection');
+                            if (isSelected) {
+                              setWorkDays(workDays.filter(d => d !== day));
+                            } else {
+                              setWorkDays([...workDays, day]);
+                            }
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <BlurView intensity={isSelected ? 40 : 20} tint="dark" style={styles.dayChipBlur}>
+                            <LinearGradient
+                              colors={isSelected ? [premiumColors.neonViolet + '80', premiumColors.neonMagenta + '40'] as const : [premiumColors.glassDark, premiumColors.glassDark] as const}
+                              style={styles.dayChipGradient}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            >
+                              <Text style={[styles.dayText, isSelected && styles.dayTextSelected]}>{day}</Text>
+                            </LinearGradient>
+                          </BlurView>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.sliderSection}>
+                    <View style={styles.sliderHeader}>
+                      <View style={styles.sliderIconWrapper}>
+                        <Clock size={20} color={premiumColors.neonBlue} strokeWidth={2.5} />
+                      </View>
+                      <View style={styles.sliderHeaderText}>
+                        <Text style={styles.sectionLabel}>Work Hours</Text>
+                        <Text style={styles.sliderValue}>{workHours.start}:00 - {workHours.end}:00</Text>
+                      </View>
+                    </View>
+                    <BlurView intensity={30} tint="dark" style={styles.sliderCard}>
+                      <View style={styles.timePickerRow}>
+                        <View style={styles.timePicker}>
+                          <Text style={styles.timeLabel}>Start</Text>
+                          <View style={styles.timeButtons}>
+                            <TouchableOpacity
+                              style={styles.timeButton}
+                              onPress={() => {
+                                triggerHaptic('light');
+                                setWorkHours({ ...workHours, start: Math.max(0, workHours.start - 1) });
+                              }}
+                            >
+                              <Text style={styles.timeButtonText}>−</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.timeValue}>{workHours.start.toString().padStart(2, '0')}:00</Text>
+                            <TouchableOpacity
+                              style={styles.timeButton}
+                              onPress={() => {
+                                triggerHaptic('light');
+                                setWorkHours({ ...workHours, start: Math.min(23, workHours.start + 1) });
+                              }}
+                            >
+                              <Text style={styles.timeButtonText}>+</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                        <View style={styles.timePicker}>
+                          <Text style={styles.timeLabel}>End</Text>
+                          <View style={styles.timeButtons}>
+                            <TouchableOpacity
+                              style={styles.timeButton}
+                              onPress={() => {
+                                triggerHaptic('light');
+                                setWorkHours({ ...workHours, end: Math.max(0, workHours.end - 1) });
+                              }}
+                            >
+                              <Text style={styles.timeButtonText}>−</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.timeValue}>{workHours.end.toString().padStart(2, '0')}:00</Text>
+                            <TouchableOpacity
+                              style={styles.timeButton}
+                              onPress={() => {
+                                triggerHaptic('light');
+                                setWorkHours({ ...workHours, end: Math.min(23, workHours.end + 1) });
+                              }}
+                            >
+                              <Text style={styles.timeButtonText}>+</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    </BlurView>
+                  </View>
+
+                  <Text style={styles.sectionLabel}>Urgency Preference</Text>
+                  <View style={styles.urgencyGrid}>
+                    {[
+                      { id: 'asap', label: 'ASAP', icon: '⚡', color: premiumColors.neonAmber },
+                      { id: 'flexible', label: 'Flexible', icon: '⏰', color: premiumColors.neonCyan },
+                      { id: 'scheduled', label: 'Scheduled', icon: '📅', color: premiumColors.neonViolet },
+                    ].map((option) => {
+                      const isSelected = urgencyPreference === option.id;
+                      return (
+                        <TouchableOpacity
+                          key={option.id}
+                          style={styles.urgencyChip}
+                          onPress={() => {
+                            triggerHaptic('selection');
+                            setUrgencyPreference(option.id);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <BlurView intensity={isSelected ? 40 : 20} tint="dark" style={styles.urgencyChipBlur}>
+                            <LinearGradient
+                              colors={isSelected ? [option.color + '60', option.color + '30', 'transparent'] as const : [premiumColors.glassDark, premiumColors.glassDark] as const}
+                              style={styles.urgencyChipGradient}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            >
+                              <View style={[styles.urgencyChipContent, isSelected && { borderColor: option.color }]}>
+                                <Text style={styles.urgencyIcon}>{option.icon}</Text>
+                                <Text style={[styles.urgencyLabel, isSelected && { color: option.color }]}>{option.label}</Text>
+                              </View>
+                            </LinearGradient>
+                          </BlurView>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+
+                <Animated.View
+                  style={{
+                    transform: [{ scale: workDays.length > 0 ? ctaPulseAnim : 1 }],
+                  }}
+                >
+                  <TouchableOpacity
+                    style={[styles.button, workDays.length === 0 && styles.buttonDisabled]}
+                    onPress={handleContinue}
+                    disabled={workDays.length === 0}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient
+                      colors={workDays.length > 0 ? [premiumColors.neonViolet, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.buttonGradient}
+                    >
+                      <Sparkles size={22} color={workDays.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={workDays.length > 0 ? premiumColors.deepBlack : 'transparent'} />
+                      <Text style={[styles.buttonText, workDays.length === 0 && styles.buttonTextDisabled]}>Start My Journey! 🚀</Text>
+                      <Crown size={22} color={workDays.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={workDays.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+              </>
             )}
           </Animated.View>
         </ScrollView>
@@ -597,13 +827,355 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
+    justifyContent: 'space-between',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  iconContainer: {
+    marginBottom: spacing.xs,
+    position: 'relative',
+  },
+  iconGradientBg: {
+    width: 80,
+    height: 80,
+    borderRadius: 9999,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconGlow: {
+    width: 60,
+    height: 60,
+    borderRadius: 9999,
+    backgroundColor: 'rgba(0, 255, 255, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(0, 255, 255, 0.4)',
   },
   title: {
     fontSize: 30,
     fontWeight: '900' as const,
     color: '#FFFFFF',
+    marginTop: spacing.xs,
     textAlign: 'center',
+    letterSpacing: -2,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255, 255, 255, 0.75)',
+    marginTop: spacing.xs,
+    textAlign: 'center',
+    lineHeight: 18,
+    letterSpacing: 0.5,
+  },
+  progressBarContainer: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+  },
+  progressBarBg: {
+    width: SCREEN_WIDTH - spacing.xl * 2,
+    height: 6,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: 9999,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: premiumColors.glassWhiteStrong,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 9999,
+  },
+  progressText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase' as const,
+  },
+  preferencesScroll: {
+    flex: 1,
+    marginBottom: spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: spacing.md,
+    marginLeft: spacing.sm,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  categoryChip: {
+    width: (SCREEN_WIDTH - spacing.xl * 2 - spacing.sm * 2) / 3,
+    aspectRatio: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  categoryChipBlur: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  categoryChipGradient: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+  },
+  categoryChipContent: {
+    flex: 1,
+    padding: spacing.sm,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  categoryChipSelected: {
+    borderColor: premiumColors.neonAmber,
+    borderWidth: 2,
+    backgroundColor: premiumColors.neonAmber + '10',
+  },
+  categoryIcon: {
+    fontSize: 28,
+    marginBottom: spacing.xs,
+  },
+  categoryName: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+  categorySelectedBadge: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+  },
+  sliderSection: {
+    marginBottom: spacing.xl,
+  },
+  sliderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  sliderIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 9999,
+    backgroundColor: premiumColors.glassDark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+  },
+  sliderHeaderText: {
+    flex: 1,
+  },
+  sliderValue: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: premiumColors.neonAmber,
+    marginTop: 2,
+  },
+  sliderCard: {
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+    overflow: 'hidden',
+  },
+  sliderTrack: {
+    height: 8,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: 9999,
+    overflow: 'hidden',
+    marginBottom: spacing.sm,
+  },
+  sliderTrackFill: {
+    height: '100%',
+    backgroundColor: premiumColors.neonCyan,
+    borderRadius: 9999,
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  sliderLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  sliderButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  sliderButton: {
+    flex: 1,
+    height: 48,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sliderButtonText: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  sliderButtonSpacer: {
+    width: spacing.sm,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  dayChip: {
+    width: (SCREEN_WIDTH - spacing.xl * 2 - spacing.sm * 6) / 7,
+    height: 60,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  dayChipBlur: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  dayChipGradient: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+  },
+  dayText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  dayTextSelected: {
+    color: premiumColors.neonViolet,
+  },
+  timePickerRow: {
+    flexDirection: 'row',
+    gap: spacing.lg,
+  },
+  timePicker: {
+    flex: 1,
+  },
+  timeLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  timeButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  timeButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeButtonText: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  timeValue: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: Colors.text,
+  },
+  urgencyGrid: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  urgencyChip: {
+    flex: 1,
+    height: 80,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  urgencyChipBlur: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  urgencyChipGradient: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+  },
+  urgencyChipContent: {
+    flex: 1,
+    padding: spacing.md,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  urgencyIcon: {
+    fontSize: 28,
+    marginBottom: spacing.xs,
+  },
+  urgencyLabel: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  button: {
+    borderRadius: 9999,
+    overflow: 'hidden',
+  },
+  buttonDisabled: {
+    opacity: 0.4,
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xxxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+  },
+  buttonText: {
+    fontSize: 20,
+    fontWeight: '900' as const,
+    color: premiumColors.deepBlack,
+    letterSpacing: 0.5,
+  },
+  buttonTextDisabled: {
+    color: Colors.textSecondary,
   },
   tutorialOverlay: {
     position: 'absolute',
@@ -656,7 +1228,7 @@ const styles = StyleSheet.create({
   tutorialDot: {
     width: 8,
     height: 8,
-    borderRadius: borderRadius.full,
+    borderRadius: 9999,
     backgroundColor: premiumColors.glassWhite,
   },
   tutorialDotActive: {
@@ -665,7 +1237,7 @@ const styles = StyleSheet.create({
   },
   tutorialButton: {
     width: '100%',
-    borderRadius: borderRadius.full,
+    borderRadius: 9999,
     overflow: 'hidden',
     marginBottom: spacing.md,
   },
