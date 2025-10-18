@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Dimensions, KeyboardAvoidingView, ScrollView, Platform, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Dimensions, KeyboardAvoidingView, ScrollView, Platform, Keyboard, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -15,6 +15,86 @@ import { triggerHaptic } from '@/utils/haptics';
 import { spacing, borderRadius, premiumColors, neonGlow } from '@/constants/designTokens';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+interface DistanceSliderProps {
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+}
+
+function DistanceSlider({ value, onChange, min, max }: DistanceSliderProps) {
+  const sliderWidth = SCREEN_WIDTH - spacing.xxxl * 4;
+  const thumbPosition = useRef(new Animated.Value(((value - min) / (max - min)) * sliderWidth)).current;
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  useEffect(() => {
+    Animated.spring(thumbPosition, {
+      toValue: ((value - min) / (max - min)) * sliderWidth,
+      tension: 100,
+      friction: 8,
+      useNativeDriver: false,
+    }).start();
+  }, [value, sliderWidth, thumbPosition, min, max]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        setIsDragging(true);
+        triggerHaptic('light');
+      },
+      onPanResponderMove: (_, gestureState) => {
+        const newPosition = Math.max(0, Math.min(sliderWidth, gestureState.moveX - spacing.xxxl * 2));
+        const newValue = Math.round(min + (newPosition / sliderWidth) * (max - min));
+        onChange(newValue);
+      },
+      onPanResponderRelease: () => {
+        setIsDragging(false);
+        triggerHaptic('medium');
+      },
+    })
+  ).current;
+
+  return (
+    <View style={styles.sliderContainer}>
+      <Text style={styles.sliderLabel}>{min} mi</Text>
+      <View style={styles.sliderTrack} {...panResponder.panHandlers}>
+        <Animated.View
+          style={[
+            styles.sliderFill,
+            {
+              width: thumbPosition.interpolate({
+                inputRange: [0, sliderWidth],
+                outputRange: ['0%', '100%'],
+                extrapolate: 'clamp',
+              }),
+            },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.sliderThumb,
+            isDragging && styles.sliderThumbActive,
+            {
+              transform: [
+                {
+                  translateX: thumbPosition.interpolate({
+                    inputRange: [0, sliderWidth],
+                    outputRange: [0, sliderWidth],
+                    extrapolate: 'clamp',
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      </View>
+      <Text style={styles.sliderLabel}>{max} mi</Text>
+    </View>
+  );
+}
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -1239,25 +1319,15 @@ export default function OnboardingScreen() {
                 <Text style={styles.locationIcon}>📍</Text>
                 <Text style={styles.locationTitle}>Max Distance</Text>
                 <Text style={styles.locationValue}>{maxDistance} miles</Text>
-                <View style={styles.sliderContainer}>
-                  <Text style={styles.sliderLabel}>1 mi</Text>
-                  <View style={styles.sliderTrack}>
-                    <Animated.View style={[styles.sliderFill, { width: `${(maxDistance / 25) * 100}%` }]} />
-                    <View style={styles.sliderThumbWrapper}>
-                      {[1, 5, 10, 15, 25].map((val) => (
-                        <TouchableOpacity
-                          key={val}
-                          onPress={() => {
-                            setMaxDistance(val);
-                            triggerHaptic('selection');
-                          }}
-                          style={[styles.sliderThumb, maxDistance === val && styles.sliderThumbActive]}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                  <Text style={styles.sliderLabel}>25 mi</Text>
-                </View>
+                <DistanceSlider
+                  value={maxDistance}
+                  onChange={(val) => {
+                    setMaxDistance(val);
+                    triggerHaptic('selection');
+                  }}
+                  min={1}
+                  max={25}
+                />
               </BlurView>
             </View>
 
@@ -1313,25 +1383,15 @@ export default function OnboardingScreen() {
                 <Text style={styles.locationIcon}>📍</Text>
                 <Text style={styles.locationTitle}>Max Distance</Text>
                 <Text style={styles.locationValue}>{maxDistance} miles</Text>
-                <View style={styles.sliderContainer}>
-                  <Text style={styles.sliderLabel}>1 mi</Text>
-                  <View style={styles.sliderTrack}>
-                    <Animated.View style={[styles.sliderFill, { width: `${(maxDistance / 25) * 100}%` }]} />
-                    <View style={styles.sliderThumbWrapper}>
-                      {[1, 5, 10, 15, 25].map((val) => (
-                        <TouchableOpacity
-                          key={val}
-                          onPress={() => {
-                            setMaxDistance(val);
-                            triggerHaptic('selection');
-                          }}
-                          style={[styles.sliderThumb, maxDistance === val && styles.sliderThumbActive]}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                  <Text style={styles.sliderLabel}>25 mi</Text>
-                </View>
+                <DistanceSlider
+                  value={maxDistance}
+                  onChange={(val) => {
+                    setMaxDistance(val);
+                    triggerHaptic('selection');
+                  }}
+                  min={1}
+                  max={25}
+                />
               </BlurView>
             </View>
 
@@ -2679,17 +2739,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   sliderThumb: {
-    width: 16,
-    height: 16,
+    position: 'absolute' as const,
+    left: 0,
+    width: 24,
+    height: 24,
     borderRadius: borderRadius.full,
-    backgroundColor: premiumColors.glassWhiteStrong,
-    borderWidth: 2,
-    borderColor: premiumColors.glassDark,
+    backgroundColor: premiumColors.neonCyan,
+    borderWidth: 3,
+    borderColor: Colors.background,
+    ...neonGlow.cyan,
+    shadowRadius: 15,
+    shadowOpacity: 0.8,
   },
   sliderThumbActive: {
-    backgroundColor: premiumColors.neonCyan,
+    backgroundColor: Colors.text,
     borderColor: premiumColors.neonCyan,
-    transform: [{ scale: 1.3 }],
+    ...neonGlow.cyan,
+    shadowRadius: 20,
+    shadowOpacity: 1,
+    transform: [{ scale: 1.2 }],
   },
   categoriesScroll: {
     maxHeight: SCREEN_HEIGHT * 0.5,
