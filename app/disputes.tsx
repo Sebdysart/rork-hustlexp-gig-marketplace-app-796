@@ -44,7 +44,7 @@ export default function DisputesScreen() {
         reporterId: currentUser.id,
         reportedUserId: '',
         category: selectedCategory,
-        title: '',
+        title: title || 'Dispute',
         description,
         status: 'open',
         createdAt: new Date().toISOString(),
@@ -54,6 +54,36 @@ export default function DisputesScreen() {
       
       const analysis = await analyzeDispute(mockDispute);
       const topSuggestion = analysis.suggestions[0];
+      
+      const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+      if (backendUrl) {
+        try {
+          const storeResponse = await fetch(
+            `${backendUrl}/api/disputes/temp/ai-analysis`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                analysis: {
+                  resolution: topSuggestion.resolution,
+                  confidence: topSuggestion.confidence,
+                  reasoning: topSuggestion.reasoning,
+                  fairnessScore: topSuggestion.fairnessScore,
+                  recommendedAction: topSuggestion.recommendedAction,
+                },
+              }),
+            }
+          );
+
+          if (storeResponse.ok) {
+            console.log('✅ AI analysis stored in backend');
+          }
+        } catch (apiError) {
+          console.log('📡 Backend not available, AI suggestion still works locally');
+        }
+      }
       
       setAiSuggestion(topSuggestion.reasoning);
       setShowAISuggestion(true);
@@ -72,11 +102,41 @@ export default function DisputesScreen() {
     }
   };
 
-  const handleSubmitDispute = () => {
+  const handleSubmitDispute = async () => {
     if (!selectedCategory || !title.trim() || !description.trim() || !selectedTaskId) {
       triggerHaptic('error');
       Alert.alert('Missing Information', 'Please fill in all required fields.');
       return;
+    }
+
+    const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const task = tasks.find(t => t.id === selectedTaskId);
+        const reportedUserId = task?.workerId === currentUser.id ? task.posterId : task?.workerId;
+
+        const response = await fetch(`${backendUrl}/api/disputes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            taskId: selectedTaskId,
+            reporterId: currentUser.id,
+            reportedUserId: reportedUserId || 'unknown',
+            category: selectedCategory,
+            title,
+            description,
+          }),
+        });
+
+        if (response.ok) {
+          const dispute = await response.json();
+          console.log('✅ Dispute created in backend:', dispute);
+        }
+      } catch (apiError) {
+        console.log('📡 Backend not available, dispute saved locally');
+      }
     }
 
     triggerHaptic('success');
@@ -91,6 +151,8 @@ export default function DisputesScreen() {
             setTitle('');
             setDescription('');
             setSelectedTaskId('');
+            setShowAISuggestion(false);
+            setAiSuggestion('');
           },
         },
       ]

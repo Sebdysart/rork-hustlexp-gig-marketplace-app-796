@@ -115,6 +115,27 @@ export default function WalletScreen() {
     if (currentUser && myAcceptedTasks.length > 0 && walletData) {
       const getPredictions = async () => {
         try {
+          const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+          if (backendUrl) {
+            try {
+              const response = await fetch(
+                `${backendUrl}/api/users/${currentUser.id}/earnings-history?days=30`,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                }
+              );
+
+              if (response.ok) {
+                const earningsData = await response.json();
+                console.log('✅ Fetched earnings history from backend:', earningsData);
+              }
+            } catch (apiError) {
+              console.log('📡 Backend not available, using local predictions');
+            }
+          }
+
           const weeklyPred = predictWeeklyEarnings(currentUser, myAcceptedTasks);
           const monthlyPred = predictMonthlyEarnings(currentUser, myAcceptedTasks);
           
