@@ -42,11 +42,13 @@ export default function DisputesScreen() {
         id: 'temp',
         taskId: selectedTaskId,
         reporterId: currentUser.id,
+        reportedUserId: '',
         category: selectedCategory,
         title: '',
         description,
         status: 'open',
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         evidence: [],
       };
       

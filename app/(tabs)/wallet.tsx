@@ -66,36 +66,6 @@ export default function WalletScreen() {
     monthly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable' };
   } | null>(null);
 
-  useEffect(() => {
-    if (currentUser && myAcceptedTasks.length > 0) {
-      const getPredictions = async () => {
-        try {
-          const weeklyPred = predictWeeklyEarnings(currentUser, myAcceptedTasks);
-          const monthlyPred = predictMonthlyEarnings(currentUser, myAcceptedTasks);
-          
-          const weeklyTrend: 'up' | 'down' | 'stable' = weeklyPred.projected > walletData.thisWeek * 4 ? 'up' : 'stable';
-          const monthlyTrend: 'up' | 'down' | 'stable' = monthlyPred.projected > walletData.thisMonth * 4 ? 'up' : 'stable';
-          
-          setPredictions({
-            weekly: { 
-              amount: weeklyPred.projected, 
-              confidence: weeklyPred.confidence / 100, 
-              trend: weeklyTrend 
-            },
-            monthly: { 
-              amount: monthlyPred.projected, 
-              confidence: monthlyPred.confidence / 100, 
-              trend: monthlyTrend 
-            },
-          });
-        } catch (error) {
-          console.error('Failed to get predictions:', error);
-        }
-      };
-      getPredictions();
-    }
-  }, [currentUser, myAcceptedTasks]);
-
   const walletData = useMemo(() => {
     if (!currentUser) return null;
 
@@ -140,6 +110,36 @@ export default function WalletScreen() {
       weeklyHistory,
     };
   }, [currentUser, myAcceptedTasks]);
+
+  useEffect(() => {
+    if (currentUser && myAcceptedTasks.length > 0 && walletData) {
+      const getPredictions = async () => {
+        try {
+          const weeklyPred = predictWeeklyEarnings(currentUser, myAcceptedTasks);
+          const monthlyPred = predictMonthlyEarnings(currentUser, myAcceptedTasks);
+          
+          const weeklyTrend: 'up' | 'down' | 'stable' = weeklyPred.projected > walletData.thisWeek * 4 ? 'up' : 'stable';
+          const monthlyTrend: 'up' | 'down' | 'stable' = monthlyPred.projected > walletData.thisMonth * 4 ? 'up' : 'stable';
+          
+          setPredictions({
+            weekly: { 
+              amount: weeklyPred.projected, 
+              confidence: weeklyPred.confidence / 100, 
+              trend: weeklyTrend 
+            },
+            monthly: { 
+              amount: monthlyPred.projected, 
+              confidence: monthlyPred.confidence / 100, 
+              trend: monthlyTrend 
+            },
+          });
+        } catch (error) {
+          console.error('Failed to get predictions:', error);
+        }
+      };
+      getPredictions();
+    }
+  }, [currentUser, myAcceptedTasks, walletData]);
 
   if (!currentUser || !walletData) {
     return null;
