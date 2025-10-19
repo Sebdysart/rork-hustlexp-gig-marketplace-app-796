@@ -117,8 +117,8 @@ export async function testBackendConnection() {
     console.log('\n7️⃣ Testing Nearby Tasks (Smart Bundling)...');
     const response = await fetch('https://lunch-garden-dycejr.replit.app/api/tasks/nearby?lat=40.7128&lng=-74.0060&radius=5&status=open');
     const nearbyTasks = await response.json();
-    console.log('✅ Nearby Tasks:', nearbyTasks.tasks?.length || 0, 'tasks found');
-    results.nearbyTasks = Array.isArray(nearbyTasks.tasks);
+    console.log('✅ Nearby Tasks:', Array.isArray(nearbyTasks) ? nearbyTasks.length : 0, 'tasks found');
+    results.nearbyTasks = Array.isArray(nearbyTasks);
   } catch (error) {
     console.error('❌ Nearby Tasks failed:', error instanceof Error ? error.message : 'Unknown error');
   }
@@ -127,8 +127,8 @@ export async function testBackendConnection() {
     console.log('\n8️⃣ Testing Earnings History (Predictive Earnings)...');
     const response = await fetch('https://lunch-garden-dycejr.replit.app/api/users/test-user-123/earnings-history?days=30');
     const earningsHistory = await response.json();
-    console.log('✅ Earnings History:', Array.isArray(earningsHistory.earnings) ? earningsHistory.earnings.length : 0, 'days of data');
-    results.earningsHistory = Array.isArray(earningsHistory.earnings);
+    console.log('✅ Earnings History:', Array.isArray(earningsHistory) ? earningsHistory.length : 0, 'days of data');
+    results.earningsHistory = Array.isArray(earningsHistory);
   } catch (error) {
     console.error('❌ Earnings History failed:', error instanceof Error ? error.message : 'Unknown error');
   }
@@ -141,10 +141,10 @@ export async function testBackendConnection() {
       body: JSON.stringify({
         taskId: 'test-task-123',
         reporterId: 'test-user-123',
-        reportedUserId: 'test-user-456',
-        category: 'payment_dispute',
-        title: 'Payment not received',
+        defendantId: 'test-user-456',
+        reason: 'Payment not received',
         description: 'Task was completed but payment is pending',
+        status: 'open',
       }),
     });
     const dispute = await createDisputeResponse.json();
@@ -154,14 +154,21 @@ export async function testBackendConnection() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          analysis: 'AI suggests investigating payment processing logs',
-          suggestedResolution: 'manual_review',
-          confidence: 0.85,
+          suggestions: [{
+            resolution: 'manual_review',
+            confidence: 85,
+            reasoning: 'AI suggests investigating payment processing logs'
+          }],
+          analysis: {
+            riskScore: 30,
+            recommendedAction: 'manual_review',
+            evidenceAnalysis: 'Payment dispute requires manual investigation'
+          }
         }),
       });
       const aiResult = await aiAnalysisResponse.json();
-      console.log('✅ Dispute AI Analysis:', aiResult.success ? 'stored successfully' : 'failed');
-      results.disputeAI = aiResult.success || false;
+      console.log('✅ Dispute AI Analysis:', aiResult.status === 'analysis_stored' ? 'stored successfully' : 'failed');
+      results.disputeAI = aiResult.status === 'analysis_stored';
     } else {
       console.log('⚠️ Dispute creation failed, skipping AI analysis test');
       results.disputeAI = false;
