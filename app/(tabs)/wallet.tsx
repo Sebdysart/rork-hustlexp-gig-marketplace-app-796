@@ -112,7 +112,7 @@ export default function WalletScreen() {
   }, [currentUser, myAcceptedTasks]);
 
   useEffect(() => {
-    if (currentUser && myAcceptedTasks.length > 0 && walletData) {
+    if (currentUser && myAcceptedTasks.length > 0 && walletData && walletData.thisWeek !== undefined && walletData.thisMonth !== undefined) {
       const getPredictions = async () => {
         try {
           const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;

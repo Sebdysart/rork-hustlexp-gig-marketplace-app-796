@@ -289,16 +289,17 @@ export default function TasksScreen() {
     return filtered;
   }, [availableTasks, currentUser, activeFilter, sortBy]);
 
-  const currentTask = filteredTasks[currentTaskIndex];
-  const currentPoster = currentTask ? users.find(u => u.id === currentTask.posterId) : undefined;
-
   useEffect(() => {
+    const currentTask = filteredTasks[currentTaskIndex];
     if (currentTask && currentUser && filteredTasks.length > 1) {
       suggestTaskBundles(currentTask, filteredTasks, currentUser.location, currentUser)
         .then(bundles => setTaskBundles(bundles))
         .catch(err => console.error('Failed to generate bundles:', err));
     }
-  }, [currentTask, currentUser, filteredTasks]);
+  }, [currentTaskIndex, currentUser, filteredTasks]);
+
+  const currentTask = filteredTasks[currentTaskIndex];
+  const currentPoster = currentTask ? users.find(u => u.id === currentTask.posterId) : undefined;
 
   const handleSwipeLeft = () => {
     console.log('Task skipped:', currentTask?.id);

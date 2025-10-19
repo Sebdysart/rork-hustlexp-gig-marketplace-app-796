@@ -42,7 +42,7 @@ export default function DisputesScreen() {
         id: 'temp',
         taskId: selectedTaskId,
         reporterId: currentUser.id,
-        reportedUserId: '',
+        reportedUserId: 'unknown',
         category: selectedCategory,
         title: title || 'Dispute',
         description,
