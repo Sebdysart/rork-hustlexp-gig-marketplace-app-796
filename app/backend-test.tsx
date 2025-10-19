@@ -16,6 +16,10 @@ interface TestResults {
   feedback: boolean;
   aiProfile: boolean;
   experiments: boolean;
+  taskHistory: boolean;
+  nearbyTasks: boolean;
+  earningsHistory: boolean;
+  disputeAI: boolean;
 }
 
 export default function BackendTestScreen() {
@@ -50,11 +54,15 @@ export default function BackendTestScreen() {
   };
 
   const tests = [
-    { key: 'health' as const, label: 'Health Check', description: 'Backend is online and responding' },
-    { key: 'chat' as const, label: 'AI Chat', description: 'GPT-4 Turbo chat endpoint' },
-    { key: 'feedback' as const, label: 'Feedback Loop', description: 'AI learning from user actions' },
-    { key: 'aiProfile' as const, label: 'AI User Profile', description: 'Personalized recommendations' },
-    { key: 'experiments' as const, label: 'A/B Testing', description: 'Experiment tracking' },
+    { key: 'health' as const, label: 'Health Check', description: 'Backend is online and responding', category: 'core' },
+    { key: 'chat' as const, label: 'AI Chat', description: 'GPT-4 Turbo chat endpoint', category: 'core' },
+    { key: 'feedback' as const, label: 'Feedback Loop', description: 'AI learning from user actions', category: 'core' },
+    { key: 'aiProfile' as const, label: 'AI User Profile', description: 'Personalized recommendations', category: 'core' },
+    { key: 'experiments' as const, label: 'A/B Testing', description: 'Experiment tracking', category: 'core' },
+    { key: 'taskHistory' as const, label: 'Task History', description: 'Safety Scanner - User stats', category: 'phase3' },
+    { key: 'nearbyTasks' as const, label: 'Nearby Tasks', description: 'Smart Bundling - Geolocation', category: 'phase3' },
+    { key: 'earningsHistory' as const, label: 'Earnings History', description: 'Predictive Earnings - Analytics', category: 'phase3' },
+    { key: 'disputeAI' as const, label: 'Dispute AI', description: 'AI Dispute Assistant - Auto-resolve', category: 'phase3' },
   ];
 
   const passedCount = results ? Object.values(results).filter(r => r).length : 0;
@@ -133,7 +141,8 @@ export default function BackendTestScreen() {
           </TouchableOpacity>
 
           <View style={styles.testsContainer}>
-            {tests.map((test) => (
+            <Text style={styles.sectionTitle}>🎯 Core AI Features</Text>
+            {tests.filter(t => t.category === 'core').map((test) => (
               <GlassCard 
                 key={test.key} 
                 variant="dark" 
@@ -147,6 +156,30 @@ export default function BackendTestScreen() {
                   <View style={styles.testStatus}>
                     {testing && !results && (
                       <ActivityIndicator size="small" color={premiumColors.neonCyan} />
+                    )}
+                    {results && getStatusIcon(results[test.key])}
+                  </View>
+                </View>
+              </GlassCard>
+            ))}
+
+            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>🚀 Phase 3 Mobile Features</Text>
+            {tests.filter(t => t.category === 'phase3').map((test) => (
+              <GlassCard 
+                key={test.key} 
+                variant="dark" 
+                style={styles.testCard}
+                neonBorder
+                glowColor="neonGreen"
+              >
+                <View style={styles.testHeader}>
+                  <View style={styles.testInfo}>
+                    <Text style={styles.testLabel}>{test.label}</Text>
+                    <Text style={styles.testDescription}>{test.description}</Text>
+                  </View>
+                  <View style={styles.testStatus}>
+                    {testing && !results && (
+                      <ActivityIndicator size="small" color={premiumColors.neonGreen} />
                     )}
                     {results && getStatusIcon(results[test.key])}
                   </View>
@@ -180,11 +213,18 @@ export default function BackendTestScreen() {
           <GlassCard variant="dark" style={styles.infoCard}>
             <Text style={styles.infoTitle}>ℹ️ What This Tests</Text>
             <Text style={styles.infoText}>
-              • Backend availability and response times{'\n'}
+              Core AI:{'\n'}
+              • Backend health & response times{'\n'}
               • AI chat with GPT-4 Turbo{'\n'}
-              • Feedback loop for AI learning{'\n'}
+              • Feedback loop for learning{'\n'}
               • User profile personalization{'\n'}
-              • A/B testing infrastructure
+              • A/B testing infrastructure{'\n'}
+              {'\n'}
+              Phase 3 Mobile:{'\n'}
+              • Safety Scanner (task history){'\n'}
+              • Smart Bundling (nearby tasks){'\n'}
+              • Predictive Earnings (analytics){'\n'}
+              • AI Dispute Assistant (auto-resolve)
             </Text>
           </GlassCard>
         </ScrollView>
@@ -289,6 +329,12 @@ const styles = StyleSheet.create({
   testStatus: {
     width: 32,
     alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 12,
   },
   resultCard: {
     padding: 24,
