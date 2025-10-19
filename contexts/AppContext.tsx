@@ -114,6 +114,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [currentUser]);
 
   const completeOnboarding = useCallback(async (name: string, role: UserRole, location: { lat: number; lng: number; address: string }, email?: string, password?: string, mode?: UserMode, trades?: string[]) => {
+    const initialMode = mode || (role === 'poster' ? 'business' : 'everyday');
+    const modesUnlocked: UserMode[] = [initialMode];
+    
+    if (role === 'both') {
+      modesUnlocked.push('everyday', 'business');
+      if (trades && trades.length > 0) {
+        modesUnlocked.push('tradesmen');
+      }
+    }
+
     const newUser: User = {
       id: `user-${Date.now()}`,
       email: email || `${name.toLowerCase().replace(/\s/g, '.')}@hustlexp.com`,
@@ -152,9 +162,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
         totalPrestige: 0,
         permanentPayoutBoost: 0,
       },
-      activeMode: mode || (role === 'poster' ? 'business' : 'everyday'),
-      modesUnlocked: [mode || (role === 'poster' ? 'business' : 'everyday')],
-      tradesmanProfile: mode === 'tradesmen' && trades ? {
+      activeMode: initialMode,
+      modesUnlocked,
+      tradesmanProfile: (mode === 'tradesmen' || role === 'both') && trades ? {
         isPro: true,
         trades: trades,
         primaryTrade: trades[0],
@@ -172,7 +182,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
           onTimeCompletion: 100,
         },
       } : undefined,
-      posterProfile: mode === 'business' ? {
+      posterProfile: (mode === 'business' || role === 'both' || role === 'poster') ? {
         trustXP: 0,
         totalSpent: 0,
         tasksPosted: 0,

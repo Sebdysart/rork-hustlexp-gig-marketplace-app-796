@@ -307,14 +307,7 @@ export default function OnboardingScreen() {
         triggerHaptic('success');
         setShowTutorial(true);
       } else if (userIntent === 'both') {
-        triggerHaptic('success');
-        const role: UserRole = 'worker';
-        completeOnboarding(name, role, {
-          lat: 37.7749,
-          lng: -122.4194,
-          address: 'San Francisco, CA',
-        }, email, password, 'everyday');
-        router.replace('/(tabs)/home');
+        transitionToNextStep();
       } else {
         transitionToNextStep();
       }
@@ -524,8 +517,9 @@ export default function OnboardingScreen() {
                     setTutorialIndex(tutorialIndex + 1);
                   } else {
                     if (selectedMode === 'tradesmen' && selectedTrades.length > 0) {
+                      const role: UserRole = userIntent === 'both' ? 'both' : 'worker';
                       setTimeout(() => {
-                        completeOnboarding(name, 'worker', {
+                        completeOnboarding(name, role, {
                           lat: 37.7749,
                           lng: -122.4194,
                           address: 'San Francisco, CA',
@@ -533,7 +527,14 @@ export default function OnboardingScreen() {
                         router.replace('/(tabs)/home');
                       }, 500);
                     } else if (selectedMode) {
-                      const role: UserRole = selectedMode === 'business' ? 'poster' : 'worker';
+                      let role: UserRole = 'worker';
+                      if (userIntent === 'both') {
+                        role = 'both';
+                      } else if (selectedMode === 'business') {
+                        role = 'poster';
+                      } else {
+                        role = 'worker';
+                      }
                       setTimeout(() => {
                         completeOnboarding(name, role, {
                           lat: 37.7749,
@@ -563,14 +564,22 @@ export default function OnboardingScreen() {
                 onPress={() => {
                   triggerHaptic('light');
                   if (selectedMode === 'tradesmen' && selectedTrades.length > 0) {
-                    completeOnboarding(name, 'worker', {
+                    const role: UserRole = userIntent === 'both' ? 'both' : 'worker';
+                    completeOnboarding(name, role, {
                       lat: 37.7749,
                       lng: -122.4194,
                       address: 'San Francisco, CA',
                     }, email, password, 'tradesmen', selectedTrades);
                     router.replace('/(tabs)/home');
                   } else if (selectedMode) {
-                    const role: UserRole = selectedMode === 'business' ? 'poster' : 'worker';
+                    let role: UserRole = 'worker';
+                    if (userIntent === 'both') {
+                      role = 'both';
+                    } else if (selectedMode === 'business') {
+                      role = 'poster';
+                    } else {
+                      role = 'worker';
+                    }
                     completeOnboarding(name, role, {
                       lat: 37.7749,
                       lng: -122.4194,
