@@ -108,12 +108,21 @@ export async function testBackendConnection() {
     const response = await fetch('https://lunch-garden-dycejr.replit.app/api/users/test-user-123/task-history');
     
     if (!response.ok) {
+      const errorText = await response.text();
       console.error('❌ Task History HTTP error:', response.status, response.statusText);
+      console.error('   Response body:', errorText);
       results.taskHistory = false;
     } else {
       const taskHistory = await response.json();
-      console.log('✅ Task History:', JSON.stringify(taskHistory).substring(0, 150));
-      results.taskHistory = typeof taskHistory === 'object' && taskHistory !== null && 'tasksPosted' in taskHistory;
+      console.log('✅ Task History:', JSON.stringify(taskHistory));
+      const isValid = typeof taskHistory === 'object' && 
+                     taskHistory !== null && 
+                     'tasksPosted' in taskHistory &&
+                     'cancelRate' in taskHistory &&
+                     'avgRating' in taskHistory &&
+                     'strikes' in taskHistory;
+      console.log('   Validation:', isValid ? 'PASS (has all required fields)' : 'FAIL (missing fields)');
+      results.taskHistory = isValid;
     }
   } catch (error) {
     console.error('❌ Task History failed:', error instanceof Error ? error.message : 'Unknown error');
@@ -134,12 +143,16 @@ export async function testBackendConnection() {
     const response = await fetch('https://lunch-garden-dycejr.replit.app/api/users/test-user-123/earnings-history?days=30');
     
     if (!response.ok) {
+      const errorText = await response.text();
       console.error('❌ Earnings History HTTP error:', response.status, response.statusText);
+      console.error('   Response body:', errorText);
       results.earningsHistory = false;
     } else {
       const earningsHistory = await response.json();
-      console.log('✅ Earnings History:', Array.isArray(earningsHistory) ? earningsHistory.length : 0, 'days of data');
-      results.earningsHistory = Array.isArray(earningsHistory);
+      const isValid = Array.isArray(earningsHistory);
+      console.log('✅ Earnings History:', earningsHistory.length, 'days of data');
+      console.log('   Validation:', isValid ? 'PASS (is array)' : 'FAIL (not array)');
+      results.earningsHistory = isValid;
     }
   } catch (error) {
     console.error('❌ Earnings History failed:', error instanceof Error ? error.message : 'Unknown error');
