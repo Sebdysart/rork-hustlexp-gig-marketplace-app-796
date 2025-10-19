@@ -106,9 +106,15 @@ export async function testBackendConnection() {
   try {
     console.log('\n6️⃣ Testing Task History (Safety Scanner)...');
     const response = await fetch('https://lunch-garden-dycejr.replit.app/api/users/test-user-123/task-history');
-    const taskHistory = await response.json();
-    console.log('✅ Task History:', JSON.stringify(taskHistory).substring(0, 150));
-    results.taskHistory = taskHistory.tasksPosted !== undefined;
+    
+    if (!response.ok) {
+      console.error('❌ Task History HTTP error:', response.status, response.statusText);
+      results.taskHistory = false;
+    } else {
+      const taskHistory = await response.json();
+      console.log('✅ Task History:', JSON.stringify(taskHistory).substring(0, 150));
+      results.taskHistory = typeof taskHistory === 'object' && taskHistory !== null && 'tasksPosted' in taskHistory;
+    }
   } catch (error) {
     console.error('❌ Task History failed:', error instanceof Error ? error.message : 'Unknown error');
   }
@@ -126,9 +132,15 @@ export async function testBackendConnection() {
   try {
     console.log('\n8️⃣ Testing Earnings History (Predictive Earnings)...');
     const response = await fetch('https://lunch-garden-dycejr.replit.app/api/users/test-user-123/earnings-history?days=30');
-    const earningsHistory = await response.json();
-    console.log('✅ Earnings History:', Array.isArray(earningsHistory) ? earningsHistory.length : 0, 'days of data');
-    results.earningsHistory = Array.isArray(earningsHistory);
+    
+    if (!response.ok) {
+      console.error('❌ Earnings History HTTP error:', response.status, response.statusText);
+      results.earningsHistory = false;
+    } else {
+      const earningsHistory = await response.json();
+      console.log('✅ Earnings History:', Array.isArray(earningsHistory) ? earningsHistory.length : 0, 'days of data');
+      results.earningsHistory = Array.isArray(earningsHistory);
+    }
   } catch (error) {
     console.error('❌ Earnings History failed:', error instanceof Error ? error.message : 'Unknown error');
   }
