@@ -297,6 +297,8 @@ export default function OnboardingScreen() {
       if (userIntent === 'poster') {
         setSelectedMode('business');
         transitionToNextStep();
+      } else if (userIntent === 'both') {
+        transitionToNextStep();
       } else {
         transitionToNextStep();
       }
@@ -304,6 +306,15 @@ export default function OnboardingScreen() {
       if (userIntent === 'poster') {
         triggerHaptic('success');
         setShowTutorial(true);
+      } else if (userIntent === 'both') {
+        triggerHaptic('success');
+        const role: UserRole = 'worker';
+        completeOnboarding(name, role, {
+          lat: 37.7749,
+          lng: -122.4194,
+          address: 'San Francisco, CA',
+        }, email, password, 'everyday');
+        router.replace('/(tabs)/home');
       } else {
         transitionToNextStep();
       }
