@@ -77,11 +77,15 @@ export async function findBestWorkers(
         worker.location.lng
       );
 
-      const baseScore =
+      let baseScore =
         (worker.reputationScore / 5) * 30 +
         Math.min(worker.tasksCompleted / 100, 1) * 20 +
         Math.max(0, 1 - distance / 50) * 30 +
         (worker.level / 100) * 20;
+
+      if (worker.role === 'both') {
+        baseScore *= 1.1;
+      }
 
       return {
         worker,

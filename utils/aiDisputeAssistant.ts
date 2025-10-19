@@ -1,5 +1,6 @@
 import { Dispute, DisputeCategory, DisputeResolution } from '@/constants/disputes';
 import { Task, User } from '@/types';
+import { hustleAI } from './hustleAI';
 
 export interface DisputeSuggestion {
   resolution: DisputeResolution;
@@ -190,8 +191,65 @@ export async function analyzeDispute(
   dispute: Dispute,
   task?: Task,
   reporter?: User,
-  reported?: User
+  reported?: User,
+  useAI: boolean = true
 ): Promise<DisputeAnalysis> {
+  console.log('[AIDispute] Analyzing dispute:', dispute.id);
+
+  if (useAI && reporter) {
+    try {
+      const aiResponse = await hustleAI.chat(reporter.id, JSON.stringify({
+        action: 'analyze_dispute',
+        dispute: {
+          id: dispute.id,
+          category: dispute.category,
+          description: dispute.description,
+          evidence: dispute.evidence.map(e => ({ type: e.type, url: e.url })),
+        },
+        task: task ? {
+          id: task.id,
+          category: task.category,
+          payAmount: task.payAmount,
+          status: task.status,
+        } : undefined,
+        reporter: reporter ? {
+          id: reporter.id,
+          reputation: reporter.reputationScore,
+          level: reporter.level,
+        } : undefined,
+        reported: reported ? {
+          id: reported.id,
+          reputation: reported.reputationScore,
+          level: reported.level,
+        } : undefined,
+      }));
+
+      if (aiResponse && typeof aiResponse === 'object' && 'analysis' in aiResponse) {
+        const aiAnalysis = (aiResponse as any).analysis;
+        console.log('[AIDispute] AI analysis received:', aiAnalysis);
+        
+        if (aiAnalysis && aiAnalysis.suggestions) {
+          return {
+            category: dispute.category,
+            severity: aiAnalysis.severity || 'medium',
+            suggestions: aiAnalysis.suggestions.map((s: any) => ({
+              resolution: s.resolution || 'warning_issued',
+              confidence: s.confidence || 70,
+              reasoning: s.reasoning || '',
+              fairnessScore: s.fairnessScore || 75,
+              recommendedAction: s.recommendedAction || '',
+              alternativeOptions: s.alternativeOptions || [],
+            })),
+            mediationPoints: aiAnalysis.mediationPoints || [],
+            precedents: aiAnalysis.precedents || [],
+            estimatedResolutionTime: aiAnalysis.estimatedResolutionTime || '1-2 days',
+          };
+        }
+      }
+    } catch (error) {
+      console.error('[AIDispute] AI analysis failed, using rule-based:', error);
+    }
+  }
   let suggestions: DisputeSuggestion[] = [];
   let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
   const mediationPoints: string[] = [];

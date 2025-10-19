@@ -1,4 +1,5 @@
 import { Task, User } from '@/types';
+import { hustleAI } from './hustleAI';
 
 export interface TaskBundle {
   id: string;
@@ -62,7 +63,81 @@ export async function suggestTaskBundles(
   userLocation: { lat: number; lng: number },
   user?: User
 ): Promise<TaskBundle[]> {
+  console.log('[AITaskBundling] Generating bundle suggestions');
   const bundles: TaskBundle[] = [];
+
+  if (user) {
+    try {
+      const aiResponse = await hustleAI.chat(user.id, JSON.stringify({
+        action: 'suggest_task_bundles',
+        userId: user.id,
+        currentTask: {
+          id: currentTask.id,
+          category: currentTask.category,
+          location: currentTask.location,
+          payAmount: currentTask.payAmount,
+        },
+        availableTasks: availableTasks.slice(0, 20).map(t => ({
+          id: t.id,
+          category: t.category,
+          location: t.location,
+          payAmount: t.payAmount,
+          xpReward: t.xpReward,
+          status: t.status,
+        })),
+        userLocation,
+      }));
+
+      if (aiResponse && typeof aiResponse === 'object' && 'bundles' in aiResponse) {
+        const aiBundles = (aiResponse as any).bundles;
+        console.log('[AITaskBundling] AI suggested', aiBundles.length, 'bundles');
+        
+        if (aiBundles && Array.isArray(aiBundles) && aiBundles.length > 0) {
+          for (const aiBundle of aiBundles) {
+            const taskIds = aiBundle.taskIds || [];
+            const bundledTasks = [currentTask, ...availableTasks.filter(t => taskIds.includes(t.id))];
+            
+            if (bundledTasks.length > 1) {
+              const optimizedRoute = optimizeRoute(bundledTasks, userLocation);
+              let totalDistance = 0;
+              for (let i = 0; i < optimizedRoute.length - 1; i++) {
+                totalDistance += calculateDistance(
+                  optimizedRoute[i].location.lat,
+                  optimizedRoute[i].location.lng,
+                  optimizedRoute[i + 1].location.lat,
+                  optimizedRoute[i + 1].location.lng
+                );
+              }
+
+              const totalPay = optimizedRoute.reduce((sum, t) => sum + t.payAmount, 0);
+              const totalXP = optimizedRoute.reduce((sum, t) => sum + t.xpReward, 0);
+              const bonusMultiplier = aiBundle.bonusMultiplier || 1.12;
+              const potentialBonus = Math.floor(totalPay * (bonusMultiplier - 1));
+
+              bundles.push({
+                id: `bundle-ai-${aiBundle.id || Date.now()}`,
+                tasks: optimizedRoute,
+                totalPay: totalPay + potentialBonus,
+                totalXP: Math.floor(totalXP * bonusMultiplier),
+                totalDistance,
+                estimatedDuration: aiBundle.estimatedDuration || `${optimizedRoute.length * 1.5}-${optimizedRoute.length * 2.5} hours`,
+                routeOptimized: true,
+                potentialBonus,
+                reasoning: aiBundle.reasoning || 'AI-optimized bundle for maximum efficiency',
+                efficiencyScore: aiBundle.efficiencyScore || 88,
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[AITaskBundling] AI bundling failed, using fallback:', error);
+    }
+  }
+
+  if (bundles.length === 0) {
+    console.log('[AITaskBundling] Using rule-based bundling');
+  }
 
   const nearbyTasks = availableTasks.filter(task => {
     if (task.id === currentTask.id) return false;
