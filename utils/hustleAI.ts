@@ -246,6 +246,12 @@ class HustleAIClient {
   }
 
   async chat(userId: string, message: string): Promise<ChatResponse> {
+    const MAX_MESSAGE_LENGTH = 1000;
+    
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      throw new Error(`Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`);
+    }
+    
     try {
       return await this.makeRequest<ChatResponse>('/agent/chat', 'POST', {
         userId,

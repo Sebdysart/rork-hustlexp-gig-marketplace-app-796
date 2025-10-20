@@ -11,6 +11,7 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Send, Brain, DollarSign, Clock, Zap, ChevronRight } from 'lucide-react-native';
@@ -21,6 +22,8 @@ import { premiumColors } from '@/constants/designTokens';
 import { useRorkAgent } from '@rork/toolkit-sdk';
 
 import GlassCard from '@/components/GlassCard';
+
+const MAX_MESSAGE_LENGTH = 1000;
 
 export default function HustleAIChatScreen() {
   const router = useRouter();
@@ -46,6 +49,16 @@ export default function HustleAIChatScreen() {
     if (!input.trim()) return;
     
     const messageText = input.trim();
+    
+    if (messageText.length > MAX_MESSAGE_LENGTH) {
+      Alert.alert(
+        'Message Too Long',
+        `Your message is ${messageText.length} characters. Please keep it under ${MAX_MESSAGE_LENGTH} characters.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
     setInput('');
     await sendMessage(messageText);
     triggerHaptic('light');
@@ -283,16 +296,30 @@ export default function HustleAIChatScreen() {
         )}
 
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder="Ask HustleAI anything..."
-            placeholderTextColor={Colors.textSecondary}
-            multiline
-            maxLength={500}
-            editable={!isLoading}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+              placeholder="Ask HustleAI anything..."
+              placeholderTextColor={Colors.textSecondary}
+              multiline
+              maxLength={MAX_MESSAGE_LENGTH}
+              editable={!isLoading}
+            />
+            
+            {input.length > 0 && (
+              <Text 
+                style={[
+                  styles.charCounter,
+                  input.length > MAX_MESSAGE_LENGTH * 0.9 && styles.charCounterWarning,
+                  input.length >= MAX_MESSAGE_LENGTH && styles.charCounterError,
+                ]}
+              >
+                {input.length}/{MAX_MESSAGE_LENGTH}
+              </Text>
+            )}
+          </View>
 
           <TouchableOpacity
             style={[styles.sendButton, (!input.trim() || isLoading) && styles.sendButtonDisabled]}
@@ -508,21 +535,38 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     padding: 12,
     backgroundColor: Colors.card,
     borderTopWidth: 1,
     borderTopColor: Colors.surface,
   },
-  input: {
+  inputWrapper: {
     flex: 1,
+    marginRight: 8,
+  },
+  input: {
     backgroundColor: Colors.surface,
     borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginRight: 8,
+    paddingTop: 10,
+    paddingBottom: 10,
     color: Colors.text,
     maxHeight: 100,
+  },
+  charCounter: {
+    position: 'absolute',
+    bottom: -18,
+    right: 8,
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  charCounterWarning: {
+    color: premiumColors.neonAmber,
+  },
+  charCounterError: {
+    color: '#EF4444',
   },
   sendButton: {
     backgroundColor: Colors.accent,
