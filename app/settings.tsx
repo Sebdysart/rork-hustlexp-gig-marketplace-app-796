@@ -220,6 +220,25 @@ export default function SettingsScreen() {
               />
             </View>
 
+            <View style={styles.settingRow} accessible accessibilityLabel="Enable smart AI notifications">
+              <View style={styles.settingInfo}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.settingLabel}>Smart Notifications</Text>
+                  <Sparkles size={14} color={Colors.accent} />
+                </View>
+                <Text style={styles.settingDescription}>AI learns best timing for notifications</Text>
+              </View>
+              <Switch
+                value={settings.aiNotificationsEnabled !== false}
+                onValueChange={(value) => handleToggle('aiNotificationsEnabled', value)}
+                trackColor={{ false: Colors.card, true: Colors.primary }}
+                thumbColor={(settings.aiNotificationsEnabled !== false) ? Colors.accent : Colors.textSecondary}
+                disabled={!settings.notificationsEnabled}
+                accessibilityLabel="Smart notifications toggle"
+                accessibilityRole="switch"
+              />
+            </View>
+
             <View style={styles.settingRow} accessible accessibilityLabel="Enable sound effects">
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Sound Effects</Text>

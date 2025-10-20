@@ -299,6 +299,12 @@ export default function UnifiedProfile({
                 <Text style={styles.heroRole}>
                   {user.role === 'poster' ? 'Quest Giver' : user.role === 'worker' ? 'Adventurer' : 'Legendary Hero'}
                 </Text>
+                {user.role === 'both' && (
+                  <View style={styles.dualRoleBadge}>
+                    <Zap size={12} color={premiumColors.neonAmber} strokeWidth={3} />
+                    <Text style={styles.dualRoleText}>DUAL ROLE</Text>
+                  </View>
+                )}
                 <View style={styles.levelBadgeContainer}>
                   <LevelBadge level={user.level} size="small" />
                   <Text style={styles.tierBadge}>{currentTier.title}</Text>
@@ -953,6 +959,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  dualRoleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: premiumColors.neonAmber + '20',
+    borderWidth: 1,
+    borderColor: premiumColors.neonAmber,
+  },
+  dualRoleText: {
+    fontSize: 10,
+    fontWeight: '800' as const,
+    color: premiumColors.neonAmber,
+    letterSpacing: 0.5,
   },
   heroBio: {
     backgroundColor: 'rgba(0,0,0,0.25)',
