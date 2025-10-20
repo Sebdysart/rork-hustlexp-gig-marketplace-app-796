@@ -275,33 +275,44 @@ export default function OnboardingScreen() {
     console.log('[ONBOARDING] userIntent:', userIntent);
     console.log('[ONBOARDING] priceRange:', priceRange);
     console.log('[ONBOARDING] preferredCategories:', preferredCategories);
+    console.log('[ONBOARDING] availability:', availability);
     
     if (userIntent === 'poster') {
-      console.log('[ONBOARDING] Poster intent detected → business mode');
+      console.log('[ONBOARDING] ✅ userIntent=poster → MUST recommend business');
       return 'business';
     }
     
     if (userIntent === 'both') {
-      console.log('[ONBOARDING] Both intent detected → everyday mode (default)');
+      console.log('[ONBOARDING] ✅ userIntent=both → Default to everyday (user can choose)');
       return 'everyday';
     }
     
-    const avgPrice = (priceRange[0] + priceRange[1]) / 2;
-    const hasProfessionalTrades = preferredCategories.some(cat => 
-      ['Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Roofing', 'Painting'].includes(cat)
-    );
-    const highPriceAndProfessional = avgPrice > 400 && hasProfessionalTrades;
-    
-    console.log('[ONBOARDING] avgPrice:', avgPrice);
-    console.log('[ONBOARDING] hasProfessionalTrades:', hasProfessionalTrades);
-    console.log('[ONBOARDING] highPriceAndProfessional:', highPriceAndProfessional);
-    
-    if (highPriceAndProfessional && preferredCategories.length >= 2) {
-      console.log('[ONBOARDING] Recommending tradesmen mode');
-      return 'tradesmen';
+    if (userIntent === 'worker') {
+      console.log('[ONBOARDING] ✅ userIntent=worker → Analyzing worker profile...');
+      
+      const avgPrice = (priceRange[0] + priceRange[1]) / 2;
+      const hasProfessionalTrades = preferredCategories.some(cat => 
+        ['Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Roofing', 'Painting'].includes(cat)
+      );
+      
+      const hasWeekendAvailability = availability.includes('weekend');
+      const highPriceRange = avgPrice > 300;
+      
+      console.log('[ONBOARDING]   - avgPrice:', avgPrice);
+      console.log('[ONBOARDING]   - hasProfessionalTrades:', hasProfessionalTrades);
+      console.log('[ONBOARDING]   - hasWeekendAvailability:', hasWeekendAvailability);
+      console.log('[ONBOARDING]   - highPriceRange:', highPriceRange);
+      
+      if (hasProfessionalTrades && avgPrice > 400 && preferredCategories.length >= 2) {
+        console.log('[ONBOARDING] ✅ Recommending TRADESMEN: Professional trades + high price + multiple specializations');
+        return 'tradesmen';
+      }
+      
+      console.log('[ONBOARDING] ✅ Recommending EVERYDAY: Worker intent without strong tradesman indicators');
+      return 'everyday';
     }
     
-    console.log('[ONBOARDING] Recommending everyday mode');
+    console.log('[ONBOARDING] ⚠️ Fallback to everyday mode (unexpected state)');
     return 'everyday';
   };
 
