@@ -581,3 +581,21 @@ export interface OfferLimits {
   canAddAddOns: boolean;
   platformFeePercent: number;
 }
+
+export interface ModeStats {
+  everyday: number;
+  tradesmen: number;
+  business: number;
+  totalSwitches: number;
+  preferredMode: UserMode;
+}
+
+export interface RoleStats {
+  isDualRole: boolean;
+  totalEarnings: number;
+  totalSpent: number;
+  tasksCompleted: number;
+  tasksPosted: number;
+  modeStats?: ModeStats;
+  lastModeSwitch?: string;
+}

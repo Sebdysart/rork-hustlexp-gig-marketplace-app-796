@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Task, Message, UserRole, UserMode, Rating, Report, Purchase, PowerUp, ActivePowerUp, UnlockedFeature } from '@/types';
+import { User, Task, Message, UserRole, UserMode, Rating, Report, Purchase, PowerUp, ActivePowerUp, UnlockedFeature, RoleStats, ModeStats } from '@/types';
 import { SEED_USERS, SEED_TASKS } from '@/mocks/seedData';
 import { calculateLevel } from '@/utils/gamification';
 import { checkDailyStreak, updateUserStreak } from '@/utils/dailyStreak';
@@ -19,6 +19,8 @@ const STORAGE_KEYS = {
   REPORTS: 'hustlexp_reports',
   PURCHASES: 'hustlexp_purchases',
   ACTIVE_POWERUPS: 'hustlexp_active_powerups',
+  MODE_STATS: 'hustlexp_mode_stats',
+  LAST_MODE_SWITCH: 'hustlexp_last_mode_switch',
 };
 
 const COMMISSION_RATE = 0.125;
@@ -792,6 +794,45 @@ export const [AppProvider, useApp] = createContextHook(() => {
       updatedRole = currentUser.role === 'poster' ? 'both' : 'worker';
     }
 
+    const currentMode = currentUser.activeMode || 'everyday';
+    const now = Date.now();
+    
+    try {
+      const storedLastSwitch = await AsyncStorage.getItem(STORAGE_KEYS.LAST_MODE_SWITCH);
+      const storedModeStats = await AsyncStorage.getItem(STORAGE_KEYS.MODE_STATS);
+      
+      const lastSwitchTime = storedLastSwitch ? parseInt(storedLastSwitch, 10) : now;
+      const modeStats: ModeStats = storedModeStats ? JSON.parse(storedModeStats) : {
+        everyday: 0,
+        tradesmen: 0,
+        business: 0,
+        totalSwitches: 0,
+        preferredMode: currentMode,
+      };
+
+      if (currentMode !== mode) {
+        const timeElapsed = (now - lastSwitchTime) / (1000 * 60 * 60);
+        modeStats[currentMode] += timeElapsed;
+        modeStats.totalSwitches += 1;
+
+        const modeEntries = Object.entries(modeStats)
+          .filter(([key]) => key !== 'totalSwitches' && key !== 'preferredMode');
+        
+        const maxMode = modeEntries.reduce((max, [key, value]) => {
+          const maxKey = max as UserMode;
+          return (value as number) > modeStats[maxKey] ? (key as UserMode) : maxKey;
+        }, currentMode as UserMode);
+        modeStats.preferredMode = maxMode;
+
+        await AsyncStorage.setItem(STORAGE_KEYS.MODE_STATS, JSON.stringify(modeStats));
+        await AsyncStorage.setItem(STORAGE_KEYS.LAST_MODE_SWITCH, now.toString());
+        
+        console.log(`Mode switch tracked: ${currentMode} -> ${mode}, time: ${timeElapsed.toFixed(2)}h`);
+      }
+    } catch (error) {
+      console.error('Error tracking mode switch:', error);
+    }
+
     const updatedUser: User = {
       ...currentUser,
       activeMode: mode,
@@ -802,6 +843,56 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await updateUser(updatedUser);
     console.log(`Switched to ${mode} mode`);
   }, [currentUser, updateUser]);
+
+  const fetchRoleStats = useCallback(async (userId?: string): Promise<RoleStats | null> => {
+    try {
+      const targetUserId = userId || currentUser?.id;
+      if (!targetUserId) return null;
+
+      const targetUser = users.find(u => u.id === targetUserId) || currentUser;
+      if (!targetUser) return null;
+
+      const isDualRole = targetUser.role === 'both' || 
+        (!!targetUser.tradesmanProfile && !!targetUser.posterProfile);
+
+      const userTasks = tasks.filter(t => 
+        (t.workerId === targetUserId && t.status === 'completed') ||
+        (t.posterId === targetUserId)
+      );
+
+      const completedTasks = userTasks.filter(t => 
+        t.workerId === targetUserId && t.status === 'completed'
+      );
+
+      const postedTasks = userTasks.filter(t => t.posterId === targetUserId);
+
+      const totalEarnings = targetUser.tradesmanProfile?.businessMetrics.totalEarnings || targetUser.earnings || 0;
+      const totalSpent = targetUser.posterProfile?.totalSpent || 0;
+
+      const storedModeStats = await AsyncStorage.getItem(STORAGE_KEYS.MODE_STATS);
+      const storedLastSwitch = await AsyncStorage.getItem(STORAGE_KEYS.LAST_MODE_SWITCH);
+
+      let modeStats: ModeStats | undefined;
+      if (storedModeStats) {
+        modeStats = JSON.parse(storedModeStats);
+      }
+
+      const roleStats: RoleStats = {
+        isDualRole,
+        totalEarnings,
+        totalSpent,
+        tasksCompleted: completedTasks.length,
+        tasksPosted: postedTasks.length,
+        modeStats,
+        lastModeSwitch: storedLastSwitch || undefined,
+      };
+
+      return roleStats;
+    } catch (error) {
+      console.error('Error fetching role stats:', error);
+      return null;
+    }
+  }, [currentUser, users, tasks]);
 
   return useMemo(() => ({
     currentUser,
@@ -834,6 +925,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     leaderboard,
     markFeatureAsViewed,
     switchMode,
+    fetchRoleStats,
   }), [
     currentUser,
     users,
@@ -865,5 +957,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
     leaderboard,
     markFeatureAsViewed,
     switchMode,
+    fetchRoleStats,
   ]);
 });

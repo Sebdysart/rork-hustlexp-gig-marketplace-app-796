@@ -27,6 +27,7 @@ interface UnifiedProfileProps {
   onRateUser?: (rating: number, comment: string) => Promise<void>;
   onReportUser?: (reason: string, description: string) => Promise<void>;
   myAcceptedTasks?: any[];
+  roleStatsCard?: React.ReactNode;
 }
 
 export default function UnifiedProfile({
@@ -36,6 +37,7 @@ export default function UnifiedProfile({
   onRateUser,
   onReportUser,
   myAcceptedTasks = [],
+  roleStatsCard,
 }: UnifiedProfileProps) {
   const router = useRouter();
   const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
@@ -485,6 +487,8 @@ export default function UnifiedProfile({
               <UnifiedModeSwitcher />
             </View>
           )}
+
+          {isOwnProfile && roleStatsCard && roleStatsCard}
 
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
