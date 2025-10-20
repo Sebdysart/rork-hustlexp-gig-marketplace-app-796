@@ -6,7 +6,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { Sparkles, Briefcase, Hammer, Zap, Star, Crown, Users, DollarSign, TrendingUp, Lock, Shield, Wrench, Building2 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import { UserRole } from '@/types';
+import { UserRole, UserMode } from '@/types';
 import { TradeCategory, TRADES } from '@/constants/tradesmen';
 import { OFFER_CATEGORIES } from '@/constants/offerCategories';
 import Colors from '@/constants/colors';
@@ -537,6 +537,7 @@ export default function OnboardingScreen() {
                   } else {
                     if (selectedMode === 'tradesmen' && selectedTrades.length > 0) {
                       const role: UserRole = userIntent === 'both' ? 'both' : 'worker';
+                      console.log('[ONBOARDING] Completing as Tradesmen - role:', role, 'userIntent:', userIntent);
                       setTimeout(() => {
                         completeOnboarding(name, role, {
                           lat: 37.7749,
@@ -547,15 +548,20 @@ export default function OnboardingScreen() {
                       }, 500);
                     } else if (selectedMode) {
                       let role: UserRole = 'worker';
+                      let finalMode: UserMode = selectedMode;
+                      
                       if (userIntent === 'both') {
                         role = 'both';
+                        finalMode = selectedMode;
                       } else if (userIntent === 'poster') {
                         role = 'poster';
-                      } else {
+                        finalMode = 'business';
+                      } else if (userIntent === 'worker') {
                         role = 'worker';
+                        finalMode = selectedMode === 'business' ? 'everyday' : selectedMode;
                       }
                       
-                      const finalMode = userIntent === 'poster' ? 'business' : selectedMode;
+                      console.log('[ONBOARDING] Completing - role:', role, 'finalMode:', finalMode, 'userIntent:', userIntent, 'selectedMode:', selectedMode);
                       
                       setTimeout(() => {
                         completeOnboarding(name, role, {
@@ -587,6 +593,7 @@ export default function OnboardingScreen() {
                   triggerHaptic('light');
                   if (selectedMode === 'tradesmen' && selectedTrades.length > 0) {
                     const role: UserRole = userIntent === 'both' ? 'both' : 'worker';
+                    console.log('[ONBOARDING] Skip - Completing as Tradesmen - role:', role);
                     completeOnboarding(name, role, {
                       lat: 37.7749,
                       lng: -122.4194,
@@ -595,15 +602,20 @@ export default function OnboardingScreen() {
                     router.replace('/(tabs)/home');
                   } else if (selectedMode) {
                     let role: UserRole = 'worker';
+                    let finalMode: UserMode = selectedMode;
+                    
                     if (userIntent === 'both') {
                       role = 'both';
+                      finalMode = selectedMode;
                     } else if (userIntent === 'poster') {
                       role = 'poster';
-                    } else {
+                      finalMode = 'business';
+                    } else if (userIntent === 'worker') {
                       role = 'worker';
+                      finalMode = selectedMode === 'business' ? 'everyday' : selectedMode;
                     }
                     
-                    const finalMode = userIntent === 'poster' ? 'business' : selectedMode;
+                    console.log('[ONBOARDING] Skip - role:', role, 'finalMode:', finalMode);
                     
                     completeOnboarding(name, role, {
                       lat: 37.7749,
