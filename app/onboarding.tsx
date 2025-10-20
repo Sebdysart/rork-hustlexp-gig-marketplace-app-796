@@ -271,17 +271,37 @@ export default function OnboardingScreen() {
   };
 
   const calculateRecommendedMode = (): 'everyday' | 'tradesmen' | 'business' => {
+    console.log('[ONBOARDING] Calculating recommended mode...');
+    console.log('[ONBOARDING] userIntent:', userIntent);
+    console.log('[ONBOARDING] priceRange:', priceRange);
+    console.log('[ONBOARDING] preferredCategories:', preferredCategories);
+    
     if (userIntent === 'poster') {
+      console.log('[ONBOARDING] Poster intent detected → business mode');
       return 'business';
     }
     
-    const avgPrice = (priceRange[0] + priceRange[1]) / 2;
-    const isHighSkill = avgPrice > 300;
+    if (userIntent === 'both') {
+      console.log('[ONBOARDING] Both intent detected → everyday mode (default)');
+      return 'everyday';
+    }
     
-    if (isHighSkill && preferredCategories.length >= 2) {
+    const avgPrice = (priceRange[0] + priceRange[1]) / 2;
+    const hasProfessionalTrades = preferredCategories.some(cat => 
+      ['Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Roofing', 'Painting'].includes(cat)
+    );
+    const highPriceAndProfessional = avgPrice > 400 && hasProfessionalTrades;
+    
+    console.log('[ONBOARDING] avgPrice:', avgPrice);
+    console.log('[ONBOARDING] hasProfessionalTrades:', hasProfessionalTrades);
+    console.log('[ONBOARDING] highPriceAndProfessional:', highPriceAndProfessional);
+    
+    if (highPriceAndProfessional && preferredCategories.length >= 2) {
+      console.log('[ONBOARDING] Recommending tradesmen mode');
       return 'tradesmen';
     }
     
+    console.log('[ONBOARDING] Recommending everyday mode');
     return 'everyday';
   };
 
@@ -343,6 +363,8 @@ export default function OnboardingScreen() {
   };
 
   const handleModeSelect = (mode: 'everyday' | 'tradesmen' | 'business') => {
+    console.log('[ONBOARDING] Mode selected:', mode);
+    console.log('[ONBOARDING] userIntent:', userIntent);
     triggerHaptic('selection');
     setSelectedMode(mode);
     setShowConfetti(true);
@@ -527,17 +549,20 @@ export default function OnboardingScreen() {
                       let role: UserRole = 'worker';
                       if (userIntent === 'both') {
                         role = 'both';
-                      } else if (selectedMode === 'business') {
+                      } else if (userIntent === 'poster') {
                         role = 'poster';
                       } else {
                         role = 'worker';
                       }
+                      
+                      const finalMode = userIntent === 'poster' ? 'business' : selectedMode;
+                      
                       setTimeout(() => {
                         completeOnboarding(name, role, {
                           lat: 37.7749,
                           lng: -122.4194,
                           address: 'San Francisco, CA',
-                        }, email, password, selectedMode);
+                        }, email, password, finalMode);
                         router.replace('/(tabs)/home');
                       }, 500);
                     }
@@ -572,16 +597,19 @@ export default function OnboardingScreen() {
                     let role: UserRole = 'worker';
                     if (userIntent === 'both') {
                       role = 'both';
-                    } else if (selectedMode === 'business') {
+                    } else if (userIntent === 'poster') {
                       role = 'poster';
                     } else {
                       role = 'worker';
                     }
+                    
+                    const finalMode = userIntent === 'poster' ? 'business' : selectedMode;
+                    
                     completeOnboarding(name, role, {
                       lat: 37.7749,
                       lng: -122.4194,
                       address: 'San Francisco, CA',
-                    }, email, password, selectedMode);
+                    }, email, password, finalMode);
                     router.replace('/(tabs)/home');
                   }
                 }}
