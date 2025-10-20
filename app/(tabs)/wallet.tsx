@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useState, useMemo, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Zap, TrendingUp, DollarSign, Download, Calendar, Clock, CheckCircle, X, TrendingDown, Sparkles } from 'lucide-react-native';
+import { Zap, TrendingUp, DollarSign, Download, Calendar, Clock, CheckCircle, X, TrendingDown, Sparkles, Target, Info } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
@@ -62,9 +62,12 @@ export default function WalletScreen() {
   const [showPayoutModal, setShowPayoutModal] = useState<boolean>(false);
   const [payoutAmount, setPayoutAmount] = useState<string>('');
   const [predictions, setPredictions] = useState<{
-    weekly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable' };
-    monthly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable' };
+    weekly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable'; breakdown: any; recommendations: string[] };
+    monthly: { amount: number; confidence: number; trend: 'up' | 'down' | 'stable'; breakdown: any; recommendations: string[] };
   } | null>(null);
+  const [loadingPredictions, setLoadingPredictions] = useState<boolean>(false);
+  const [showBreakdown, setShowBreakdown] = useState<boolean>(false);
+  const [selectedPrediction, setSelectedPrediction] = useState<'weekly' | 'monthly'>('weekly');
 
   const walletData = useMemo(() => {
     if (!currentUser) return null;
@@ -114,6 +117,7 @@ export default function WalletScreen() {
   useEffect(() => {
     if (currentUser && myAcceptedTasks.length > 0 && walletData && walletData.thisWeek !== undefined && walletData.thisMonth !== undefined) {
       const getPredictions = async () => {
+        setLoadingPredictions(true);
         try {
           const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
           if (backendUrl) {
@@ -136,26 +140,32 @@ export default function WalletScreen() {
             }
           }
 
-          const weeklyPred = predictWeeklyEarnings(currentUser, myAcceptedTasks);
-          const monthlyPred = predictMonthlyEarnings(currentUser, myAcceptedTasks);
+          const weeklyPred = await predictWeeklyEarnings(currentUser, myAcceptedTasks);
+          const monthlyPred = await predictMonthlyEarnings(currentUser, myAcceptedTasks);
           
-          const weeklyTrend: 'up' | 'down' | 'stable' = weeklyPred.projected > walletData.thisWeek * 4 ? 'up' : 'stable';
-          const monthlyTrend: 'up' | 'down' | 'stable' = monthlyPred.projected > walletData.thisMonth * 4 ? 'up' : 'stable';
+          const weeklyTrend: 'up' | 'down' | 'stable' = weeklyPred.projected > walletData.thisWeek * 4 ? 'up' : weeklyPred.projected < walletData.thisWeek * 2 ? 'down' : 'stable';
+          const monthlyTrend: 'up' | 'down' | 'stable' = monthlyPred.projected > walletData.thisMonth * 1.5 ? 'up' : monthlyPred.projected < walletData.thisMonth * 0.7 ? 'down' : 'stable';
           
           setPredictions({
             weekly: { 
               amount: weeklyPred.projected, 
               confidence: weeklyPred.confidence / 100, 
-              trend: weeklyTrend 
+              trend: weeklyTrend,
+              breakdown: weeklyPred.breakdown,
+              recommendations: weeklyPred.recommendations || [],
             },
             monthly: { 
               amount: monthlyPred.projected, 
               confidence: monthlyPred.confidence / 100, 
-              trend: monthlyTrend 
+              trend: monthlyTrend,
+              breakdown: monthlyPred.breakdown,
+              recommendations: monthlyPred.recommendations || [],
             },
           });
         } catch (error) {
           console.error('Failed to get predictions:', error);
+        } finally {
+          setLoadingPredictions(false);
         }
       };
       getPredictions();
@@ -317,51 +327,155 @@ export default function WalletScreen() {
             </View>
           </View>
 
-          {predictions && (
+          {loadingPredictions && (
             <GlassCard variant="dark" style={styles.predictionsCard}>
-              <View style={styles.predictionsHeader}>
-                <Sparkles size={20} color={premiumColors.neonCyan} />
-                <Text style={styles.predictionsTitle}>AI Earnings Predictions</Text>
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={premiumColors.neonCyan} />
+                <Text style={styles.loadingText}>Analyzing your earnings patterns...</Text>
               </View>
-
-              <View style={styles.predictionRow}>
-                <View style={styles.predictionItem}>
-                  <Text style={styles.predictionLabel}>Next Week</Text>
-                  <Text style={styles.predictionAmount}>${predictions.weekly.amount.toFixed(2)}</Text>
-                  <View style={styles.predictionMeta}>
-                    {predictions.weekly.trend === 'up' ? (
-                      <TrendingUp size={14} color={premiumColors.neonGreen} />
-                    ) : predictions.weekly.trend === 'down' ? (
-                      <TrendingDown size={14} color={premiumColors.neonAmber} />
-                    ) : null}
-                    <Text style={styles.predictionConfidence}>
-                      {(predictions.weekly.confidence * 100).toFixed(0)}% confident
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.predictionDivider} />
-
-                <View style={styles.predictionItem}>
-                  <Text style={styles.predictionLabel}>Next Month</Text>
-                  <Text style={styles.predictionAmount}>${predictions.monthly.amount.toFixed(2)}</Text>
-                  <View style={styles.predictionMeta}>
-                    {predictions.monthly.trend === 'up' ? (
-                      <TrendingUp size={14} color={premiumColors.neonGreen} />
-                    ) : predictions.monthly.trend === 'down' ? (
-                      <TrendingDown size={14} color={premiumColors.neonAmber} />
-                    ) : null}
-                    <Text style={styles.predictionConfidence}>
-                      {(predictions.monthly.confidence * 100).toFixed(0)}% confident
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <Text style={styles.predictionDisclaimer}>
-                Predictions based on your task history, completion rate, and market trends
-              </Text>
             </GlassCard>
+          )}
+
+          {!loadingPredictions && predictions && (
+            <>
+              <GlassCard variant="dark" style={styles.predictionsCard}>
+                <View style={styles.predictionsHeader}>
+                  <Sparkles size={20} color={premiumColors.neonCyan} />
+                  <Text style={styles.predictionsTitle}>AI Earnings Forecast</Text>
+                  <TouchableOpacity
+                    onPress={() => setShowBreakdown(!showBreakdown)}
+                    style={styles.infoButton}
+                  >
+                    <Info size={18} color={premiumColors.glassWhite} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.predictionRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.predictionItem,
+                      selectedPrediction === 'weekly' && styles.predictionItemActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedPrediction('weekly');
+                      triggerHaptic('light');
+                    }}
+                  >
+                    <Text style={styles.predictionLabel}>Next Week</Text>
+                    <Text style={styles.predictionAmount}>${predictions.weekly.amount.toFixed(2)}</Text>
+                    <View style={styles.predictionMeta}>
+                      {predictions.weekly.trend === 'up' ? (
+                        <TrendingUp size={14} color={premiumColors.neonGreen} />
+                      ) : predictions.weekly.trend === 'down' ? (
+                        <TrendingDown size={14} color={premiumColors.neonAmber} />
+                      ) : null}
+                      <Text style={styles.predictionConfidence}>
+                        {(predictions.weekly.confidence * 100).toFixed(0)}% confident
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <View style={styles.predictionDivider} />
+
+                  <TouchableOpacity
+                    style={[
+                      styles.predictionItem,
+                      selectedPrediction === 'monthly' && styles.predictionItemActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedPrediction('monthly');
+                      triggerHaptic('light');
+                    }}
+                  >
+                    <Text style={styles.predictionLabel}>Next Month</Text>
+                    <Text style={styles.predictionAmount}>${predictions.monthly.amount.toFixed(2)}</Text>
+                    <View style={styles.predictionMeta}>
+                      {predictions.monthly.trend === 'up' ? (
+                        <TrendingUp size={14} color={premiumColors.neonGreen} />
+                      ) : predictions.monthly.trend === 'down' ? (
+                        <TrendingDown size={14} color={premiumColors.neonAmber} />
+                      ) : null}
+                      <Text style={styles.predictionConfidence}>
+                        {(predictions.monthly.confidence * 100).toFixed(0)}% confident
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                {showBreakdown && (
+                  <View style={styles.breakdownContainer}>
+                    <View style={styles.breakdownHeader}>
+                      <Target size={16} color={premiumColors.neonCyan} />
+                      <Text style={styles.breakdownTitle}>
+                        {selectedPrediction === 'weekly' ? 'Weekly' : 'Monthly'} Breakdown
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.breakdownItems}>
+                      {(() => {
+                        const breakdown = selectedPrediction === 'weekly'
+                          ? predictions.weekly.breakdown
+                          : predictions.monthly.breakdown;
+                        
+                        if (!breakdown) return null;
+
+                        return Object.entries(breakdown).map(([key, value]) => (
+                          <View key={key} style={styles.breakdownItem}>
+                            <Text style={styles.breakdownLabel}>
+                              {key === 'basePay' ? '💰 Base Pay' :
+                               key === 'bonuses' ? '🎁 Bonuses' :
+                               key === 'tips' ? '💵 Tips' :
+                               key === 'streakBonus' ? '🔥 Streak Bonus' : key}
+                            </Text>
+                            <Text style={styles.breakdownValue}>${(value as number).toFixed(2)}</Text>
+                          </View>
+                        ));
+                      })()}
+                    </View>
+
+                    {selectedPrediction === 'weekly' && predictions.weekly.recommendations.length > 0 && (
+                      <View style={styles.recommendationsContainer}>
+                        <Text style={styles.recommendationsTitle}>💡 Recommendations</Text>
+                        {predictions.weekly.recommendations.map((rec, idx) => (
+                          <Text key={idx} style={styles.recommendationText}>• {rec}</Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {selectedPrediction === 'monthly' && predictions.monthly.recommendations.length > 0 && (
+                      <View style={styles.recommendationsContainer}>
+                        <Text style={styles.recommendationsTitle}>💡 Recommendations</Text>
+                        {predictions.monthly.recommendations.map((rec, idx) => (
+                          <Text key={idx} style={styles.recommendationText}>• {rec}</Text>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                <Text style={styles.predictionDisclaimer}>
+                  AI-powered predictions based on your task history, completion rate, and market trends
+                </Text>
+              </GlassCard>
+
+              {predictions[selectedPrediction].trend === 'up' && (
+                <View style={styles.trendAlert}>
+                  <TrendingUp size={20} color={premiumColors.neonGreen} />
+                  <Text style={styles.trendAlertText}>
+                    📈 Your earnings are trending upward! Keep up the momentum!
+                  </Text>
+                </View>
+              )}
+
+              {predictions[selectedPrediction].trend === 'down' && (
+                <View style={[styles.trendAlert, styles.trendAlertWarning]}>
+                  <TrendingDown size={20} color={premiumColors.neonAmber} />
+                  <Text style={styles.trendAlertText}>
+                    📉 Earnings may be lower than usual. Check recommendations above.
+                  </Text>
+                </View>
+              )}
+            </>
           )}
 
           <View style={styles.commissionInfo}>
@@ -751,5 +865,102 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic' as const,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  infoButton: {
+    padding: 4,
+    marginLeft: 'auto',
+  },
+  predictionItemActive: {
+    backgroundColor: 'rgba(0, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 8,
+  },
+  breakdownContainer: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: premiumColors.glassWhite,
+  },
+  breakdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  breakdownTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  breakdownItems: {
+    gap: 12,
+  },
+  breakdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+  },
+  breakdownLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  breakdownValue: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: premiumColors.neonCyan,
+  },
+  recommendationsContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(0, 255, 200, 0.05)',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: premiumColors.neonCyan,
+  },
+  recommendationsTitle: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  recommendationText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  trendAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    backgroundColor: 'rgba(0, 255, 100, 0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: premiumColors.neonGreen,
+    marginBottom: 16,
+  },
+  trendAlertWarning: {
+    backgroundColor: 'rgba(255, 191, 0, 0.1)',
+    borderColor: premiumColors.neonAmber,
+  },
+  trendAlertText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.text,
+    lineHeight: 18,
   },
 });
