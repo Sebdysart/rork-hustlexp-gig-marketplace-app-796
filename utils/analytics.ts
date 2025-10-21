@@ -2,11 +2,61 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ANALYTICS_KEY = 'hustlexp_analytics';
 
-export type AnalyticsEvent = {
-  type: 'share' | 'level_up' | 'quest_complete' | 'badge_unlock' | 'referral_click' | 'page_view';
+export type AnalyticsEventType =
+  | 'app_open'
+  | 'app_close'
+  | 'user_signup'
+  | 'user_login'
+  | 'user_logout'
+  | 'onboarding_start'
+  | 'onboarding_complete'
+  | 'onboarding_skip'
+  | 'task_viewed'
+  | 'task_accepted'
+  | 'task_started'
+  | 'task_completed'
+  | 'task_posted'
+  | 'task_cancelled'
+  | 'task_search'
+  | 'first_task_completed'
+  | 'share'
+  | 'level_up'
+  | 'quest_complete'
+  | 'quest_accepted'
+  | 'badge_unlock'
+  | 'trophy_earned'
+  | 'referral_click'
+  | 'referral_signup'
+  | 'page_view'
+  | 'screen_view'
+  | 'button_click'
+  | 'feature_used'
+  | 'powerup_purchased'
+  | 'powerup_activated'
+  | 'squad_joined'
+  | 'squad_created'
+  | 'offer_created'
+  | 'offer_viewed'
+  | 'chat_opened'
+  | 'chat_message_sent'
+  | 'mode_switched'
+  | 'role_changed'
+  | 'settings_changed'
+  | 'notification_received'
+  | 'notification_clicked'
+  | 'push_permission_granted'
+  | 'push_permission_denied'
+  | 'error_occurred'
+  | 'session_start'
+  | 'session_end';
+
+export interface AnalyticsEvent {
+  type: AnalyticsEventType;
   timestamp: number;
+  userId?: string;
+  sessionId?: string;
   data: Record<string, any>;
-};
+}
 
 export class Analytics {
   static async trackEvent(event: Omit<AnalyticsEvent, 'timestamp'>): Promise<void> {
@@ -110,5 +160,57 @@ export class Analytics {
     } catch (error) {
       console.error('[Analytics] Clear error:', error);
     }
+  }
+
+  static async getAllEvents(): Promise<AnalyticsEvent[]> {
+    try {
+      const stored = await AsyncStorage.getItem(ANALYTICS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('[Analytics] Get all events error:', error);
+      return [];
+    }
+  }
+
+  static async getEventCount(type: AnalyticsEventType): Promise<number> {
+    const events = await this.getEvents(type);
+    return events.length;
+  }
+
+  static async getUniqueUsers(startTime?: number, endTime?: number): Promise<string[]> {
+    const events = await this.getEvents(undefined, startTime, endTime);
+    const uniqueUsers = new Set<string>();
+    events.forEach(event => {
+      if (event.userId) uniqueUsers.add(event.userId);
+    });
+    return Array.from(uniqueUsers);
+  }
+
+  static async getDailyActiveUsers(days: number = 7): Promise<number[]> {
+    const now = Date.now();
+    const dailyCounts: number[] = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const dayStart = now - i * 24 * 60 * 60 * 1000;
+      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+      const users = await this.getUniqueUsers(dayStart, dayEnd);
+      dailyCounts.push(users.length);
+    }
+
+    return dailyCounts;
+  }
+
+  static async getEventsByDay(type: AnalyticsEventType, days: number = 7): Promise<number[]> {
+    const now = Date.now();
+    const dailyCounts: number[] = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const dayStart = now - i * 24 * 60 * 60 * 1000;
+      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+      const events = await this.getEvents(type, dayStart, dayEnd);
+      dailyCounts.push(events.length);
+    }
+
+    return dailyCounts;
   }
 }

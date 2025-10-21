@@ -11,6 +11,7 @@ import { SquadContext } from "@/contexts/SquadContext";
 import { TaskLifecycleProvider } from "@/contexts/TaskLifecycleContext";
 import { OfferContext } from "@/contexts/OfferContext";
 import { AIProfileProvider } from "@/contexts/AIProfileContext";
+import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
@@ -50,6 +51,7 @@ function RootLayoutNav() {
         <Stack.Screen name="task-complete/[id]" options={{ presentation: 'modal', title: 'Task Complete!' }} />
         <Stack.Screen name="offers/index" options={{ title: 'My Offers' }} />
         <Stack.Screen name="offers/new" options={{ presentation: 'modal', title: 'Create Offer' }} />
+        <Stack.Screen name="analytics-dashboard" options={{ title: 'Analytics' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
@@ -76,18 +78,20 @@ export default function RootLayout() {
         <ThemeProvider>
           <SettingsProvider>
             <NotificationProvider>
-              <AppProvider>
-                <AIProfileProvider>
-                  <TaskLifecycleProvider>
-                    <SquadContext>
-                      <OfferContext>
-                        <SplashScreenManager />
-                        <RootLayoutNav />
-                      </OfferContext>
-                    </SquadContext>
-                  </TaskLifecycleProvider>
-                </AIProfileProvider>
-              </AppProvider>
+              <AnalyticsProvider>
+                <AppProvider>
+                  <AIProfileProvider>
+                    <TaskLifecycleProvider>
+                      <SquadContext>
+                        <OfferContext>
+                          <SplashScreenManager />
+                          <RootLayoutNav />
+                        </OfferContext>
+                      </SquadContext>
+                    </TaskLifecycleProvider>
+                  </AIProfileProvider>
+                </AppProvider>
+              </AnalyticsProvider>
             </NotificationProvider>
           </SettingsProvider>
         </ThemeProvider>
