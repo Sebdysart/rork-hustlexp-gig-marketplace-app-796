@@ -1,4 +1,4 @@
-import { offlineSyncQueue, SyncAction, QueuedAction } from '@/utils/offlineSyncQueue';
+import { offlineSyncQueue, SyncAction } from '@/utils/offlineSyncQueue';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(() => Promise.resolve(null)),
@@ -166,9 +166,12 @@ describe('OfflineSyncQueue', () => {
       const queue = offlineSyncQueue.getQueue();
       const action = queue.find(a => a.id === actionId);
 
-      expect(action?.timestamp).toBeDefined();
-      expect(action?.timestamp >= beforeTime).toBe(true);
-      expect(action?.timestamp <= afterTime).toBe(true);
+      expect(action).toBeDefined();
+      if (action) {
+        expect(action.timestamp).toBeDefined();
+        expect(action.timestamp >= beforeTime).toBe(true);
+        expect(action.timestamp <= afterTime).toBe(true);
+      }
     });
   });
 });

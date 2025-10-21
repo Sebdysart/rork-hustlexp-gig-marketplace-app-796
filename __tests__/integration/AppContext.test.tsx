@@ -281,6 +281,8 @@ describe('AppContext Integration Tests', () => {
       const mockPowerUp = {
         id: 'xp-boost',
         name: 'XP Boost',
+        description: 'Double your XP',
+        icon: '⚡',
         price: 9.99,
         effect: { type: 'xp_multiplier' as const, value: 2, duration: 24 },
       };

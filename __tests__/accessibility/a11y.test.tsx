@@ -101,7 +101,7 @@ describe('Accessibility Tests', () => {
     });
 
     it('should have proper state description', () => {
-      const { getByA11yState } = render(
+      const { getByTestId } = render(
         <TouchableOpacity
           accessibilityLabel="Accept task"
           accessibilityState={{ disabled: false, selected: false }}
@@ -111,7 +111,9 @@ describe('Accessibility Tests', () => {
         </TouchableOpacity>
       );
 
-      expect(getByA11yState({ disabled: false })).toBeTruthy();
+      const button = getByTestId('accept-button');
+      expect(button).toBeTruthy();
+      expect(button.props.accessibilityState).toEqual({ disabled: false, selected: false });
     });
   });
 
