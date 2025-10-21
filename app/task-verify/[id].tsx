@@ -53,8 +53,9 @@ export default function TaskVerifyScreen() {
 
     if (!result.canceled && result.assets[0]) {
       const newProof: TaskProof = {
+        id: `proof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: 'photo',
-        uri: result.assets[0].uri,
+        url: result.assets[0].uri,
         timestamp: new Date().toISOString(),
       };
       setProofItems([...proofItems, newProof]);
@@ -77,8 +78,9 @@ export default function TaskVerifyScreen() {
 
     if (!result.canceled) {
       const newProofs: TaskProof[] = result.assets.map(asset => ({
+        id: `proof_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: 'photo',
-        uri: asset.uri,
+        url: asset.uri,
         timestamp: new Date().toISOString(),
       }));
       setProofItems([...proofItems, ...newProofs]);
@@ -188,8 +190,8 @@ export default function TaskVerifyScreen() {
           {proofItems.length > 0 && (
             <View style={styles.proofGrid}>
               {proofItems.map((proof, index) => (
-                <View key={index} style={styles.proofItem}>
-                  <Image source={{ uri: proof.uri }} style={styles.proofImage} />
+                <View key={proof.id} style={styles.proofItem}>
+                  <Image source={{ uri: proof.url }} style={styles.proofImage} />
                   <TouchableOpacity
                     style={styles.removeButton}
                     onPress={() => handleRemoveProof(index)}
@@ -198,7 +200,7 @@ export default function TaskVerifyScreen() {
                   </TouchableOpacity>
                   <View style={styles.proofType}>
                     {proof.type === 'photo' && <ImageIcon size={14} color="#FFFFFF" />}
-                    {proof.type === 'document' && <FileText size={14} color="#FFFFFF" />}
+                    {proof.type === 'video' && <FileText size={14} color="#FFFFFF" />}
                   </View>
                 </View>
               ))}
