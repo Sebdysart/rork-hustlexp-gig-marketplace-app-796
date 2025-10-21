@@ -284,7 +284,7 @@ describe('AppContext Integration Tests', () => {
         description: 'Double your XP',
         icon: '⚡',
         price: 9.99,
-        effect: { type: 'xp_multiplier' as const, value: 2, duration: 24 },
+        effect: { type: 'xp_boost' as const, value: 2, duration: 24 },
       };
 
       const response = await act(async () => {
