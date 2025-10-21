@@ -68,25 +68,14 @@ export async function suggestTaskBundles(
 
   if (user) {
     try {
-      const aiResponse = await hustleAI.chat(user.id, JSON.stringify({
-        action: 'suggest_task_bundles',
-        userId: user.id,
-        currentTask: {
-          id: currentTask.id,
-          category: currentTask.category,
-          location: currentTask.location,
-          payAmount: currentTask.payAmount,
-        },
-        availableTasks: availableTasks.slice(0, 20).map(t => ({
-          id: t.id,
-          category: t.category,
-          location: t.location,
-          payAmount: t.payAmount,
-          xpReward: t.xpReward,
-          status: t.status,
-        })),
-        userLocation,
-      }));
+      const message = `Suggest task bundles for user ${user.id}. Current task: ${currentTask.category} at (${currentTask.location.lat.toFixed(2)},${currentTask.location.lng.toFixed(2)}) paying ${currentTask.payAmount}. Available tasks: ${availableTasks.slice(0, 5).map(t => `${t.category}@(${t.location.lat.toFixed(2)},${t.location.lng.toFixed(2)})=${t.payAmount}`).join(', ')}. User at (${userLocation.lat.toFixed(2)},${userLocation.lng.toFixed(2)}). Return bundles array with taskIds, bonusMultiplier, reasoning, estimatedDuration, efficiencyScore.`;
+      
+      if (message.length > 1000) {
+        console.warn('[AITaskBundling] Message too long, using fallback');
+        throw new Error('Message too long');
+      }
+      
+      const aiResponse = await hustleAI.chat(user.id, message);
 
       if (aiResponse && typeof aiResponse === 'object' && 'bundles' in aiResponse) {
         const aiBundles = (aiResponse as any).bundles;
