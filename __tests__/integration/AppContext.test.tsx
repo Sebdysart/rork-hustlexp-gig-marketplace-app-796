@@ -278,7 +278,7 @@ describe('AppContext Integration Tests', () => {
         );
       });
 
-      const mockPowerUp = {
+      const mockPowerUp: any = {
         id: 'xp-boost',
         name: 'XP Boost',
         description: 'Double your XP',
