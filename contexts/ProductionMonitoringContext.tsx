@@ -166,7 +166,9 @@ export const [ProductionMonitoringProvider, useProductionMonitoring] = createCon
       issues.push('Critical memory usage detected');
       recommendations.push('Close unused apps or restart the app');
     } else if ((currentMetrics.memoryUsage?.usagePercent ?? 0) > 75) {
-      status = status === 'healthy' ? 'degraded' : status;
+      if (status === 'healthy') {
+        status = 'degraded';
+      }
       issues.push('High memory usage detected');
       recommendations.push('Consider closing some features');
     }
