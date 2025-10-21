@@ -156,9 +156,9 @@ export default function WelcomeTutorialScreen() {
         description: 'Escrow system holds payment safely. Only released when both parties confirm completion.',
       },
       {
-        icon: <MessageCircle size={64} color={premiumColors.neonCyan} strokeWidth={2} />,
-        title: 'Enable HustleAI Offers',
-        description: 'Turn on "Go Available" on your home screen. HustleAI will send you personalized task offers via chat.',
+        icon: <MessageCircle size={64} color={premiumColors.neonMagenta} strokeWidth={2} />,
+        title: 'Chat with HustleAI',
+        description: 'Get personalized guidance, task suggestions, and instant help from our AI assistant. Available 24/7 in your chat.',
       },
     ];
   };

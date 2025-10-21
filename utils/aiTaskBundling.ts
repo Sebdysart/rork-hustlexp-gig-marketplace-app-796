@@ -68,14 +68,14 @@ export async function suggestTaskBundles(
 
   if (user) {
     try {
-      const taskSummaries = availableTasks.slice(0, 5).map(t => 
-        `${t.category.substring(0, 10)}@${t.payAmount}`
+      const taskSummaries = availableTasks.slice(0, 3).map(t => 
+        `${t.category.substring(0, 8)}@${t.payAmount}`
       ).join(',');
       
-      const message = `Bundle for ${currentTask.category}(${currentTask.payAmount}) at (${currentTask.location.lat.toFixed(1)},${currentTask.location.lng.toFixed(1)}). Nearby: ${taskSummaries}. User:(${userLocation.lat.toFixed(1)},${userLocation.lng.toFixed(1)}). Return bundles:taskIds,bonus,score.`;
+      const message = `Bundle ${currentTask.category}(${currentTask.payAmount}) near ${taskSummaries}. Return: taskIds,bonus,score`;
       
       if (message.length > 1000) {
-        console.warn('[AITaskBundling] Message truncated from', message.length, 'chars');
+        console.warn('[AITaskBundling] Message too long, using fallback');
         throw new Error('Message too long');
       }
       
