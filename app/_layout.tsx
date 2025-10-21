@@ -36,6 +36,7 @@ function RootLayoutNav() {
         <Stack.Screen name="search" options={{ presentation: 'modal', title: 'Search' }} />
         <Stack.Screen name="admin" options={{ title: 'Admin Dashboard' }} />
         <Stack.Screen name="test-suite" options={{ presentation: 'modal', title: 'Test Suite' }} />
+        <Stack.Screen name="test-dashboard" options={{ presentation: 'modal', title: 'Test Dashboard' }} />
         <Stack.Screen name="tradesmen-dashboard" options={{ title: 'Tradesmen Pro' }} />
         <Stack.Screen name="certification-upload" options={{ title: 'Upload Certification' }} />
         <Stack.Screen name="portfolio" options={{ title: 'Portfolio' }} />
