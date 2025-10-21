@@ -16,6 +16,8 @@ import { premiumColors } from '@/constants/designTokens';
 import LiveActivityFeed from '@/components/LiveActivityFeed';
 import UnifiedModeSwitcher from '@/components/UnifiedModeSwitcher';
 import FloatingChatIcon from '@/components/FloatingChatIcon';
+import InviteFriendsWidget from '@/components/InviteFriendsWidget';
+import SocialProofBanner from '@/components/SocialProofBanner';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH > 768;
@@ -497,6 +499,10 @@ export default function HomeScreen() {
           <View style={styles.modeSwitcherContainer}>
               <UnifiedModeSwitcher compact />
             </View>
+
+            <InviteFriendsWidget userId={currentUser.id} userName={currentUser.name} variant="compact" />
+            
+            <SocialProofBanner compact />
 
             {canAcceptMoreQuests() && getRemainingQuests() <= 2 && (
               <GlassCard variant="darkStrong" neonBorder glowColor="neonGreen" style={styles.burnoutHintBanner}>
