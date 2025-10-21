@@ -7,6 +7,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAIProfile } from '@/contexts/AIProfileContext';
 import Colors from '@/constants/colors';
+import { TaskCardSkeleton, StatCardSkeleton } from '@/components/SkeletonLoader';
 
 import FloatingHUD from '@/components/FloatingHUD';
 import { triggerHaptic } from '@/utils/haptics';
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   const { settings, canAcceptMoreQuests, getRemainingQuests, dailyQuestsCompleted } = useSettings();
   const { fetchProfile, aiProfile } = useAIProfile();
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
   const [showBurnoutModal, setShowBurnoutModal] = useState<boolean>(false);
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -124,6 +126,7 @@ export default function HomeScreen() {
     if (currentUser) {
       console.log('[Home] Fetching AI profile for user:', currentUser.id);
       fetchProfile(currentUser.id);
+      setTimeout(() => setIsLoading(false), 800);
     }
   }, [currentUser, fetchProfile]);
 
@@ -413,7 +416,12 @@ export default function HomeScreen() {
                 )}
               </View>
 
-              {myTasks.length > 0 ? (
+              {isLoading ? (
+                <View style={styles.posterQuestsList}>
+                  <TaskCardSkeleton />
+                  <TaskCardSkeleton />
+                </View>
+              ) : myTasks.length > 0 ? (
                 <View style={styles.posterQuestsList}>
                   {myTasks.slice(0, 3).map((task) => (
                     <TouchableOpacity
@@ -607,27 +615,37 @@ export default function HomeScreen() {
             accessible
             accessibilityLabel="Your stats"
           >
-            <View accessible accessibilityLabel={`${currentUser.tasksCompleted} quests completed`}>
-              <GlassCard variant="dark" style={styles.statCard}>
-                <TrendingUp size={24} color={premiumColors.neonCyan} />
-                <Text style={styles.statValue}>{currentUser.tasksCompleted}</Text>
-                <Text style={styles.statLabel}>Quests</Text>
-              </GlassCard>
-            </View>
-            <View accessible accessibilityLabel={`${currentUser.reputationScore.toFixed(1)} star rating`}>
-              <GlassCard variant="dark" style={styles.statCard}>
-                <Text style={styles.statIcon}>⭐</Text>
-                <Text style={styles.statValue}>{currentUser.reputationScore.toFixed(1)}</Text>
-                <Text style={styles.statLabel}>Rating</Text>
-              </GlassCard>
-            </View>
-            <View accessible accessibilityLabel={`${currentUser.streaks.current} day streak`}>
-              <GlassCard variant="dark" style={styles.statCard}>
-                <Text style={styles.statIcon}>🔥</Text>
-                <Text style={styles.statValue}>{currentUser.streaks.current}</Text>
-                <Text style={styles.statLabel}>Streak</Text>
-              </GlassCard>
-            </View>
+            {isLoading ? (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            ) : (
+              <>
+                <View accessible accessibilityLabel={`${currentUser.tasksCompleted} quests completed`}>
+                  <GlassCard variant="dark" style={styles.statCard}>
+                    <TrendingUp size={24} color={premiumColors.neonCyan} />
+                    <Text style={styles.statValue}>{currentUser.tasksCompleted}</Text>
+                    <Text style={styles.statLabel}>Quests</Text>
+                  </GlassCard>
+                </View>
+                <View accessible accessibilityLabel={`${currentUser.reputationScore.toFixed(1)} star rating`}>
+                  <GlassCard variant="dark" style={styles.statCard}>
+                    <Text style={styles.statIcon}>⭐</Text>
+                    <Text style={styles.statValue}>{currentUser.reputationScore.toFixed(1)}</Text>
+                    <Text style={styles.statLabel}>Rating</Text>
+                  </GlassCard>
+                </View>
+                <View accessible accessibilityLabel={`${currentUser.streaks.current} day streak`}>
+                  <GlassCard variant="dark" style={styles.statCard}>
+                    <Text style={styles.statIcon}>🔥</Text>
+                    <Text style={styles.statValue}>{currentUser.streaks.current}</Text>
+                    <Text style={styles.statLabel}>Streak</Text>
+                  </GlassCard>
+                </View>
+              </>
+            )}
           </View>
 
           <View style={styles.quickAccessSection}>

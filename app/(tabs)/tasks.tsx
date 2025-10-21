@@ -11,6 +11,7 @@ import GlassCard from '@/components/GlassCard';
 import { Task, TaskCategory } from '@/types';
 import { suggestTaskBundles, type TaskBundle } from '@/utils/aiTaskBundling';
 import { Alert } from 'react-native';
+import { TaskCardSkeleton, StatCardSkeleton } from '@/components/SkeletonLoader';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = 120;
@@ -237,6 +238,7 @@ export default function TasksScreen() {
   const [comboStreak, setComboStreak] = useState<number>(0);
   const [showComboAnimation, setShowComboAnimation] = useState<boolean>(false);
   const [taskBundles, setTaskBundles] = useState<TaskBundle[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const filteredTasks = useMemo(() => {
     if (!currentUser) return [];
@@ -297,6 +299,12 @@ export default function TasksScreen() {
         .catch(err => console.error('Failed to generate bundles:', err));
     }
   }, [currentTaskIndex, currentUser, filteredTasks]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setTimeout(() => setIsLoading(false), 600);
+    }
+  }, [currentUser]);
 
   const currentTask = filteredTasks[currentTaskIndex];
   const currentPoster = currentTask ? users.find(u => u.id === currentTask.posterId) : undefined;
@@ -487,21 +495,31 @@ export default function TasksScreen() {
           </View>
 
           <View style={styles.statsBar}>
-            <GlassCard variant="dark" style={styles.statMini}>
-              <Target size={16} color={premiumColors.neonCyan} />
-              <Text style={styles.statMiniValue}>{activeTasks.length}</Text>
-              <Text style={styles.statMiniLabel}>Active</Text>
-            </GlassCard>
-            <GlassCard variant="dark" style={styles.statMini}>
-              <CheckCircle size={16} color={premiumColors.neonAmber} />
-              <Text style={styles.statMiniValue}>{completedToday.length}</Text>
-              <Text style={styles.statMiniLabel}>Today</Text>
-            </GlassCard>
-            <GlassCard variant="dark" style={styles.statMini}>
-              <Flame size={16} color={premiumColors.neonViolet} />
-              <Text style={styles.statMiniValue}>{comboStreak}x</Text>
-              <Text style={styles.statMiniLabel}>Combo</Text>
-            </GlassCard>
+            {isLoading ? (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            ) : (
+              <>
+                <GlassCard variant="dark" style={styles.statMini}>
+                  <Target size={16} color={premiumColors.neonCyan} />
+                  <Text style={styles.statMiniValue}>{activeTasks.length}</Text>
+                  <Text style={styles.statMiniLabel}>Active</Text>
+                </GlassCard>
+                <GlassCard variant="dark" style={styles.statMini}>
+                  <CheckCircle size={16} color={premiumColors.neonAmber} />
+                  <Text style={styles.statMiniValue}>{completedToday.length}</Text>
+                  <Text style={styles.statMiniLabel}>Today</Text>
+                </GlassCard>
+                <GlassCard variant="dark" style={styles.statMini}>
+                  <Flame size={16} color={premiumColors.neonViolet} />
+                  <Text style={styles.statMiniValue}>{comboStreak}x</Text>
+                  <Text style={styles.statMiniLabel}>Combo</Text>
+                </GlassCard>
+              </>
+            )}
           </View>
 
           {showComboAnimation && (
@@ -549,7 +567,9 @@ export default function TasksScreen() {
           )}
 
           <View style={styles.swipeContainer}>
-            {currentTask ? (
+            {isLoading ? (
+              <TaskCardSkeleton />
+            ) : currentTask ? (
               <SwipeableTaskCard
                 key={currentTask.id}
                 task={currentTask}
