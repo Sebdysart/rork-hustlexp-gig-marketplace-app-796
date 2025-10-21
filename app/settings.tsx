@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Ac
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Settings as SettingsIcon, Zap, Bell, Eye, RotateCcw, Info, ChevronRight, Gift, LogOut, Sparkles, Heart, TestTube } from 'lucide-react-native';
+import { Settings as SettingsIcon, Zap, Bell, Eye, RotateCcw, Info, ChevronRight, Gift, LogOut, Sparkles, Heart, TestTube, Activity } from 'lucide-react-native';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -117,17 +117,37 @@ export default function SettingsScreen() {
               style={styles.settingRow}
               onPress={() => {
                 triggerHaptic('medium');
+                router.push('/ai-backend-dashboard');
+              }}
+              accessible
+              accessibilityLabel="AI Backend Dashboard"
+              accessibilityHint="Tap to view real-time backend status and feature health"
+            >
+              <View style={styles.settingInfo}>
+                <Activity size={20} color="#06B6D4" />
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={styles.settingLabel}>AI Backend Dashboard</Text>
+                  <Text style={styles.settingDescription}>Monitor AI features & backend health</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => {
+                triggerHaptic('medium');
                 router.push('/backend-test');
               }}
               accessible
               accessibilityLabel="Backend Test"
-              accessibilityHint="Tap to test backend integration"
+              accessibilityHint="Tap to run comprehensive backend integration tests"
             >
               <View style={styles.settingInfo}>
                 <TestTube size={20} color="#10B981" />
                 <View style={{ marginLeft: 12 }}>
-                  <Text style={styles.settingLabel}>Backend Test</Text>
-                  <Text style={styles.settingDescription}>Test HustleAI backend connection</Text>
+                  <Text style={styles.settingLabel}>Backend Test Suite</Text>
+                  <Text style={styles.settingDescription}>Run full backend integration tests</Text>
                 </View>
               </View>
               <ChevronRight size={20} color={Colors.textSecondary} />
@@ -216,25 +236,6 @@ export default function SettingsScreen() {
                 trackColor={{ false: Colors.card, true: Colors.primary }}
                 thumbColor={settings.notificationsEnabled ? Colors.accent : Colors.textSecondary}
                 accessibilityLabel="Notifications toggle"
-                accessibilityRole="switch"
-              />
-            </View>
-
-            <View style={styles.settingRow} accessible accessibilityLabel="Enable smart AI notifications">
-              <View style={styles.settingInfo}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={styles.settingLabel}>Smart Notifications</Text>
-                  <Sparkles size={14} color={Colors.accent} />
-                </View>
-                <Text style={styles.settingDescription}>AI learns best timing for notifications</Text>
-              </View>
-              <Switch
-                value={settings.aiNotificationsEnabled !== false}
-                onValueChange={(value) => handleToggle('aiNotificationsEnabled', value)}
-                trackColor={{ false: Colors.card, true: Colors.primary }}
-                thumbColor={(settings.aiNotificationsEnabled !== false) ? Colors.accent : Colors.textSecondary}
-                disabled={!settings.notificationsEnabled}
-                accessibilityLabel="Smart notifications toggle"
                 accessibilityRole="switch"
               />
             </View>
