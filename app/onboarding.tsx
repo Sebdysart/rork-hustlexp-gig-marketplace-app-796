@@ -555,7 +555,7 @@ export default function OnboardingScreen() {
                           lng: -122.4194,
                           address: 'San Francisco, CA',
                         }, email, password, 'tradesmen', selectedTrades);
-                        router.replace('/(tabs)/home');
+                        router.replace('/welcome-tutorial?fromOnboarding=true');
                       }, 500);
                     } else if (selectedMode) {
                       let role: UserRole = 'worker';
@@ -580,7 +580,7 @@ export default function OnboardingScreen() {
                           lng: -122.4194,
                           address: 'San Francisco, CA',
                         }, email, password, finalMode);
-                        router.replace('/(tabs)/home');
+                        router.replace('/welcome-tutorial?fromOnboarding=true');
                       }, 500);
                     }
                   }
