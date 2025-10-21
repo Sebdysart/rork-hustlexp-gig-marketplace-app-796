@@ -144,7 +144,7 @@ export default function TaskActiveScreen() {
 
   const handleMarkComplete = () => {
     triggerHaptic('medium');
-    router.push(`/task-verify/${task.id}` as any);
+    router.push(`/task-verify/${task.id}`);
   };
 
   const allSubtasksComplete = progress.subtasks.every(st => st.completed);
