@@ -129,7 +129,7 @@ export default function WelcomeTutorialScreen() {
       {
         icon: <Zap size={64} color={premiumColors.neonAmber} strokeWidth={2} />,
         title: 'Welcome, Everyday Hustler! ⚡',
-        description: "You're ready to hustle! Accept tasks, earn XP, level up, and collect badges.",
+        description: "You're ready to hustle! Accept tasks, earn rewards, and build your reputation.",
       },
       {
         icon: <Map size={64} color={premiumColors.neonCyan} strokeWidth={2} />,
@@ -142,26 +142,18 @@ export default function WelcomeTutorialScreen() {
       },
       {
         icon: <Target size={64} color={premiumColors.neonViolet} strokeWidth={2} />,
-        title: 'Complete Daily Quests',
-        description: 'Finish daily quests to earn bonus XP and GritCoins. Keep your streak alive for multipliers!',
-        action: {
-          label: 'View Quests',
-          route: '/(tabs)/quests',
-        },
+        title: 'Accept & Complete Tasks',
+        description: 'Choose tasks that match your skills. Submit proof when done, and get paid instantly.',
       },
       {
         icon: <TrendingUp size={64} color={premiumColors.neonGreen} strokeWidth={2} />,
-        title: 'Level Up & Unlock Features',
-        description: 'Earn XP to level up. Each level unlocks new features like squads, power-ups, and seasonal events.',
+        title: 'Build Your Profile',
+        description: 'Complete tasks to boost your trust score. Better reputation means more opportunities and higher pay.',
       },
       {
-        icon: <Trophy size={64} color={premiumColors.neonAmber} strokeWidth={2} />,
-        title: 'Climb the Leaderboard',
-        description: 'Compete with other hustlers for top rankings. Earn badges, trophies, and exclusive rewards.',
-        action: {
-          label: 'View Leaderboard',
-          route: '/(tabs)/leaderboard',
-        },
+        icon: <Shield size={64} color={premiumColors.neonCyan} strokeWidth={2} />,
+        title: 'Stay Protected',
+        description: 'Escrow system holds payment safely. Only released when both parties confirm completion.',
       },
       {
         icon: <MessageCircle size={64} color={premiumColors.neonCyan} strokeWidth={2} />,

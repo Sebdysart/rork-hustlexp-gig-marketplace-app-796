@@ -27,17 +27,10 @@ const slides: TutorialSlide[] = [
   },
   {
     icon: <Target size={64} color={premiumColors.neonMagenta} strokeWidth={2.5} />,
-    title: 'Complete Quests',
-    description: 'Accept tasks, check in with GPS, upload proof, and get paid instantly. Every quest levels you up.',
+    title: 'Complete Tasks',
+    description: 'Accept tasks, check in with GPS, upload proof, and get paid instantly. Build your reputation with every job.',
     gradient: [premiumColors.neonMagenta, premiumColors.neonViolet],
     glowColor: premiumColors.neonMagenta,
-  },
-  {
-    icon: <Trophy size={64} color={premiumColors.neonAmber} strokeWidth={2.5} />,
-    title: 'Earn XP & Rank Up',
-    description: 'Gain XP with every task. Unlock badges, power-ups, and climb the leaderboard to legendary status.',
-    gradient: [premiumColors.neonAmber, '#FF6B00'],
-    glowColor: premiumColors.neonAmber,
   },
   {
     icon: <Shield size={64} color={premiumColors.neonGreen} strokeWidth={2.5} />,
@@ -47,9 +40,16 @@ const slides: TutorialSlide[] = [
     glowColor: premiumColors.neonGreen,
   },
   {
+    icon: <Trophy size={64} color={premiumColors.neonAmber} strokeWidth={2.5} />,
+    title: 'Earn & Grow',
+    description: 'Complete more tasks to unlock higher-paying opportunities. Build your portfolio and increase earnings.',
+    gradient: [premiumColors.neonAmber, '#FF6B00'],
+    glowColor: premiumColors.neonAmber,
+  },
+  {
     icon: <Rocket size={64} color={premiumColors.neonViolet} strokeWidth={2.5} />,
     title: 'Ready to Hustle?',
-    description: 'Join squads, compete in seasons, and dominate the marketplace. Your adventure starts now.',
+    description: 'Start accepting tasks and building your reputation. Your gig economy journey begins now.',
     gradient: [premiumColors.neonViolet, premiumColors.neonMagenta],
     glowColor: premiumColors.neonViolet,
   },
