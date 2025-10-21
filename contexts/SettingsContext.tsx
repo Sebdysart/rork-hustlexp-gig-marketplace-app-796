@@ -18,13 +18,12 @@ export type AppSettings = {
   largeFontMode: boolean;
   keyboardNavigationEnabled: boolean;
   aiNudgesEnabled: boolean;
-  burnoutWarningsEnabled: boolean;
   fontSize: number;
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
   gamificationEnabled: true,
-  dailyQuestLimit: 3,
+  dailyQuestLimit: 999,
   notificationsEnabled: true,
   soundEnabled: true,
   hapticsEnabled: true,
@@ -36,7 +35,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   largeFontMode: false,
   keyboardNavigationEnabled: false,
   aiNudgesEnabled: true,
-  burnoutWarningsEnabled: true,
   fontSize: 14,
 };
 

@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Platform, Animated, Switch, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Platform, Animated, Switch } from 'react-native';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, TrendingUp, Map, Zap, Search, Bookmark, Trophy, Users, Flame, Brain, Wand2, Briefcase, Mic, Lightbulb, Power, Heart, Plus } from 'lucide-react-native';
+import { Sparkles, TrendingUp, Map, Zap, Search, Bookmark, Trophy, Users, Flame, Brain, Wand2, Briefcase, Mic, Lightbulb, Power, Plus } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAIProfile } from '@/contexts/AIProfileContext';
@@ -34,24 +34,16 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-interface TaskOffer {
-  id: string;
-  title: string;
-  pay: number;
-  distance: number;
-  estimatedTime: string;
-  category: string;
-  skillMatch: number;
-}
+
 
 export default function HomeScreen() {
   const { currentUser, availableTasks, myTasks, updateAvailabilityStatus } = useApp();
-  const { settings, canAcceptMoreQuests, getRemainingQuests, dailyQuestsCompleted } = useSettings();
-  const { fetchProfile, aiProfile } = useAIProfile();
+  const { settings, canAcceptMoreQuests, getRemainingQuests } = useSettings();
+  const { fetchProfile } = useAIProfile();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
-  const [showBurnoutModal, setShowBurnoutModal] = useState<boolean>(false);
+
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -118,11 +110,7 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  useEffect(() => {
-    if (settings.burnoutWarningsEnabled && dailyQuestsCompleted === 2) {
-      setShowBurnoutModal(true);
-    }
-  }, [dailyQuestsCompleted, settings.burnoutWarningsEnabled]);
+
 
   useEffect(() => {
     if (currentUser) {
@@ -504,25 +492,7 @@ export default function HomeScreen() {
             
             <SocialProofBanner compact />
 
-            {canAcceptMoreQuests() && getRemainingQuests() <= 2 && (
-              <GlassCard variant="darkStrong" neonBorder glowColor="neonGreen" style={styles.burnoutHintBanner}>
-                <Heart size={20} color={premiumColors.neonGreen} />
-                <Text style={styles.burnoutHintText}>
-                  {getRemainingQuests()} {getRemainingQuests() === 1 ? 'task' : 'tasks'} left today — Rest for +10 XP bonus!
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    triggerHaptic('light');
-                    router.push('/wellbeing-settings');
-                  }}
-                  accessible
-                  accessibilityLabel="View wellbeing settings"
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.burnoutHintLink}>Settings</Text>
-                </TouchableOpacity>
-              </GlassCard>
-            )}
+
 
             <View style={styles.header}>
             <View style={styles.headerContent}>
@@ -758,53 +728,6 @@ export default function HomeScreen() {
         </ScrollView>
 
         <FloatingChatIcon isAvailable={isAvailable} hasNewMessage={isAvailable && nearbyGigs.length > 0} />
-
-        <Modal
-          visible={showBurnoutModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowBurnoutModal(false)}
-          accessible
-          accessibilityLabel="Burnout warning modal"
-        >
-          <View style={styles.modalOverlay}>
-            <GlassCard variant="darkStrong" neonBorder glowColor="neonGreen" style={styles.burnoutModal}>
-              <Heart size={48} color={premiumColors.neonGreen} strokeWidth={2} />
-              <Text style={styles.burnoutModalTitle}>Great work today! 💚</Text>
-              <Text style={styles.burnoutModalText}>
-                You've completed 2 tasks. Consider taking a break to recharge.
-                {"\n\n"}Taking rest is part of staying productive long-term!
-              </Text>
-              <View style={styles.burnoutModalActions}>
-                <TouchableOpacity
-                  style={styles.burnoutButton}
-                  onPress={() => {
-                    triggerHaptic('medium');
-                    setShowBurnoutModal(false);
-                    router.push('/wellbeing-settings');
-                  }}
-                  accessible
-                  accessibilityLabel="View wellbeing settings"
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.burnoutButtonText}>View Settings</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.burnoutButton, styles.burnoutButtonPrimary]}
-                  onPress={() => {
-                    triggerHaptic('success');
-                    setShowBurnoutModal(false);
-                  }}
-                  accessible
-                  accessibilityLabel="Dismiss burnout warning"
-                  accessibilityRole="button"
-                >
-                  <Text style={[styles.burnoutButtonText, styles.burnoutButtonPrimaryText]}>Got it!</Text>
-                </TouchableOpacity>
-              </View>
-            </GlassCard>
-          </View>
-        </Modal>
       </LinearGradient>
     </View>
   );
@@ -1485,76 +1408,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: 'flex-start',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  burnoutModal: {
-    width: '100%',
-    maxWidth: 400,
-    padding: 32,
-    alignItems: 'center',
-    gap: 16,
-  },
-  burnoutModalTitle: {
-    fontSize: 24,
-    fontWeight: '800' as const,
-    color: Colors.text,
-    textAlign: 'center',
-  },
-  burnoutModalText: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  burnoutModalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-    marginTop: 8,
-  },
-  burnoutButton: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: premiumColors.glassDark,
-    borderWidth: 1.5,
-    borderColor: premiumColors.neonGreen,
-    alignItems: 'center',
-  },
-  burnoutButtonPrimary: {
-    backgroundColor: premiumColors.neonGreen + '20',
-  },
-  burnoutButtonText: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  burnoutButtonPrimaryText: {
-    color: premiumColors.neonGreen,
-  },
-  burnoutHintBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 12,
-    marginBottom: 16,
-  },
-  burnoutHintText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    lineHeight: 18,
-  },
-  burnoutHintLink: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: premiumColors.neonGreen,
-  },
+
+
 });

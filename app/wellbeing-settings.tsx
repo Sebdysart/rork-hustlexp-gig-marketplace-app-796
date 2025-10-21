@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Heart, Brain, Shield, Moon, ArrowLeft, AlertTriangle } from 'lucide-react-native';
+import { Heart, Brain, Shield, Moon, ArrowLeft } from 'lucide-react-native';
 import { useSettings } from '@/contexts/SettingsContext';
 import { premiumColors, spacing, borderRadius } from '@/constants/designTokens';
 import Colors from '@/constants/colors';
@@ -15,10 +15,10 @@ export default function WellbeingSettingsScreen() {
   const { settings, updateSetting, getRemainingQuests } = useSettings();
 
   const dailyLimits = [
-    { label: 'Unlimited', value: 999 },
+    { label: 'Unlimited (Recommended)', value: 999 },
     { label: '10 tasks/day', value: 10 },
     { label: '5 tasks/day', value: 5 },
-    { label: '3 tasks/day (Recommended)', value: 3 },
+    { label: '3 tasks/day', value: 3 },
   ];
 
   const handleToggle = async (key: keyof typeof settings, value: boolean) => {
@@ -29,14 +29,6 @@ export default function WellbeingSettingsScreen() {
   const handleLimitChange = async (limit: number) => {
     triggerHaptic('selection');
     await updateSetting('dailyQuestLimit', limit);
-    
-    if (limit <= 5) {
-      Alert.alert(
-        '💚 Great Choice',
-        'Setting healthy limits helps prevent burnout and keeps you motivated long-term.',
-        [{ text: 'Got it!', style: 'default' }]
-      );
-    }
   };
 
   const remaining = getRemainingQuests();
@@ -63,7 +55,7 @@ export default function WellbeingSettingsScreen() {
           >
             <ArrowLeft size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Wellbeing</Text>
+          <Text style={styles.headerTitle}>Task Settings</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -80,9 +72,9 @@ export default function WellbeingSettingsScreen() {
               style={styles.heroGradient}
             >
               <Heart size={48} color={premiumColors.neonGreen} strokeWidth={2} />
-              <Text style={styles.heroTitle}>Your wellbeing matters</Text>
+              <Text style={styles.heroTitle}>Your Hustle, Your Rules</Text>
               <Text style={styles.heroSubtitle}>
-                These settings help you maintain a healthy work-life balance
+                Customize your task preferences and AI assistance
               </Text>
             </LinearGradient>
           </GlassCard>
@@ -103,7 +95,7 @@ export default function WellbeingSettingsScreen() {
             <View style={styles.settingGroup}>
               <Text style={styles.groupLabel}>Set Daily Task Limit</Text>
               <Text style={styles.groupDescription}>
-                Limit how many tasks you can accept per day to prevent overwork
+                Set daily task limit (Unlimited recommended for maximum flexibility)
               </Text>
               <View style={styles.chipGrid}>
                 {dailyLimits.map((limit) => (
@@ -124,7 +116,7 @@ export default function WellbeingSettingsScreen() {
                     >
                       {limit.label}
                     </Text>
-                    {limit.value === 3 && (
+                    {limit.value === 999 && (
                       <View style={styles.recommendedBadge}>
                         <Text style={styles.recommendedText}>⭐</Text>
                       </View>
@@ -134,11 +126,11 @@ export default function WellbeingSettingsScreen() {
               </View>
             </View>
 
-            {settings.dailyQuestLimit <= 5 && settings.dailyQuestLimit < 999 && (
+            {settings.dailyQuestLimit === 999 && (
               <View style={styles.encouragementBox}>
                 <Heart size={16} color={premiumColors.neonGreen} />
                 <Text style={styles.encouragementText}>
-                  You&apos;re protecting your energy! This limit helps maintain quality over quantity.
+                  Unlimited mode activated! Work at your own pace without restrictions.
                 </Text>
               </View>
             )}
@@ -172,44 +164,10 @@ export default function WellbeingSettingsScreen() {
             </Text>
           </GlassCard>
 
-          <GlassCard variant="dark" style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <AlertTriangle size={24} color={premiumColors.neonAmber} strokeWidth={2} />
-              <Text style={styles.sectionTitle}>Burnout Protection</Text>
-            </View>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Burnout Warnings</Text>
-                <Text style={styles.settingDescription}>
-                  Get alerts when you&apos;re working too much
-                </Text>
-              </View>
-              <Switch
-                value={settings.burnoutWarningsEnabled}
-                onValueChange={(val) => handleToggle('burnoutWarningsEnabled', val)}
-                trackColor={{ false: Colors.textSecondary + '40', true: premiumColors.neonAmber + '60' }}
-                thumbColor={settings.burnoutWarningsEnabled ? premiumColors.neonAmber : Colors.textSecondary}
-                ios_backgroundColor={Colors.textSecondary + '40'}
-              />
-            </View>
-
-            {settings.burnoutWarningsEnabled && (
-              <View style={styles.warningBox}>
-                <AlertTriangle size={16} color={premiumColors.neonAmber} />
-                <Text style={styles.warningText}>
-                  You&apos;ll receive a notification if you work more than 8 hours in a day or 40 hours in a
-                  week.
-                </Text>
-              </View>
-            )}
-          </GlassCard>
-
           <View style={styles.infoBox}>
             <Moon size={20} color={premiumColors.neonCyan} />
             <Text style={styles.infoText}>
-              Remember: Taking breaks isn&apos;t lazy — it&apos;s strategic. Rest helps you perform better and
-              enjoy the hustle more.
+              You&apos;re in control. Customize these settings to match your working style and preferences.
             </Text>
           </View>
         </ScrollView>
@@ -414,23 +372,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: spacing.md,
     fontStyle: 'italic' as const,
-  },
-  warningBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: premiumColors.neonAmber + '15',
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: premiumColors.neonAmber + '30',
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    color: Colors.text,
-    lineHeight: 18,
   },
   infoBox: {
     flexDirection: 'row',
