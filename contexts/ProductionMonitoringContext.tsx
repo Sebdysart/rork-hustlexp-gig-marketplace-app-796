@@ -166,17 +166,13 @@ export const [ProductionMonitoringProvider, useProductionMonitoring] = createCon
       issues.push('Critical memory usage detected');
       recommendations.push('Close unused apps or restart the app');
     } else if ((currentMetrics.memoryUsage?.usagePercent ?? 0) > 75) {
-      if (status !== 'critical') {
-        status = 'degraded';
-      }
+      status = status === 'healthy' ? 'degraded' : status;
       issues.push('High memory usage detected');
       recommendations.push('Consider closing some features');
     }
 
     if ((currentMetrics.errorCount ?? 0) > 10) {
-      if (status !== 'critical') {
-        status = 'degraded';
-      }
+      status = status === 'healthy' ? 'degraded' : status;
       issues.push(`${currentMetrics.errorCount} recent errors`);
       recommendations.push('Report issues to support');
     }
