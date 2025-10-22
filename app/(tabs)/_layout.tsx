@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { premiumColors, neonGlow } from "@/constants/designTokens";
 
 interface TabIconProps {
@@ -43,6 +44,7 @@ function TabIcon({ color, focused, Icon, badge, glowColor }: TabIconProps) {
 
 export default function TabLayout() {
   const { myAcceptedTasks, myTasks, currentUser, messages, tasks } = useApp();
+  const { t } = useLanguage();
   const activeMode = currentUser?.activeMode || 'everyday';
   const isPoster = activeMode === 'business';
   const isTradesman = activeMode === 'tradesmen';
@@ -99,7 +101,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="home"
           options={{
-            title: "Dashboard",
+            title: t('tabs.home'),
             headerTitle: "Tradesmen Pro",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
@@ -114,7 +116,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="tasks"
           options={{
-            title: "Projects",
+            title: t('tabs.tasks'),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -129,7 +131,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="roadmap"
           options={{
-            title: "Progress",
+            title: t('tabs.roadmap'),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -143,7 +145,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: "Profile",
+            title: t('tabs.profile'),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -205,7 +207,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="home"
           options={{
-            title: "Dashboard",
+            title: t('tabs.home'),
             headerTitle: "HustleXP Poster",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
@@ -220,7 +222,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="tasks"
           options={{
-            title: "My Tasks",
+            title: t('tabs.tasks'),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -250,7 +252,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: "Profile",
+            title: t('tabs.profile'),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -311,7 +313,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Dashboard",
+          title: t('tabs.home'),
           headerTitle: "HustleXP",
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
@@ -326,7 +328,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: "Tasks",
+          title: t('tabs.tasks'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
               color={color} 
@@ -341,7 +343,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="roadmap"
         options={{
-          title: "Progress",
+          title: t('tabs.roadmap'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
               color={color} 
@@ -355,7 +357,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
               color={color} 
