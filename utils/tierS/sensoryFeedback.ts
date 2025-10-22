@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { triggerHaptic as baseHaptic, HapticType } from '@/utils/haptics';
+import { playSound, SoundType } from '@/utils/soundSystem';
 
 export type SensoryPattern = 
   | 'success'
@@ -17,6 +18,7 @@ export interface SensoryConfig {
   haptic?: boolean;
   audio?: boolean;
   visual?: boolean;
+  soundType?: SoundType;
 }
 
 const hapticPatterns: Record<SensoryPattern, HapticType[]> = {
@@ -34,8 +36,21 @@ const hapticPatterns: Record<SensoryPattern, HapticType[]> = {
 
 const defaultConfig: SensoryConfig = {
   haptic: true,
-  audio: false,
+  audio: true,
   visual: true,
+};
+
+const soundMap: Record<SensoryPattern, SoundType> = {
+  success: 'success',
+  error: 'error',
+  warning: 'warning',
+  tap: 'tap',
+  swipe: 'swipe',
+  longPress: 'click',
+  levelUp: 'levelUp',
+  achievement: 'achievementUnlock',
+  coin: 'coin',
+  notification: 'notification',
 };
 
 export async function triggerSensoryFeedback(
@@ -43,6 +58,11 @@ export async function triggerSensoryFeedback(
   config: SensoryConfig = defaultConfig
 ): Promise<void> {
   const finalConfig = { ...defaultConfig, ...config };
+
+  if (finalConfig.audio) {
+    const soundType = finalConfig.soundType || soundMap[pattern];
+    playSound(soundType);
+  }
 
   if (finalConfig.haptic && Platform.OS !== 'web') {
     const haptics = hapticPatterns[pattern];

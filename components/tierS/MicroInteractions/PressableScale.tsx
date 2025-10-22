@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
-import { Animated, TouchableWithoutFeedback, ViewStyle, Platform } from 'react-native';
-import { triggerHaptic } from '@/utils/haptics';
+import { Animated, TouchableWithoutFeedback, ViewStyle } from 'react-native';
+import { useSensory } from '@/hooks/useSensory';
 
 interface PressableScaleProps {
   onPress: () => void;
@@ -20,12 +20,13 @@ export default function PressableScale({
   hapticFeedback = true,
 }: PressableScaleProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const sensory = useSensory();
 
   const handlePressIn = () => {
     if (disabled) return;
     
-    if (hapticFeedback && Platform.OS !== 'web') {
-      triggerHaptic('light');
+    if (hapticFeedback) {
+      sensory.tap();
     }
 
     Animated.spring(scale, {
