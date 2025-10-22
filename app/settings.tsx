@@ -14,7 +14,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useSettings();
   const { signOut } = useApp();
-  const { currentLanguage, changeLanguage, availableLanguages, t } = useLanguage();
+  const { currentLanguage, changeLanguage, availableLanguages, t, useAITranslation, toggleAITranslation } = useLanguage();
   const insets = useSafeAreaInsets();
   const [screenReaderEnabled, setScreenReaderEnabled] = useState<boolean>(false);
 
@@ -111,6 +111,26 @@ export default function SettingsScreen() {
               </View>
               <ChevronRight size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
+
+            <View style={styles.settingRow} accessible accessibilityLabel="AI-powered translation">
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>🤖 AI Translation</Text>
+                <Text style={styles.settingDescription}>
+                  {useAITranslation ? 'Backend AI translating all content' : 'Using pre-translated content'}
+                </Text>
+              </View>
+              <Switch
+                value={useAITranslation}
+                onValueChange={(value) => {
+                  toggleAITranslation(value);
+                  triggerHaptic('light');
+                }}
+                trackColor={{ false: Colors.card, true: Colors.primary }}
+                thumbColor={useAITranslation ? Colors.accent : Colors.textSecondary}
+                accessibilityLabel="AI Translation toggle"
+                accessibilityRole="switch"
+              />
+            </View>
           </View>
 
           <View style={styles.section}>

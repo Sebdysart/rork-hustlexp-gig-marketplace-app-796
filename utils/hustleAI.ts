@@ -548,6 +548,30 @@ class HustleAIClient {
       throw error;
     }
   }
+
+  async translate(params: {
+    text: string | string[];
+    targetLanguage: string;
+    sourceLanguage?: string;
+    context?: string;
+  }): Promise<{ translations: string[] }> {
+    try {
+      const textsArray = Array.isArray(params.text) ? params.text : [params.text];
+      
+      const response = await this.makeRequest<{ translations: string[] }>('/translate', 'POST', {
+        texts: textsArray,
+        targetLanguage: params.targetLanguage,
+        sourceLanguage: params.sourceLanguage || 'en',
+        context: params.context || 'mobile app UI',
+      });
+      
+      return response;
+    } catch (error) {
+      console.warn('[HUSTLEAI] Translation failed, returning original text:', error);
+      const textsArray = Array.isArray(params.text) ? params.text : [params.text];
+      return { translations: textsArray };
+    }
+  }
 }
 
 export const hustleAI = new HustleAIClient();
