@@ -18,16 +18,16 @@ export function useTranslatedText(text: string): string {
     const cacheKey = `${currentLanguage}:${text}`;
     const cached = (aiTranslationCache as Record<string, string>)[cacheKey];
     
-    if (cached && cached !== translatedText) {
+    if (cached) {
       setTranslatedText(cached);
       lastTextRef.current = text;
       lastLangRef.current = currentLanguage;
-    } else if (!cached && (lastTextRef.current !== text || lastLangRef.current !== currentLanguage)) {
+    } else if (lastTextRef.current !== text || lastLangRef.current !== currentLanguage) {
       lastTextRef.current = text;
       lastLangRef.current = currentLanguage;
       let cancelled = false;
       translateText(text).then((result: string) => {
-        if (!cancelled && result !== translatedText) {
+        if (!cancelled) {
           setTranslatedText(result);
         }
       });
@@ -35,7 +35,8 @@ export function useTranslatedText(text: string): string {
         cancelled = true;
       };
     }
-  }, [text, currentLanguage, useAITranslation, aiTranslationCache, translatedText, translateText]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, currentLanguage, useAITranslation, aiTranslationCache]);
 
   return translatedText;
 }
@@ -53,11 +54,10 @@ export function useTranslatedTexts(texts: string[]): string[] {
       return;
     }
     
+    textsKeyRef.current = cacheKey;
+    
     if (!useAITranslation || currentLanguage === 'en') {
-      if (JSON.stringify(translatedTexts) !== JSON.stringify(texts)) {
-        setTranslatedTexts(texts);
-        textsKeyRef.current = cacheKey;
-      }
+      setTranslatedTexts(texts);
       return;
     }
 
@@ -66,11 +66,8 @@ export function useTranslatedTexts(texts: string[]): string[] {
       return (aiTranslationCache as Record<string, string>)[key] || text;
     });
 
-    if (JSON.stringify(translated) !== JSON.stringify(translatedTexts)) {
-      setTranslatedTexts(translated);
-      textsKeyRef.current = cacheKey;
-    }
-  }, [texts, currentLanguage, useAITranslation, aiTranslationCache, translatedTexts]);
+    setTranslatedTexts(translated);
+  }, [texts, currentLanguage, useAITranslation, aiTranslationCache]);
 
   return translatedTexts;
 }

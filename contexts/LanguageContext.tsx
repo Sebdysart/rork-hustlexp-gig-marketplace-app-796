@@ -217,6 +217,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
 
   useEffect(() => {
     loadLanguageAndAIPreference();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const changeLanguage = useCallback(async (lang: LanguageCodeType) => {
