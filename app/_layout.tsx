@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { SquadContext } from "@/contexts/SquadContext";
@@ -75,7 +76,8 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
           <SettingsProvider>
             <NotificationProvider>
               <AnalyticsProvider>
@@ -94,7 +96,8 @@ export default function RootLayout() {
               </AnalyticsProvider>
             </NotificationProvider>
           </SettingsProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

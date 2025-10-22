@@ -2,9 +2,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Ac
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Settings as SettingsIcon, Zap, Bell, Eye, RotateCcw, Info, ChevronRight, Gift, LogOut, Sparkles, Heart, TestTube, Activity } from 'lucide-react-native';
+import { Settings as SettingsIcon, Zap, Bell, Eye, RotateCcw, Info, ChevronRight, Gift, LogOut, Sparkles, Heart, TestTube, Activity, Globe } from 'lucide-react-native';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useApp } from '@/contexts/AppContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useSettings();
   const { signOut } = useApp();
+  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const insets = useSafeAreaInsets();
   const [screenReaderEnabled, setScreenReaderEnabled] = useState<boolean>(false);
 
@@ -81,6 +83,36 @@ export default function SettingsScreen() {
 
       <LinearGradient colors={[Colors.background, Colors.surface]} style={styles.gradient}>
         <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Globe size={20} color={Colors.accent} />
+              <Text style={styles.sectionTitle}>Language & Region</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => {
+                const currentIndex = availableLanguages.findIndex(l => l.code === currentLanguage);
+                const nextLang = availableLanguages[(currentIndex + 1) % availableLanguages.length];
+                changeLanguage(nextLang.code);
+                triggerHaptic('light');
+              }}
+              accessible
+              accessibilityLabel={`Current language: ${availableLanguages.find(l => l.code === currentLanguage)?.name}`}
+              accessibilityHint="Tap to cycle through available languages"
+            >
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>
+                  {availableLanguages.find(l => l.code === currentLanguage)?.flag} Language
+                </Text>
+                <Text style={styles.settingDescription}>
+                  {availableLanguages.find(l => l.code === currentLanguage)?.name}
+                </Text>
+              </View>
+              <ChevronRight size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Zap size={20} color={Colors.accent} />
