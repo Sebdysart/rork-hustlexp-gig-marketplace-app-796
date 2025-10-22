@@ -103,6 +103,11 @@ export default function QuestCard({
         activeOpacity={0.8}
         onPress={handlePress}
         disabled={isComplete}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={`Quest: ${quest.title}. ${quest.description}. Progress: ${quest.progress} of ${quest.target}. Rewards: ${adjustedGrit} Grit${quest.rewards.xp ? `, ${quest.rewards.xp} XP` : ''}${quest.rewards.taskCredits ? `, ${quest.rewards.taskCredits}` : ''}. ${isComplete ? 'Completed' : timeRemaining}.`}
+        accessibilityHint={isComplete ? 'Quest already completed' : 'Double tap to view quest details'}
+        accessibilityState={{ disabled: isComplete }}
       >
         <View
           style={[
