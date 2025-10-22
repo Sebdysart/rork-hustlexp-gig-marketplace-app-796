@@ -20,7 +20,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCodeType>('en');
   const [isLoading, setIsLoading] = useState(true);
   const [translationProgress, setTranslationProgress] = useState(0);
-  const [useAITranslation, setUseAITranslation] = useState(false);
+  const [useAITranslation, setUseAITranslation] = useState(true);
   const [aiTranslationCache, setAITranslationCache] = useState<Record<string, string>>({});
   const batchQueueRef = useRef<Map<string, string>>(new Map());
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -201,8 +201,10 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       setCurrentLanguage(lang);
       i18n.locale = lang;
       
-      if (aiEnabled === 'true') {
-        setUseAITranslation(true);
+      const shouldEnableAI = aiEnabled !== 'false';
+      setUseAITranslation(shouldEnableAI);
+      
+      if (shouldEnableAI && lang !== 'en') {
         console.log('[Language] AI translation enabled on startup, preloading...');
         await preloadAllAppTranslations(lang);
       }
@@ -274,6 +276,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     translationProgress,
     useAITranslation,
     toggleAITranslation,
+    aiTranslationCache,
     availableLanguages: [
       { code: 'en', name: 'English', flag: '🇺🇸' },
       { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -288,5 +291,5 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       { code: 'ko', name: '한국어', flag: '🇰🇷' },
       { code: 'it', name: 'Italiano', flag: '🇮🇹' },
     ] as const,
-  }), [currentLanguage, changeLanguage, t, translateText, isLoading, translationProgress, useAITranslation, toggleAITranslation]);
+  }), [currentLanguage, changeLanguage, t, translateText, isLoading, translationProgress, useAITranslation, toggleAITranslation, aiTranslationCache]);
 });
