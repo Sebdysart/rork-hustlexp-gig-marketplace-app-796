@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Sparkles, Briefcase, Hammer, Zap, Star, Crown, Users, DollarSign, TrendingUp, Lock, Shield, Wrench, Building2, Globe } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole, UserMode } from '@/types';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { TradeCategory, TRADES } from '@/constants/tradesmen';
 import { OFFER_CATEGORIES } from '@/constants/offerCategories';
 import Colors from '@/constants/colors';
@@ -123,6 +124,90 @@ export default function OnboardingScreen() {
   const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
   const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
+
+  const translationKeys = [
+    'HustleXP',
+    'Your Journey to Legendary Status Starts Here',
+    'Level Up Your Hustle',
+    'Your Name',
+    'Enter your name',
+    'Email Address',
+    'your.email@example.com',
+    'Create Password',
+    'Make it epic!',
+    'First Quest Sneak Peek',
+    'Earn 50 XP on signup! 🎯',
+    'Your info is secure with 256-bit encryption',
+    'Enable AI nudges (adjust in Wellbeing Settings later)',
+    "Let's Hustle 🚀",
+    'What brings you here?',
+    'Choose your primary goal',
+    'Complete Tasks',
+    'I want to work and earn money',
+    'Post Tasks',
+    'I need workers for my projects',
+    'Both',
+    'I want to do both',
+    'Continue 🚀',
+    'Set Your Location',
+    'Help workers find your tasks',
+    'Help us find tasks nearby',
+    'Max Distance',
+    'Continue 📍',
+    'Begin Your Journey 💪',
+    'Task Categories',
+    'What type of work interests you?',
+    'Continue 🎯',
+    'Price & Availability',
+    'When can you hustle?',
+    'Price Range',
+    'When Are You Free?',
+    '🌅 Weekday AM',
+    '☀️ Weekday PM',
+    '🌙 Weekday Eve',
+    '🎉 Weekend',
+    '⚡ Flexible',
+    'AI Analyze Me 🤖',
+    'AI Recommends Your Path',
+    'Based on your preferences, but you choose!',
+    'Everyday Hustler',
+    'Simple tasks, errands, and gigs—quick XP gains!',
+    'Perfect for side hustles and fast cash',
+    'Tradesman Pro',
+    'Skilled trades and professional work—unlock premium badges!',
+    'For certified professionals and skilled workers',
+    'Business Poster',
+    'Post jobs and hire workers—build your empire!',
+    'Manage projects and hire top talent',
+    'AI Pick',
+    'Begin Your Grind 💪',
+    'Select Your Trades',
+    'Choose up to 3 trades you specialize in',
+    'Step 8 of 8 - Final Step!',
+    'Unlock Your Journey ⚡',
+    'Quick Gigs',
+    'Accept simple tasks like errands, deliveries, and odd jobs',
+    'Fast Cash',
+    'Get paid instantly after completing tasks. Build your reputation fast',
+    'Level Up',
+    'Earn XP, unlock badges, and climb the leaderboard with every task',
+    'Pro Jobs',
+    'Access skilled trade jobs with higher pay and professional clients',
+    'Trade Badges',
+    'Earn trade-specific badges from Copper to Diamond as you master your craft',
+    'Form Squads',
+    'Team up with other tradesmen for larger projects and bigger payouts',
+    'Post Jobs',
+    'Create tasks and get matched with qualified workers in seconds',
+    'Instant Match',
+    'AI finds the perfect worker based on skills, location, and trust score',
+    'Track Progress',
+    'Monitor work with GPS check-ins, proof photos, and real-time updates',
+    'Next',
+    'Start Hustling!',
+    'Skip',
+  ];
+  const translations = useTranslatedTexts(translationKeys);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -779,11 +864,11 @@ export default function OnboardingScreen() {
                     </View>
                   </LinearGradient>
                 </Animated.View>
-                <Text style={styles.title}>HustleXP</Text>
-                <Text style={styles.subtitle}>Your Journey to Legendary Status Starts Here</Text>
+                <Text style={styles.title}>{translations[0]}</Text>
+                <Text style={styles.subtitle}>{translations[1]}</Text>
                 <View style={styles.tagline}>
                   <Sparkles size={16} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
-                  <Text style={styles.taglineText}>Level Up Your Hustle</Text>
+                  <Text style={styles.taglineText}>{translations[2]}</Text>
                   <Sparkles size={16} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
                 </View>
               </View>
@@ -791,7 +876,7 @@ export default function OnboardingScreen() {
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Your Name</Text>
+                <Text style={styles.label}>{translations[3]}</Text>
                 <Animated.View
                   style={{
                     transform: [{
@@ -809,7 +894,7 @@ export default function OnboardingScreen() {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your name"
+                      placeholder={translations[4]}
                       placeholderTextColor={premiumColors.glassWhiteStrong}
                       value={name}
                       onChangeText={setName}
@@ -841,7 +926,7 @@ export default function OnboardingScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address</Text>
+                <Text style={styles.label}>{translations[5]}</Text>
                 <Animated.View
                   style={{
                     transform: [{
@@ -859,7 +944,7 @@ export default function OnboardingScreen() {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="your.email@example.com"
+                      placeholder={translations[6]}
                       placeholderTextColor={premiumColors.glassWhiteStrong}
                       value={email}
                       onChangeText={setEmail}
@@ -892,7 +977,7 @@ export default function OnboardingScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Create Password</Text>
+                <Text style={styles.label}>{translations[7]}</Text>
                 <Animated.View
                   style={{
                     transform: [{
@@ -910,7 +995,7 @@ export default function OnboardingScreen() {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Make it epic!"
+                      placeholder={translations[8]}
                       placeholderTextColor={premiumColors.glassWhiteStrong}
                       value={password}
                       onChangeText={handlePasswordChange}
@@ -991,8 +1076,8 @@ export default function OnboardingScreen() {
                     >
                       <Sparkles size={20} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
                       <View style={styles.questSneakTextContainer}>
-                        <Text style={styles.questSneakTitle}>First Quest Sneak Peek</Text>
-                        <Text style={styles.questSneakSubtitle}>Earn 50 XP on signup! 🎯</Text>
+                        <Text style={styles.questSneakTitle}>{translations[9]}</Text>
+                        <Text style={styles.questSneakSubtitle}>{translations[10]}</Text>
                       </View>
                       <Zap size={20} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
                     </LinearGradient>
@@ -1003,7 +1088,7 @@ export default function OnboardingScreen() {
               {!keyboardVisible && (
                 <View style={styles.securityBadge} accessible={true} accessibilityLabel="Your information is secure with 256-bit encryption">
                   <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2.5} />
-                  <Text style={styles.securityText}>Your info is secure with 256-bit encryption</Text>
+                  <Text style={styles.securityText}>{translations[11]}</Text>
                 </View>
               )}
 
@@ -1019,7 +1104,7 @@ export default function OnboardingScreen() {
                 <View style={[styles.checkbox, aiNudgesOptIn && styles.checkboxActive]}>
                   {aiNudgesOptIn && <Sparkles size={14} color={premiumColors.deepBlack} fill={premiumColors.deepBlack} />}
                 </View>
-                <Text style={styles.aiOptInText}>Enable AI nudges (adjust in Wellbeing Settings later)</Text>
+                <Text style={styles.aiOptInText}>{translations[12]}</Text>
               </TouchableOpacity>
             </View>
 
@@ -1072,7 +1157,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Zap size={24} color={name.trim() && email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={name.trim() && email.trim() && password.trim() ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.buttonText, (!name.trim() || !email.trim() || !password.trim()) && styles.buttonTextDisabled]}>Let&apos;s Hustle 🚀</Text>
+                <Text style={[styles.buttonText, (!name.trim() || !email.trim() || !password.trim()) && styles.buttonTextDisabled]}>{translations[13]}</Text>
                 <Sparkles size={22} color={name.trim() && email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1110,7 +1195,7 @@ export default function OnboardingScreen() {
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address</Text>
+                <Text style={styles.label}>{translations[5]}</Text>
                 <Animated.View
                   style={{
                     transform: [{
@@ -1128,7 +1213,7 @@ export default function OnboardingScreen() {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="your.email@example.com"
+                      placeholder={translations[6]}
                       placeholderTextColor={premiumColors.glassWhiteStrong}
                       value={email}
                       onChangeText={setEmail}
@@ -1158,7 +1243,7 @@ export default function OnboardingScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Create Password</Text>
+                <Text style={styles.label}>{translations[7]}</Text>
                 <Animated.View
                   style={{
                     transform: [{
@@ -1176,7 +1261,7 @@ export default function OnboardingScreen() {
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="Make it epic!"
+                      placeholder={translations[8]}
                       placeholderTextColor={premiumColors.glassWhiteStrong}
                       value={password}
                       onChangeText={handlePasswordChange}
@@ -1239,7 +1324,7 @@ export default function OnboardingScreen() {
                 <View style={[styles.checkbox, aiNudgesOptIn && styles.checkboxActive]}>
                   {aiNudgesOptIn && <Sparkles size={14} color={premiumColors.deepBlack} fill={premiumColors.deepBlack} />}
                 </View>
-                <Text style={styles.aiOptInText}>Enable AI nudges (adjust in Wellbeing Settings later)</Text>
+                <Text style={styles.aiOptInText}>{translations[12]}</Text>
               </TouchableOpacity>
             </View>
 
@@ -1270,8 +1355,8 @@ export default function OnboardingScreen() {
         ) : step === 3 ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>What brings you here?</Text>
-              <Text style={styles.pathSubtitle}>Choose your primary goal</Text>
+              <Text style={styles.pathTitle}>{translations[14]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[15]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1302,24 +1387,24 @@ export default function OnboardingScreen() {
                 {
                   type: 'worker' as const,
                   icon: Hammer,
-                  title: 'Complete Tasks',
-                  description: 'I want to work and earn money',
+                  title: translations[16],
+                  description: translations[17],
                   gradient: [premiumColors.neonCyan, premiumColors.neonBlue],
                   accentColor: premiumColors.neonCyan,
                 },
                 {
                   type: 'poster' as const,
                   icon: Building2,
-                  title: 'Post Tasks',
-                  description: 'I need workers for my projects',
+                  title: translations[18],
+                  description: translations[19],
                   gradient: [premiumColors.neonMagenta, premiumColors.neonViolet],
                   accentColor: premiumColors.neonMagenta,
                 },
                 {
                   type: 'both' as const,
                   icon: Users,
-                  title: 'Both',
-                  description: 'I want to do both',
+                  title: translations[20],
+                  description: translations[21],
                   gradient: [premiumColors.neonAmber, '#FF6B00'],
                   accentColor: premiumColors.neonAmber,
                 },
