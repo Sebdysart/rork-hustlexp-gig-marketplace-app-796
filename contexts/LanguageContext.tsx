@@ -52,7 +52,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   }, []);
 
   const t = useCallback((key: string, options?: any) => {
-    return i18n.t(key, options);
+    return i18n.t(key, { ...options, locale: currentLanguage });
   }, [currentLanguage]);
 
   return useMemo(() => ({
