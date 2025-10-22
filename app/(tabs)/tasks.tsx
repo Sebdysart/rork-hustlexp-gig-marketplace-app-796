@@ -239,6 +239,8 @@ export default function TasksScreen() {
   const [showComboAnimation, setShowComboAnimation] = useState<boolean>(false);
   const [taskBundles, setTaskBundles] = useState<TaskBundle[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showInstantMatch, setShowInstantMatch] = useState<boolean>(false);
+  const [matchTaskIndex, setMatchTaskIndex] = useState<number>(0);
 
   const filteredTasks = useMemo(() => {
     if (!currentUser) return [];
@@ -323,6 +325,45 @@ export default function TasksScreen() {
     setTimeout(() => setShowComboAnimation(false), 1500);
     
     setCurrentTaskIndex(prev => Math.min(prev + 1, filteredTasks.length - 1));
+  };
+
+  const handleInstantMatchAccept = async () => {
+    const task = filteredTasks[matchTaskIndex];
+    if (!task) return;
+    
+    await acceptTask(task.id);
+    setComboStreak(prev => prev + 1);
+    setShowComboAnimation(true);
+    setTimeout(() => setShowComboAnimation(false), 1500);
+    triggerHaptic('success');
+    
+    if (matchTaskIndex >= filteredTasks.length - 1) {
+      setShowInstantMatch(false);
+      setMatchTaskIndex(0);
+    } else {
+      setMatchTaskIndex(prev => prev + 1);
+    }
+  };
+
+  const handleInstantMatchDecline = () => {
+    triggerHaptic('light');
+    
+    if (matchTaskIndex >= filteredTasks.length - 1) {
+      setShowInstantMatch(false);
+      setMatchTaskIndex(0);
+    } else {
+      setMatchTaskIndex(prev => prev + 1);
+    }
+  };
+
+  const openInstantMatch = () => {
+    if (filteredTasks.length === 0) {
+      Alert.alert('No Tasks', 'There are no available tasks right now');
+      return;
+    }
+    setMatchTaskIndex(0);
+    setShowInstantMatch(true);
+    triggerHaptic('medium');
   };
 
   const activeTasks = myAcceptedTasks.filter(t => t.status === 'in_progress');
@@ -590,10 +631,7 @@ export default function TasksScreen() {
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => {
-                triggerHaptic('medium');
-                router.push('/instant-match');
-              }}
+              onPress={openInstantMatch}
             >
               <LinearGradient
                 colors={[premiumColors.neonViolet, premiumColors.neonCyan]}
@@ -645,6 +683,130 @@ export default function TasksScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+
+      <Modal visible={showInstantMatch} transparent animationType="fade">
+        <View style={styles.instantMatchOverlay}>
+          <View style={styles.instantMatchModal}>
+            <View style={styles.instantMatchHeader}>
+              <View style={styles.instantMatchBadge}>
+                <Zap size={18} color={premiumColors.neonCyan} />
+                <Text style={styles.instantMatchTitle}>Instant Match</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowInstantMatch(false);
+                  setMatchTaskIndex(0);
+                  triggerHaptic('light');
+                }}
+                style={styles.closeButton}
+              >
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.instantMatchCounter}>
+              <Text style={styles.counterText}>
+                {matchTaskIndex + 1} / {filteredTasks.length}
+              </Text>
+            </View>
+
+            {filteredTasks[matchTaskIndex] && (() => {
+              const task = filteredTasks[matchTaskIndex];
+              const poster = users.find(u => u.id === task.posterId);
+              const distance = task.distance || 0;
+              
+              return (
+                <View style={styles.instantMatchCard}>
+                  <LinearGradient
+                    colors={[premiumColors.neonViolet + '15', premiumColors.neonCyan + '10']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.instantMatchGradient}
+                  >
+                    <View style={styles.taskHeader}>
+                      <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryIcon}>{getCategoryIcon(task.category)}</Text>
+                        <Text style={styles.categoryText}>{task.category}</Text>
+                      </View>
+                      {task.urgency === 'today' && (
+                        <View style={styles.urgentBadge}>
+                          <Flame size={14} color={premiumColors.neonAmber} />
+                          <Text style={styles.urgentText}>URGENT</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <Text style={styles.taskTitle}>{task.title}</Text>
+                    <Text style={styles.taskDescription}>{task.description}</Text>
+
+                    {poster && (
+                      <View style={styles.posterInfo}>
+                        <View style={styles.posterAvatar}>
+                          <Text style={styles.posterInitial}>{poster.name[0]}</Text>
+                        </View>
+                        <View style={styles.posterDetails}>
+                          <Text style={styles.posterName}>{poster.name}</Text>
+                          <View style={styles.posterRating}>
+                            <Star size={12} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                            <Text style={styles.posterScore}>{poster.reputationScore.toFixed(1)}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+
+                    <View style={styles.taskStats}>
+                      <View style={styles.statItem}>
+                        <DollarSign size={18} color={premiumColors.neonCyan} />
+                        <Text style={styles.statValue}>${task.payAmount}</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <Zap size={18} color={premiumColors.neonAmber} />
+                        <Text style={styles.statValue}>+{task.xpReward} Grit</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <MapPin size={18} color={premiumColors.neonViolet} />
+                        <Text style={styles.statValue}>{distance.toFixed(1)} mi</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.taskFooter}>
+                      <View style={styles.timeInfo}>
+                        <Clock size={14} color={Colors.textSecondary} />
+                        <Text style={styles.timeText}>{task.dateTime ? new Date(task.dateTime).toLocaleDateString() : 'Flexible'}</Text>
+                      </View>
+                    </View>
+                  </LinearGradient>
+                </View>
+              );
+            })()}
+
+            <View style={styles.instantMatchActions}>
+              <TouchableOpacity
+                style={styles.declineButton}
+                onPress={handleInstantMatchDecline}
+              >
+                <X size={32} color={Colors.text} />
+                <Text style={styles.declineText}>Skip</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.acceptButton}
+                onPress={handleInstantMatchAccept}
+              >
+                <LinearGradient
+                  colors={[premiumColors.neonCyan, premiumColors.neonViolet]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.acceptGradient}
+                >
+                  <CheckCircle size={32} color="#fff" />
+                  <Text style={styles.acceptText}>Accept</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={showFilters} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -1288,5 +1450,102 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: premiumColors.neonCyan,
+  },
+  instantMatchOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  instantMatchModal: {
+    width: '100%',
+    maxWidth: 500,
+    backgroundColor: premiumColors.richBlack,
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+  },
+  instantMatchHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  instantMatchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  instantMatchTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: Colors.text,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: premiumColors.glassWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  instantMatchCounter: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  counterText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: premiumColors.neonCyan,
+  },
+  instantMatchCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: premiumColors.neonViolet + '40',
+  },
+  instantMatchGradient: {
+    padding: 20,
+  },
+  instantMatchActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  declineButton: {
+    flex: 1,
+    backgroundColor: premiumColors.glassWhite,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: Colors.textSecondary,
+  },
+  declineText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  acceptButton: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  acceptGradient: {
+    padding: 20,
+    alignItems: 'center',
+    gap: 8,
+  },
+  acceptText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#fff',
   },
 });
