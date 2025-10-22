@@ -574,5 +574,5 @@ export const translations = {
   },
 };
 
-export type LanguageCode = keyof typeof translations;
+export type LanguageCode = keyof typeof translations | 'ar' | 'pt' | 'ru' | 'hi' | 'ko' | 'it';
 export type TranslationKeys = typeof translations.en;

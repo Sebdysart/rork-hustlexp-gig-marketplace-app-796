@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18n } from 'i18n-js';
 import { translations, LanguageCode } from '@/constants/translations';
 import { getLocales } from 'expo-localization';
+import { aiTranslationService } from '@/utils/aiTranslation';
 
 const STORAGE_KEY = 'hustlexp_language';
 
@@ -51,15 +52,49 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     }
   }, []);
 
+  const [useAITranslation, setUseAITranslation] = useState(false);
+  const [aiTranslationCache, setAITranslationCache] = useState<Record<string, string>>({});
+
   const t = useCallback((key: string, options?: any) => {
+    if (useAITranslation && currentLanguage !== 'en') {
+      const cacheKey = `${currentLanguage}:${key}`;
+      if (aiTranslationCache[cacheKey]) {
+        return aiTranslationCache[cacheKey];
+      }
+      
+      const englishText = i18n.t(key, { ...options, locale: 'en' });
+      
+      aiTranslationService.translate(englishText, currentLanguage, 'en')
+        .then(([translated]) => {
+          setAITranslationCache(prev => ({
+            ...prev,
+            [cacheKey]: translated,
+          }));
+        })
+        .catch((error) => {
+          console.error('[Language] AI translation error:', error);
+        });
+      
+      return englishText;
+    }
+    
     return i18n.t(key, { ...options, locale: currentLanguage });
-  }, [currentLanguage]);
+  }, [currentLanguage, useAITranslation, aiTranslationCache]);
+
+  const toggleAITranslation = useCallback((enabled: boolean) => {
+    setUseAITranslation(enabled);
+    if (enabled) {
+      console.log('[Language] AI translation enabled');
+    }
+  }, []);
 
   return useMemo(() => ({
     currentLanguage,
     changeLanguage,
     t,
     isLoading,
+    useAITranslation,
+    toggleAITranslation,
     availableLanguages: [
       { code: 'en', name: 'English', flag: '🇺🇸' },
       { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -67,6 +102,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
       { code: 'zh', name: '中文', flag: '🇨🇳' },
       { code: 'ja', name: '日本語', flag: '🇯🇵' },
+      { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+      { code: 'pt', name: 'Português', flag: '🇧🇷' },
+      { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+      { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
+      { code: 'ko', name: '한국어', flag: '🇰🇷' },
+      { code: 'it', name: 'Italiano', flag: '🇮🇹' },
     ] as const,
-  }), [currentLanguage, changeLanguage, t, isLoading]);
+  }), [currentLanguage, changeLanguage, t, isLoading, useAITranslation, toggleAITranslation]);
 });
