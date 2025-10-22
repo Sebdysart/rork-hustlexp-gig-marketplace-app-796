@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { Sparkles, Briefcase, Hammer, Zap, Star, Crown, Users, DollarSign, TrendingUp, Lock, Shield, Wrench, Building2 } from 'lucide-react-native';
+import { Sparkles, Briefcase, Hammer, Zap, Star, Crown, Users, DollarSign, TrendingUp, Lock, Shield, Wrench, Building2, Globe } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole, UserMode } from '@/types';
 import { TradeCategory, TRADES } from '@/constants/tradesmen';
@@ -13,6 +13,7 @@ import Colors from '@/constants/colors';
 import Confetti from '@/components/Confetti';
 import { triggerHaptic } from '@/utils/haptics';
 import { spacing, borderRadius, premiumColors, neonGlow } from '@/constants/designTokens';
+import LanguageSelectorModal from '@/components/LanguageSelectorModal';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -121,6 +122,7 @@ export default function OnboardingScreen() {
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
+  const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -661,6 +663,41 @@ export default function OnboardingScreen() {
       <View style={styles.gridOverlay} />
       <View style={styles.topGlow} />
       <View style={styles.bottomGlow} />
+
+      <TouchableOpacity
+        style={[
+          styles.languageButton,
+          {
+            top: insets.top + 10,
+            right: spacing.lg,
+          },
+        ]}
+        onPress={() => {
+          triggerHaptic('selection');
+          setShowLanguageModal(true);
+        }}
+        activeOpacity={0.8}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <BlurView intensity={40} tint="dark" style={styles.languageButtonBlur}>
+          <LinearGradient
+            colors={[premiumColors.neonCyan + '40', premiumColors.neonBlue + '20', 'transparent']}
+            style={styles.languageButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Globe size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
+          </LinearGradient>
+        </BlurView>
+      </TouchableOpacity>
+
+      <LanguageSelectorModal
+        visible={showLanguageModal}
+        onClose={() => {
+          triggerHaptic('light');
+          setShowLanguageModal(false);
+        }}
+      />
 
       {particleAnims.map((anim, index) => {
         const translateY = anim.interpolate({
@@ -3001,5 +3038,31 @@ const styles = StyleSheet.create({
     color: premiumColors.neonAmber,
     letterSpacing: 0.5,
     textTransform: 'uppercase' as const,
+  },
+  languageButton: {
+    position: 'absolute',
+    zIndex: 100,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  languageButtonBlur: {
+    width: '100%',
+    height: '100%',
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan + '60',
+  },
+  languageButtonGradient: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...neonGlow.subtle,
+    shadowColor: premiumColors.neonCyan,
+    shadowRadius: 20,
+    shadowOpacity: 0.6,
   },
 });
