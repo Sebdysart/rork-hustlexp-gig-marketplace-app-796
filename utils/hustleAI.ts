@@ -549,28 +549,56 @@ class HustleAIClient {
     }
   }
 
-  async translate(params: {
-    text: string | string[];
-    targetLanguage: string;
-    sourceLanguage?: string;
-    context?: string;
-  }): Promise<{ translations: string[] }> {
-    try {
-      const textsArray = Array.isArray(params.text) ? params.text : [params.text];
-      
-      const response = await this.makeRequest<{ translations: string[] }>('/translate', 'POST', {
-        text: textsArray,
-        targetLanguage: params.targetLanguage,
-        sourceLanguage: params.sourceLanguage || 'en',
-        context: params.context || 'mobile app UI',
-      });
-      
-      return response;
-    } catch (error) {
-      console.warn('[HUSTLEAI] Translation failed, returning original text:', error);
-      const textsArray = Array.isArray(params.text) ? params.text : [params.text];
-      return { translations: textsArray };
+  async translate(
+    params: {
+      text: string | string[];
+      targetLanguage: string;
+      sourceLanguage?: string;
+      context?: string;
+    },
+    retries = 3
+  ): Promise<{ translations: string[] }> {
+    const textsArray = Array.isArray(params.text) ? params.text : [params.text];
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const response = await this.makeRequest<{ translations: string[] }>('/translate', 'POST', {
+          text: textsArray,
+          targetLanguage: params.targetLanguage,
+          sourceLanguage: params.sourceLanguage || 'en',
+          context: params.context || 'mobile app UI',
+        });
+        
+        return response;
+      } catch (error: any) {
+        const errorStr = error?.message || String(error);
+        
+        if (errorStr.includes('429') || errorStr.includes('Rate limit')) {
+          const retryAfterMatch = errorStr.match(/retry.*?(\d+)\s*second/i);
+          const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1]) : Math.pow(2, attempt) * 5;
+          
+          if (attempt < retries - 1) {
+            console.log(`[HUSTLEAI] Rate limited. Retrying in ${retryAfter}s (attempt ${attempt + 1}/${retries})`);
+            await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+            continue;
+          }
+          
+          console.error('[HUSTLEAI] Rate limit exceeded after all retries');
+          throw new Error(`Rate limit exceeded. Please try again in ${retryAfter} seconds.`);
+        }
+        
+        if (attempt === retries - 1) {
+          console.warn('[HUSTLEAI] Translation failed after all retries, returning original text');
+          return { translations: textsArray };
+        }
+        
+        const backoffMs = Math.pow(2, attempt) * 1000;
+        console.log(`[HUSTLEAI] Translation attempt ${attempt + 1} failed, retrying in ${backoffMs}ms`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      }
     }
+    
+    return { translations: textsArray };
   }
 }
 
