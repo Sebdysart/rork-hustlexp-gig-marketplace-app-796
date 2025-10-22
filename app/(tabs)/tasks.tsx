@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, MapPin, Clock, DollarSign, TrendingUp, Filter, Sparkles, Target, CheckCircle, X, ChevronRight, Flame, Star } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '@/contexts/LanguageContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import { premiumColors } from '@/constants/designTokens';
@@ -230,6 +231,7 @@ function SwipeableTaskCard({ task, onSwipeLeft, onSwipeRight, distance, poster }
 
 export default function TasksScreen() {
   const { currentUser, availableTasks, myAcceptedTasks, myTasks, acceptTask, users } = useApp();
+  const { t } = useLanguage();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [sortBy, setSortBy] = useState<SortType>('ai');
@@ -384,9 +386,9 @@ export default function TasksScreen() {
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
               <View>
-                <Text style={styles.headerTitle}>My Quests</Text>
+                <Text style={styles.headerTitle}>{t('tasks.myTasks')}</Text>
                 <Text style={styles.headerSubtitle}>
-                  {myTasks.length} total quests posted
+                  {myTasks.length} {t('common.total')} {t('tasks.myTasks').toLowerCase()}
                 </Text>
               </View>
             </View>
@@ -395,17 +397,17 @@ export default function TasksScreen() {
               <GlassCard variant="dark" style={styles.statMini}>
                 <Target size={16} color={premiumColors.neonCyan} />
                 <Text style={styles.statMiniValue}>{myTasks.filter(t => t.status === 'open').length}</Text>
-                <Text style={styles.statMiniLabel}>Open</Text>
+                <Text style={styles.statMiniLabel}>{t('tasks.available')}</Text>
               </GlassCard>
               <GlassCard variant="dark" style={styles.statMini}>
                 <Clock size={16} color={premiumColors.neonAmber} />
                 <Text style={styles.statMiniValue}>{myTasks.filter(t => t.status === 'in_progress').length}</Text>
-                <Text style={styles.statMiniLabel}>In Progress</Text>
+                <Text style={styles.statMiniLabel}>{t('tasks.inProgress')}</Text>
               </GlassCard>
               <GlassCard variant="dark" style={styles.statMini}>
                 <CheckCircle size={16} color={premiumColors.neonGreen} />
                 <Text style={styles.statMiniValue}>{myTasks.filter(t => t.status === 'completed').length}</Text>
-                <Text style={styles.statMiniLabel}>Completed</Text>
+                <Text style={styles.statMiniLabel}>{t('tasks.completed')}</Text>
               </GlassCard>
             </View>
 
@@ -417,7 +419,7 @@ export default function TasksScreen() {
                 <View key={status} style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>
-                      {status === 'open' ? 'Open Quests' : status === 'in_progress' ? 'In Progress' : 'Completed'}
+                      {status === 'open' ? t('tasks.available') + ' ' + t('tasks.myTasks') : status === 'in_progress' ? t('tasks.inProgress') : t('tasks.completed')}
                     </Text>
                     <Text style={styles.sectionCount}>{statusTasks.length}</Text>
                   </View>
@@ -449,7 +451,7 @@ export default function TasksScreen() {
                                 styles.statusText,
                                 { color: status === 'open' ? premiumColors.neonCyan : status === 'in_progress' ? premiumColors.neonAmber : premiumColors.neonGreen }
                               ]}>
-                                {status === 'open' ? 'Open' : status === 'in_progress' ? 'In Progress' : 'Completed'}
+                                {status === 'open' ? t('tasks.available') : status === 'in_progress' ? t('tasks.inProgress') : t('tasks.completed')}
                               </Text>
                             </View>
                           </View>
@@ -461,7 +463,7 @@ export default function TasksScreen() {
                                 <Text style={styles.workerInitial}>{worker.name[0]}</Text>
                               </View>
                               <View style={styles.workerDetails}>
-                                <Text style={styles.workerLabel}>Assigned to</Text>
+                                <Text style={styles.workerLabel}>{t('common.assignedTo')}</Text>
                                 <Text style={styles.workerName}>{worker.name}</Text>
                               </View>
                             </View>
@@ -487,8 +489,8 @@ export default function TasksScreen() {
             {myTasks.length === 0 && (
               <GlassCard variant="dark" style={styles.emptyCard}>
                 <Text style={styles.emptyIcon}>📋</Text>
-                <Text style={styles.emptyTitle}>No Quests Yet</Text>
-                <Text style={styles.emptyText}>Create your first quest using AI or manual posting</Text>
+                <Text style={styles.emptyTitle}>{t('tasks.noTasks')}</Text>
+                <Text style={styles.emptyText}>{t('tasks.createFirstTask')}</Text>
                 <TouchableOpacity
                   style={styles.createButton}
                   onPress={() => {
@@ -502,7 +504,7 @@ export default function TasksScreen() {
                     end={{ x: 1, y: 0 }}
                     style={styles.createGradient}
                   >
-                    <Text style={styles.createButtonText}>Create Quest</Text>
+                    <Text style={styles.createButtonText}>{t('tasks.postTask')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </GlassCard>
@@ -519,9 +521,9 @@ export default function TasksScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.headerTitle}>The Hustle Feed</Text>
+              <Text style={styles.headerTitle}>{t('tasks.hustleFeed')}</Text>
               <Text style={styles.headerSubtitle}>
-                {filteredTasks.length} gigs • AI-optimized for you
+                {filteredTasks.length} {t('tasks.available')} • {t('tasks.aiOptimized')}
               </Text>
             </View>
             <TouchableOpacity
@@ -547,17 +549,17 @@ export default function TasksScreen() {
                 <GlassCard variant="dark" style={styles.statMini}>
                   <Target size={16} color={premiumColors.neonCyan} />
                   <Text style={styles.statMiniValue}>{activeTasks.length}</Text>
-                  <Text style={styles.statMiniLabel}>Active</Text>
+                  <Text style={styles.statMiniLabel}>{t('tasks.active')}</Text>
                 </GlassCard>
                 <GlassCard variant="dark" style={styles.statMini}>
                   <CheckCircle size={16} color={premiumColors.neonAmber} />
                   <Text style={styles.statMiniValue}>{completedToday.length}</Text>
-                  <Text style={styles.statMiniLabel}>Today</Text>
+                  <Text style={styles.statMiniLabel}>{t('common.today')}</Text>
                 </GlassCard>
                 <GlassCard variant="dark" style={styles.statMini}>
                   <Flame size={16} color={premiumColors.neonViolet} />
                   <Text style={styles.statMiniValue}>{comboStreak}x</Text>
-                  <Text style={styles.statMiniLabel}>Combo</Text>
+                  <Text style={styles.statMiniLabel}>{t('common.combo')}</Text>
                 </GlassCard>
               </>
             )}
@@ -573,8 +575,8 @@ export default function TasksScreen() {
             <Sparkles size={18} color={premiumColors.neonCyan} />
             <Text style={styles.aiInsightText}>
               {sortBy === 'ai' 
-                ? 'AI matched these gigs to your skills & location'
-                : `Sorted by ${sortBy === 'distance' ? 'nearest first' : sortBy === 'pay' ? 'highest pay' : 'most XP'}`
+                ? t('tasks.aiMatched')
+                : `${t('common.sortedBy')} ${sortBy === 'distance' ? t('tasks.distance') : sortBy === 'pay' ? t('tasks.pay') : t('tasks.xp')}`
               }
             </Text>
           </View>
@@ -583,7 +585,7 @@ export default function TasksScreen() {
             <View style={styles.bundlesCard}>
               <View style={styles.bundlesHeader}>
                 <Sparkles size={18} color={premiumColors.neonCyan} />
-                <Text style={styles.bundlesTitle}>Smart Bundling</Text>
+                <Text style={styles.bundlesTitle}>{t('tasks.smartBundling')}</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {taskBundles.map(bundle => (
@@ -622,8 +624,8 @@ export default function TasksScreen() {
             ) : (
               <GlassCard variant="dark" style={styles.emptyCard}>
                 <Text style={styles.emptyIcon}>🎉</Text>
-                <Text style={styles.emptyTitle}>You've seen all gigs!</Text>
-                <Text style={styles.emptyText}>Check back soon for new opportunities</Text>
+                <Text style={styles.emptyTitle}>{t('tasks.allTasksSeen')}</Text>
+                <Text style={styles.emptyText}>{t('tasks.checkBackSoon')}</Text>
               </GlassCard>
             )}
           </View>
@@ -640,14 +642,14 @@ export default function TasksScreen() {
                 style={styles.actionGradient}
               >
                 <Zap size={20} color="#fff" />
-                <Text style={styles.actionText}>Instant Match</Text>
+                <Text style={styles.actionText}>{t('tasks.instantMatch')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>My Active Quests</Text>
+              <Text style={styles.sectionTitle}>{t('tasks.myActive')}</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/home')}>
                 <ChevronRight size={20} color={Colors.accent} />
               </TouchableOpacity>
@@ -678,7 +680,7 @@ export default function TasksScreen() {
                 </TouchableOpacity>
               ))
             ) : (
-              <Text style={styles.emptyText}>No active quests</Text>
+              <Text style={styles.emptyText}>{t('tasks.noActive')}</Text>
             )}
           </View>
         </ScrollView>
@@ -690,7 +692,7 @@ export default function TasksScreen() {
             <View style={styles.instantMatchHeader}>
               <View style={styles.instantMatchBadge}>
                 <Zap size={18} color={premiumColors.neonCyan} />
-                <Text style={styles.instantMatchTitle}>Instant Match</Text>
+                <Text style={styles.instantMatchTitle}>{t('tasks.instantMatch')}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => {
@@ -786,7 +788,7 @@ export default function TasksScreen() {
                 onPress={handleInstantMatchDecline}
               >
                 <X size={32} color={Colors.text} />
-                <Text style={styles.declineText}>Skip</Text>
+                <Text style={styles.declineText}>{t('common.skip')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -800,7 +802,7 @@ export default function TasksScreen() {
                   style={styles.acceptGradient}
                 >
                   <CheckCircle size={32} color="#fff" />
-                  <Text style={styles.acceptText}>Accept</Text>
+                  <Text style={styles.acceptText}>{t('common.accept')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -812,13 +814,13 @@ export default function TasksScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filters & Sort</Text>
+              <Text style={styles.modalTitle}>{t('common.filtersSort')}</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
                 <X size={24} color={Colors.text} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSectionTitle}>Filter By</Text>
+            <Text style={styles.modalSectionTitle}>{t('common.filterBy')}</Text>
             <View style={styles.filterGrid}>
               {(['all', 'nearby', 'high_pay', 'quick', 'urgent'] as FilterType[]).map(filter => (
                 <TouchableOpacity
@@ -836,7 +838,7 @@ export default function TasksScreen() {
               ))}
             </View>
 
-            <Text style={styles.modalSectionTitle}>Sort By</Text>
+            <Text style={styles.modalSectionTitle}>{t('common.sortBy')}</Text>
             <View style={styles.filterGrid}>
               {(['ai', 'distance', 'pay', 'xp'] as SortType[]).map(sort => (
                 <TouchableOpacity
@@ -867,7 +869,7 @@ export default function TasksScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.applyGradient}
               >
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
+                <Text style={styles.applyButtonText}>{t('common.applyFilters')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
