@@ -50,7 +50,13 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         newCache[key] = translations[index] || textsToTranslate[index];
       });
 
-      setAITranslationCache(prev => ({ ...prev, ...newCache }));
+      setAITranslationCache(prev => {
+        const updated = { ...prev };
+        Object.keys(newCache).forEach(key => {
+          updated[key] = newCache[key];
+        });
+        return updated;
+      });
     } catch (error: any) {
       console.error('[Language] Batch translation failed:', error);
       
@@ -230,15 +236,20 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       i18n.locale = lang;
       await AsyncStorage.setItem(STORAGE_KEY, lang);
       
+      setAITranslationCache({});
+      batchQueueRef.current.clear();
+      
       if (useAITranslation && lang !== 'en') {
         console.log('[Language] Preloading all translations for:', lang);
         await preloadAllAppTranslations(lang);
+      } else {
+        setIsLoading(false);
+        setTranslationProgress(100);
       }
     } catch (error) {
       console.error('[Language] Error changing language:', error);
-    } finally {
       setIsLoading(false);
-      setTranslationProgress(100);
+      setTranslationProgress(0);
     }
   }, [useAITranslation, preloadAllAppTranslations]);
 
