@@ -213,11 +213,11 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [preloadAllAppTranslations]);
 
   useEffect(() => {
     loadLanguageAndAIPreference();
-  }, [loadLanguageAndAIPreference]);
+  }, []);
 
   const changeLanguage = useCallback(async (lang: LanguageCodeType) => {
     try {
