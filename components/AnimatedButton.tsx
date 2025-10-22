@@ -1,6 +1,6 @@
 import { TouchableOpacity, Animated, ViewStyle } from 'react-native';
 import { useRef, ReactNode } from 'react';
-import { triggerHaptic } from '@/utils/haptics';
+import { useSensory } from '@/hooks/useSensory';
 
 interface AnimatedButtonProps {
   children: ReactNode;
@@ -21,9 +21,10 @@ export function AnimatedButton({
 }: AnimatedButtonProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const sensory = useSensory();
 
   const handlePressIn = () => {
-    triggerHaptic(haptic);
+    sensory.buttonPress();
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: scaleValue,

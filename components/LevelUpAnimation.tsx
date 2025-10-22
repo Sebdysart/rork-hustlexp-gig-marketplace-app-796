@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { getRankForLevel } from '@/constants/ranks';
 import { LinearGradient } from 'expo-linear-gradient';
+import { playSound } from '@/utils/soundSystem';
 
 interface LevelUpAnimationProps {
   newLevel: number;
@@ -23,6 +24,8 @@ export default function LevelUpAnimation({ newLevel, onComplete }: LevelUpAnimat
   const rank = getRankForLevel(newLevel);
 
   useEffect(() => {
+    playSound('levelUp');
+    
     Animated.sequence([
       Animated.parallel([
         Animated.spring(scaleAnim, {

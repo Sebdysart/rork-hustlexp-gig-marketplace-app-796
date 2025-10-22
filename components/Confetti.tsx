@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Dimensions } from 'react-native';
 import Colors from '@/constants/colors';
 import { useSettings } from '@/contexts/SettingsContext';
+import { playSoundWithSettings } from '@/utils/soundSystem';
 
 interface ConfettiProps {
   count?: number;
@@ -48,6 +49,8 @@ export default function Confetti({
     if (settings.reducedMotion) {
       return;
     }
+
+    playSoundWithSettings('confetti', settings.soundEnabled);
 
     const animations = confettiPieces.current.map((piece) => {
       const endY = SCREEN_HEIGHT + 50;
