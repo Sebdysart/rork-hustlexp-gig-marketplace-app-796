@@ -65,10 +65,6 @@ class AITranslationService {
     }
   }
 
-  private getCacheKey(text: string, targetLang: string): string {
-    return `${targetLang}:${text}`;
-  }
-
   async translate(
     text: string | string[],
     targetLanguage: string,
@@ -95,10 +91,9 @@ class AITranslationService {
 
     for (let i = 0; i < textsArray.length; i++) {
       const txt = textsArray[i];
-      const cacheKey = this.getCacheKey(txt, targetLanguage);
       
-      if (this.cache.translations[targetLanguage][cacheKey]) {
-        results[i] = this.cache.translations[targetLanguage][cacheKey];
+      if (this.cache.translations[targetLanguage][txt]) {
+        results[i] = this.cache.translations[targetLanguage][txt];
       } else {
         toTranslate.push({ text: txt, index: i });
         results[i] = txt;
@@ -121,9 +116,7 @@ class AITranslationService {
           const translated = response.translations[i] || originalText;
           
           results[index] = translated;
-          
-          const cacheKey = this.getCacheKey(originalText, targetLanguage);
-          this.cache.translations[targetLanguage][cacheKey] = translated;
+          this.cache.translations[targetLanguage][originalText] = translated;
         }
 
         await this.saveCache();
