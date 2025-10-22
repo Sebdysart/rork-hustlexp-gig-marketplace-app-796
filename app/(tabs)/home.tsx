@@ -6,6 +6,7 @@ import { Sparkles, TrendingUp, Map, Zap, Search, Bookmark, Trophy, Users, Flame,
 import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAIProfile } from '@/contexts/AIProfileContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import Colors from '@/constants/colors';
 import { TaskCardSkeleton, StatCardSkeleton } from '@/components/SkeletonLoader';
 
@@ -40,6 +41,7 @@ export default function HomeScreen() {
   const { currentUser, availableTasks, myTasks, updateAvailabilityStatus } = useApp();
   const { settings, canAcceptMoreQuests, getRemainingQuests } = useSettings();
   const { fetchProfile } = useAIProfile();
+  const { translateText } = useLanguage();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
@@ -172,15 +174,15 @@ export default function HomeScreen() {
 
   const getMissionCopy = () => {
     const hour = new Date().getHours();
-    const greeting = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+    const greetingKey = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
     
     if (isWorker && nearbyGigs.length > 0) {
-      return `${greeting}, ${currentUser.name}. ${nearbyGigs.length} nearby gig${nearbyGigs.length > 1 ? 's' : ''} hiring now.`;
+      return `${greetingKey}, ${currentUser.name}. ${nearbyGigs.length} nearby gig${nearbyGigs.length > 1 ? 's' : ''} hiring now.`;
     }
     if (isPoster && myTasks.filter(t => t.status === 'open').length > 0) {
-      return `${greeting}, ${currentUser.name}. Your quests are live.`;
+      return `${greetingKey}, ${currentUser.name}. Your quests are live.`;
     }
-    return `${greeting}, ${currentUser.name}. Ready to hustle?`;
+    return `${greetingKey}, ${currentUser.name}. Ready to hustle?`;
   };
 
   const getBackgroundGradient = (): [string, string, ...string[]] => {
