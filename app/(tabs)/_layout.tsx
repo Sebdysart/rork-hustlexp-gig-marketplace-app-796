@@ -44,7 +44,7 @@ function TabIcon({ color, focused, Icon, badge, glowColor }: TabIconProps) {
 
 export default function TabLayout() {
   const { myAcceptedTasks, myTasks, currentUser, messages, tasks } = useApp();
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const activeMode = currentUser?.activeMode || 'everyday';
   const isPoster = activeMode === 'business';
   const isTradesman = activeMode === 'tradesmen';
@@ -81,6 +81,7 @@ export default function TabLayout() {
   if (isTradesman) {
     return (
       <Tabs
+        key={currentLanguage}
         screenOptions={{
           tabBarActiveTintColor: premiumColors.neonCyan,
           tabBarInactiveTintColor: Colors.textSecondary,
@@ -187,6 +188,7 @@ export default function TabLayout() {
   if (isPoster) {
     return (
       <Tabs
+        key={currentLanguage}
         screenOptions={{
           tabBarActiveTintColor: premiumColors.neonCyan,
           tabBarInactiveTintColor: Colors.textSecondary,
@@ -293,6 +295,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      key={currentLanguage}
       screenOptions={{
         tabBarActiveTintColor: premiumColors.neonCyan,
         tabBarInactiveTintColor: Colors.textSecondary,

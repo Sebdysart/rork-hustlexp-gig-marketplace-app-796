@@ -14,7 +14,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useSettings();
   const { signOut } = useApp();
-  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
+  const { currentLanguage, changeLanguage, availableLanguages, t } = useLanguage();
   const insets = useSafeAreaInsets();
   const [screenReaderEnabled, setScreenReaderEnabled] = useState<boolean>(false);
 
@@ -75,7 +75,7 @@ export default function SettingsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Settings',
+          title: t('settings.title'),
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.text,
         }}
@@ -86,7 +86,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Globe size={20} color={Colors.accent} />
-              <Text style={styles.sectionTitle}>Language & Region</Text>
+              <Text style={styles.sectionTitle}>{t('settings.language')} & Region</Text>
             </View>
 
             <TouchableOpacity
@@ -206,7 +206,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Bell size={20} color={Colors.accent} />
-              <Text style={styles.sectionTitle}>Notifications & Feedback</Text>
+              <Text style={styles.sectionTitle}>{t('settings.notifications')} & Feedback</Text>
             </View>
 
             <TouchableOpacity
@@ -259,7 +259,7 @@ export default function SettingsScreen() {
 
             <View style={styles.settingRow} accessible accessibilityLabel="Enable notifications">
               <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Notifications</Text>
+                <Text style={styles.settingLabel}>{t('settings.notifications')}</Text>
                 <Text style={styles.settingDescription}>Receive quest updates</Text>
               </View>
               <Switch
@@ -274,7 +274,7 @@ export default function SettingsScreen() {
 
             <View style={styles.settingRow} accessible accessibilityLabel="Enable sound effects">
               <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Sound Effects</Text>
+                <Text style={styles.settingLabel}>{t('settings.soundEffects')}</Text>
                 <Text style={styles.settingDescription}>Play audio feedback</Text>
               </View>
               <Switch
@@ -289,7 +289,7 @@ export default function SettingsScreen() {
 
             <View style={styles.settingRow} accessible accessibilityLabel="Enable haptic feedback">
               <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Haptic Feedback</Text>
+                <Text style={styles.settingLabel}>{t('settings.haptics')}</Text>
                 <Text style={styles.settingDescription}>Vibration on interactions</Text>
               </View>
               <Switch
@@ -306,7 +306,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Eye size={20} color={Colors.accent} />
-              <Text style={styles.sectionTitle}>Accessibility</Text>
+              <Text style={styles.sectionTitle}>{t('settings.accessibility')}</Text>
             </View>
 
             <TouchableOpacity
