@@ -3,9 +3,11 @@ import { MapPin, DollarSign, Zap, Calendar, Radio, Shield, Clock, Brain } from '
 import { Task, User } from '@/types';
 import Colors from '@/constants/colors';
 import { premiumColors, neonGlow, spacing, borderRadius, typography } from '@/constants/designTokens';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import GlassCard from './GlassCard';
 import { useAIProfile } from '@/contexts/AIProfileContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { aiTranslationService } from '@/utils/aiTranslation';
 
 interface TaskCardProps {
   task: Task;
@@ -31,6 +33,10 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const { getTaskInsight } = useAIProfile();
+  const { currentLanguage, useAITranslation } = useLanguage();
+  const [translatedTitle, setTranslatedTitle] = useState(task.title);
+  const [translatedDescription, setTranslatedDescription] = useState(task.description);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     Animated.loop(
@@ -48,6 +54,35 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
       ])
     ).start();
   }, [glowAnim]);
+
+  useEffect(() => {
+    async function translateTaskContent() {
+      if (!useAITranslation || currentLanguage === 'en' || !task.title || !task.description) {
+        setTranslatedTitle(task.title);
+        setTranslatedDescription(task.description);
+        return;
+      }
+
+      setIsTranslating(true);
+      try {
+        const results = await aiTranslationService.translate(
+          [task.title, task.description],
+          currentLanguage,
+          'en'
+        );
+        setTranslatedTitle(results[0] || task.title);
+        setTranslatedDescription(results[1] || task.description);
+      } catch (error) {
+        console.error('[TaskCard] Translation failed:', error);
+        setTranslatedTitle(task.title);
+        setTranslatedDescription(task.description);
+      } finally {
+        setIsTranslating(false);
+      }
+    }
+
+    translateTaskContent();
+  }, [task.title, task.description, currentLanguage, useAITranslation]);
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -167,7 +202,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
         </View>
 
         <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={2}>{task.title}</Text>
+          <Text style={styles.title} numberOfLines={2}>{translatedTitle}</Text>
           {task.proofRequired && (
             <View 
               style={styles.proofBadge}
@@ -178,7 +213,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
             </View>
           )}
         </View>
-        <Text style={styles.description} numberOfLines={2}>{task.description}</Text>
+        <Text style={styles.description} numberOfLines={2}>{translatedDescription}</Text>
 
         {aiInsight && (
           <View style={styles.aiInsightRow}>

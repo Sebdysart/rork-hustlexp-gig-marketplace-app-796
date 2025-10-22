@@ -13,13 +13,15 @@ import {
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
-import { Send, Smile, Zap, Sparkles, Check, X, Clock, MapPin, DollarSign } from 'lucide-react-native';
+import { Send, Smile, Zap, Sparkles, Check, X, Clock, MapPin, DollarSign, Languages } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import { generateText } from '@rork/toolkit-sdk';
 import { premiumColors } from '@/constants/designTokens';
 import { translateMessage, generateSmartReply, detectSpamOrScam } from '@/utils/aiChatAssistant';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { aiTranslationService } from '@/utils/aiTranslation';
 
 const QUICK_COMMANDS = [
   { id: '/extend', label: 'Extend Time', icon: '⏰' },
@@ -40,7 +42,10 @@ export default function ChatDetailScreen() {
   const [isAIProcessing, setIsAIProcessing] = useState<boolean>(false);
   const [smartReplies, setSmartReplies] = useState<string[]>([]);
   const [showSmartReplies, setShowSmartReplies] = useState<boolean>(false);
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [translatingMessageIds, setTranslatingMessageIds] = useState<Set<string>>(new Set());
   const flatListRef = useRef<FlatList>(null);
+  const { currentLanguage, useAITranslation } = useLanguage();
 
   const isHustleAI = id === 'hustleai';
   const task = useMemo(() => {
@@ -290,9 +295,40 @@ Return only the improved message, nothing else. Keep it concise (1-3 sentences).
     }
   };
 
+  const handleTranslateMessage = async (messageId: string, text: string, isFromOther: boolean) => {
+    if (!isFromOther || !useAITranslation || currentLanguage === 'en') return;
+
+    setTranslatingMessageIds(prev => new Set(prev).add(messageId));
+    try {
+      const translated = await aiTranslationService.translate([text], currentLanguage, 'auto');
+      setTranslatedMessages(prev => ({ ...prev, [messageId]: translated[0] }));
+    } catch (error) {
+      console.error('[Chat] Translation failed:', error);
+    } finally {
+      setTranslatingMessageIds(prev => {
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!useAITranslation || currentLanguage === 'en') return;
+
+    messages.forEach(msg => {
+      const isFromOther = msg.senderId !== currentUser?.id;
+      if (isFromOther && !translatedMessages[msg.id] && !translatingMessageIds.has(msg.id)) {
+        handleTranslateMessage(msg.id, msg.text, true);
+      }
+    });
+  }, [messages, currentLanguage, useAITranslation]);
+
   const renderMessage = ({ item }: { item: typeof messages[0] }) => {
     const isCurrentUser = item.senderId === currentUser?.id;
     const sender = users.find(u => u.id === item.senderId);
+    const isTranslating = translatingMessageIds.has(item.id);
+    const translatedText = translatedMessages[item.id];
 
     if (item.isHustleAI && item.taskOffer) {
       const offer = item.taskOffer;
@@ -404,14 +440,38 @@ Return only the improved message, nothing else. Keep it concise (1-3 sentences).
             isCurrentUser ? styles.messageBubbleRight : styles.messageBubbleLeft,
           ]}
         >
-          <Text
-            style={[
-              styles.messageText,
-              isCurrentUser ? styles.messageTextRight : styles.messageTextLeft,
-            ]}
-          >
-            {item.text}
-          </Text>
+          <View>
+            <Text
+              style={[
+                styles.messageText,
+                isCurrentUser ? styles.messageTextRight : styles.messageTextLeft,
+              ]}
+            >
+              {!isCurrentUser && translatedText ? translatedText : item.text}
+            </Text>
+            {!isCurrentUser && translatedText && (
+              <TouchableOpacity
+                style={styles.translationBadge}
+                onPress={() => {
+                  setTranslatedMessages(prev => {
+                    const next = { ...prev };
+                    delete next[item.id];
+                    return next;
+                  });
+                }}
+              >
+                <Languages size={10} color={premiumColors.neonCyan} />
+                <Text style={styles.translationBadgeText}>Translated</Text>
+                <Text style={styles.translationBadgeHint}>Tap to see original</Text>
+              </TouchableOpacity>
+            )}
+            {isTranslating && (
+              <View style={styles.translatingBadge}>
+                <ActivityIndicator size="small" color={premiumColors.neonCyan} />
+                <Text style={styles.translatingText}>Translating...</Text>
+              </View>
+            )}
+          </View>
           <Text
             style={[
               styles.messageTime,
@@ -930,5 +990,37 @@ const styles = StyleSheet.create({
   taskOfferStatusText: {
     fontSize: 13,
     fontWeight: '700' as const,
+  },
+  translationBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    backgroundColor: premiumColors.neonCyan + '15',
+  },
+  translationBadgeText: {
+    fontSize: 9,
+    fontWeight: '600' as const,
+    color: premiumColors.neonCyan,
+  },
+  translationBadgeHint: {
+    fontSize: 8,
+    color: premiumColors.neonCyan,
+    opacity: 0.7,
+    marginLeft: 4,
+  },
+  translatingBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    marginTop: 4,
+  },
+  translatingText: {
+    fontSize: 10,
+    color: premiumColors.neonCyan,
+    fontStyle: 'italic' as const,
   },
 });
