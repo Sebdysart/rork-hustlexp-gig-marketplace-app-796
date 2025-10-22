@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-type HapticType = 'selection' | 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
+export type HapticType = 'selection' | 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
 
 export const triggerHaptic = async (type: HapticType = 'light'): Promise<void> => {
   if (Platform.OS === 'web') {
