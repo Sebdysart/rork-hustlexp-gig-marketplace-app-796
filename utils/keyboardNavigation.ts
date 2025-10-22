@@ -17,7 +17,7 @@ export const KEY_CODES = {
   PAGE_DOWN: 'PageDown',
 } as const;
 
-export type KeyCode = typeof KEY_CODES[keyof typeof KEY_CODES];
+export type KeyCode = typeof KEY_CODES[keyof typeof KEY_CODES] | string;
 
 export interface KeyboardShortcut {
   key: KeyCode;
