@@ -559,7 +559,7 @@ class HustleAIClient {
       const textsArray = Array.isArray(params.text) ? params.text : [params.text];
       
       const response = await this.makeRequest<{ translations: string[] }>('/translate', 'POST', {
-        texts: textsArray,
+        text: textsArray,
         targetLanguage: params.targetLanguage,
         sourceLanguage: params.sourceLanguage || 'en',
         context: params.context || 'mobile app UI',
