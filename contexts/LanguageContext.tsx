@@ -2,60 +2,28 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18n } from 'i18n-js';
-import { translations, LanguageCode } from '@/constants/translations';
+import { translations, LanguageCode as LanguageCodeType } from '@/constants/translations';
+
+export type LanguageCode = LanguageCodeType;
 import { getLocales } from 'expo-localization';
 import { aiTranslationService } from '@/utils/aiTranslation';
+import { generateAllAppTexts } from '@/utils/translationExtractor';
 
 const STORAGE_KEY = 'hustlexp_language';
+const AI_TRANSLATION_KEY = 'hustlexp_ai_translation_enabled';
 
 const i18n = new I18n(translations);
 i18n.enableFallback = true;
 i18n.defaultLocale = 'en';
 
 export const [LanguageProvider, useLanguage] = createContextHook(() => {
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCodeType>('en');
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const lang = stored as LanguageCode;
-        setCurrentLanguage(lang);
-        i18n.locale = lang;
-      } else {
-        const deviceLang = getLocales()[0]?.languageCode || 'en';
-        const supportedLang = Object.keys(translations).includes(deviceLang) 
-          ? (deviceLang as LanguageCode) 
-          : 'en';
-        setCurrentLanguage(supportedLang);
-        i18n.locale = supportedLang;
-      }
-    } catch (error) {
-      console.error('Error loading language:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const changeLanguage = useCallback(async (lang: LanguageCode) => {
-    try {
-      setCurrentLanguage(lang);
-      i18n.locale = lang;
-      await AsyncStorage.setItem(STORAGE_KEY, lang);
-    } catch (error) {
-      console.error('Error changing language:', error);
-    }
-  }, []);
-
+  const [translationProgress, setTranslationProgress] = useState(0);
   const [useAITranslation, setUseAITranslation] = useState(false);
   const [aiTranslationCache, setAITranslationCache] = useState<Record<string, string>>({});
   const batchQueueRef = useRef<Map<string, string>>(new Map());
-  const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPreloadingRef = useRef(false);
 
   const processBatch = useCallback(async () => {
@@ -135,41 +103,175 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     return i18n.t(key, { ...options, locale: currentLanguage });
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);
 
-  const toggleAITranslation = useCallback(async (enabled: boolean) => {
-    setUseAITranslation(enabled);
-    if (enabled && currentLanguage !== 'en') {
-      console.log('[Language] AI translation enabled - preloading common phrases');
-      
-      const commonKeys = [
-        'common.accept', 'common.decline', 'common.save', 'common.cancel',
-        'common.loading', 'common.error', 'common.success',
-        'tabs.home', 'tabs.tasks', 'tabs.quests', 'tabs.wallet', 'tabs.profile',
-        'tasks.available', 'tasks.inProgress', 'tasks.completed',
-        'profile.level', 'profile.xp', 'profile.earnings',
-      ];
-      
-      const commonPhrases = commonKeys.map(k => i18n.t(k, { locale: 'en' }));
-      
-      try {
-        await aiTranslationService.translate(commonPhrases, currentLanguage, 'en');
-        const newCache: Record<string, string> = {};
-        commonKeys.forEach((key, index) => {
-          const englishText = i18n.t(key, { locale: 'en' });
-          const cacheKey = `${currentLanguage}:${englishText}`;
-          newCache[cacheKey] = commonPhrases[index];
-        });
-        setAITranslationCache(prev => ({ ...prev, ...newCache }));
-      } catch (error) {
-        console.error('[Language] Preload failed:', error);
-      }
+  const preloadAllAppTranslations = useCallback(async (lang: LanguageCodeType) => {
+    if (lang === 'en') {
+      console.log('[Language] English selected, no translation needed');
+      return;
     }
-  }, [currentLanguage]);
+    
+    try {
+      console.log('[Language] Generating all app texts...');
+      const allTexts = generateAllAppTexts();
+      const totalTexts = allTexts.length;
+      console.log(`[Language] Found ${totalTexts} texts to translate`);
+      
+      const BATCH_SIZE = 50;
+      const batches: string[][] = [];
+      
+      for (let i = 0; i < allTexts.length; i += BATCH_SIZE) {
+        batches.push(allTexts.slice(i, i + BATCH_SIZE));
+      }
+      
+      console.log(`[Language] Processing ${batches.length} batches...`);
+      
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        setTranslationProgress(Math.floor((i / batches.length) * 100));
+        
+        try {
+          console.log(`[Language] Translating batch ${i + 1}/${batches.length} (${batch.length} texts)`);
+          const translated = await aiTranslationService.translate(batch, lang, 'en');
+          
+          const newCache: Record<string, string> = {};
+          batch.forEach((text, idx) => {
+            const cacheKey = `${lang}:${text}`;
+            newCache[cacheKey] = translated[idx] || text;
+          });
+          
+          setAITranslationCache(prev => ({ ...prev, ...newCache }));
+          
+          if (i < batches.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        } catch (error: any) {
+          console.error(`[Language] Batch ${i + 1} failed:`, error?.message || error);
+          
+          if (error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
+            const retryAfterMatch = error?.message?.match(/(\d+)\s*second/i);
+            const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1]) : 60;
+            console.log(`[Language] Rate limited. Waiting ${retryAfter}s before continuing...`);
+            await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+            i--;
+          }
+        }
+      }
+      
+      setTranslationProgress(100);
+      console.log(`[Language] ✅ Translation complete! ${totalTexts} texts translated to ${lang}`);
+    } catch (error) {
+      console.error('[Language] Preload failed:', error);
+      setTranslationProgress(0);
+    }
+  }, []);
+
+  const toggleAITranslation = useCallback(async (enabled: boolean) => {
+    try {
+      setUseAITranslation(enabled);
+      await AsyncStorage.setItem(AI_TRANSLATION_KEY, enabled ? 'true' : 'false');
+      
+      if (enabled && currentLanguage !== 'en') {
+        console.log('[Language] AI translation enabled - preloading entire app...');
+        setIsLoading(true);
+        await preloadAllAppTranslations(currentLanguage);
+        setIsLoading(false);
+      } else if (enabled) {
+        console.log('[Language] AI translation enabled for future language changes');
+      } else {
+        console.log('[Language] AI translation disabled');
+        setAITranslationCache({});
+      }
+    } catch (error) {
+      console.error('[Language] Toggle AI translation failed:', error);
+    }
+  }, [currentLanguage, preloadAllAppTranslations]);
+
+  const loadLanguageAndAIPreference = useCallback(async () => {
+    try {
+      const [storedLang, aiEnabled] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEY),
+        AsyncStorage.getItem(AI_TRANSLATION_KEY),
+      ]);
+      
+      const lang = storedLang ? (storedLang as LanguageCode) : (
+        Object.keys(translations).includes(getLocales()[0]?.languageCode || 'en')
+          ? (getLocales()[0]?.languageCode as LanguageCode)
+          : 'en'
+      );
+      
+      setCurrentLanguage(lang);
+      i18n.locale = lang;
+      
+      if (aiEnabled === 'true') {
+        setUseAITranslation(true);
+        console.log('[Language] AI translation enabled on startup, preloading...');
+        await preloadAllAppTranslations(lang);
+      }
+    } catch (error) {
+      console.error('[Language] Error loading language:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLanguageAndAIPreference();
+  }, [loadLanguageAndAIPreference]);
+
+  const changeLanguage = useCallback(async (lang: LanguageCodeType) => {
+    try {
+      setIsLoading(true);
+      setTranslationProgress(0);
+      console.log('[Language] Changing language to:', lang);
+      
+      setCurrentLanguage(lang);
+      i18n.locale = lang;
+      await AsyncStorage.setItem(STORAGE_KEY, lang);
+      
+      if (useAITranslation && lang !== 'en') {
+        console.log('[Language] Preloading all translations for:', lang);
+        await preloadAllAppTranslations(lang);
+      }
+    } catch (error) {
+      console.error('[Language] Error changing language:', error);
+    } finally {
+      setIsLoading(false);
+      setTranslationProgress(100);
+    }
+  }, [useAITranslation, preloadAllAppTranslations]);
+
+  const translateText = useCallback(async (text: string, targetLang?: LanguageCodeType) => {
+    const lang = targetLang || currentLanguage;
+    
+    if (!useAITranslation || lang === 'en') {
+      return text;
+    }
+    
+    const cacheKey = `${lang}:${text}`;
+    
+    if (aiTranslationCache[cacheKey]) {
+      return aiTranslationCache[cacheKey];
+    }
+    
+    try {
+      const result = await aiTranslationService.translate([text], lang, 'en');
+      const translated = result[0] || text;
+      
+      setAITranslationCache(prev => ({ ...prev, [cacheKey]: translated }));
+      
+      return translated;
+    } catch (error) {
+      console.error('[Language] Translation failed:', error);
+      return text;
+    }
+  }, [currentLanguage, useAITranslation, aiTranslationCache]);
 
   return useMemo(() => ({
     currentLanguage,
     changeLanguage,
     t,
+    translateText,
     isLoading,
+    translationProgress,
     useAITranslation,
     toggleAITranslation,
     availableLanguages: [
@@ -186,5 +288,5 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       { code: 'ko', name: '한국어', flag: '🇰🇷' },
       { code: 'it', name: 'Italiano', flag: '🇮🇹' },
     ] as const,
-  }), [currentLanguage, changeLanguage, t, isLoading, useAITranslation, toggleAITranslation]);
+  }), [currentLanguage, changeLanguage, t, translateText, isLoading, translationProgress, useAITranslation, toggleAITranslation]);
 });

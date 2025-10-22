@@ -25,7 +25,7 @@ interface LanguageSelectorModalProps {
 }
 
 export default function LanguageSelectorModal({ visible, onClose }: LanguageSelectorModalProps) {
-  const { currentLanguage, changeLanguage, availableLanguages, useAITranslation, toggleAITranslation } = useLanguage();
+  const { currentLanguage, changeLanguage, availableLanguages, useAITranslation, toggleAITranslation, isLoading, translationProgress } = useLanguage();
   const [selectedLang, setSelectedLang] = useState(currentLanguage);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -171,7 +171,11 @@ export default function LanguageSelectorModal({ visible, onClose }: LanguageSele
                 </Animated.View>
                 <View style={styles.headerTextContainer}>
                   <Text style={styles.modalTitle}>Choose Language</Text>
-                  <Text style={styles.modalSubtitle}>Powered by AI Translation</Text>
+                  {isLoading && translationProgress > 0 ? (
+                    <Text style={styles.modalSubtitle}>Translating... {translationProgress}%</Text>
+                  ) : (
+                    <Text style={styles.modalSubtitle}>Powered by AI Translation</Text>
+                  )}
                 </View>
                 <TouchableOpacity
                   style={styles.closeButton}
@@ -185,10 +189,34 @@ export default function LanguageSelectorModal({ visible, onClose }: LanguageSele
 
               <View style={styles.divider} />
 
+              {isLoading && translationProgress > 0 && (
+                <View style={styles.progressBarContainer}>
+                  <View style={styles.progressBarBg}>
+                    <Animated.View
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${translationProgress}%` },
+                      ]}
+                    >
+                      <LinearGradient
+                        colors={[premiumColors.neonCyan, premiumColors.neonBlue]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                    </Animated.View>
+                  </View>
+                  <Text style={styles.progressText}>
+                    Translating app to {availableLanguages.find(l => l.code === selectedLang)?.name}...
+                  </Text>
+                </View>
+              )}
+
               <ScrollView
                 style={styles.languagesScroll}
                 contentContainerStyle={styles.languagesScrollContent}
                 showsVerticalScrollIndicator={false}
+                scrollEnabled={!isLoading}
               >
                 <View style={styles.languagesGrid}>
                   {availableLanguages.map((lang) => {
@@ -382,6 +410,31 @@ const styles = StyleSheet.create({
     backgroundColor: premiumColors.glassWhiteStrong,
     marginHorizontal: spacing.xl,
     opacity: 0.3,
+  },
+  progressBarContainer: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: premiumColors.glassWhite,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  progressText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    fontStyle: 'italic' as const,
   },
   languagesScroll: {
     maxHeight: SCREEN_HEIGHT * 0.45,
