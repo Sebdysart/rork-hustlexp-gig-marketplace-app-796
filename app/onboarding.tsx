@@ -140,6 +140,9 @@ export default function OnboardingScreen() {
     'Your info is secure with 256-bit encryption',
     'Enable AI nudges (adjust in Wellbeing Settings later)',
     "Let's Hustle 🚀",
+    'Secure Your Account',
+    'Set up your credentials',
+    'Continue 🔒',
     'What brings you here?',
     'Choose your primary goal',
     'Complete Tasks',
@@ -580,19 +583,19 @@ export default function OnboardingScreen() {
 
     const tutorials = {
       everyday: [
-        { icon: <Zap size={48} color={premiumColors.neonAmber} />, title: 'Quick Gigs', desc: 'Accept simple tasks like errands, deliveries, and odd jobs' },
-        { icon: <DollarSign size={48} color={premiumColors.neonGreen} />, title: 'Fast Cash', desc: 'Get paid instantly after completing tasks. Build your reputation fast' },
-        { icon: <TrendingUp size={48} color={premiumColors.neonCyan} />, title: 'Level Up', desc: 'Earn XP, unlock badges, and climb the leaderboard with every task' },
+        { icon: <Zap size={48} color={premiumColors.neonAmber} />, title: translations[62], desc: translations[63] },
+        { icon: <DollarSign size={48} color={premiumColors.neonGreen} />, title: translations[64], desc: translations[65] },
+        { icon: <TrendingUp size={48} color={premiumColors.neonCyan} />, title: translations[66], desc: translations[67] },
       ],
       tradesmen: [
-        { icon: <Briefcase size={48} color={premiumColors.neonBlue} />, title: 'Pro Jobs', desc: 'Access skilled trade jobs with higher pay and professional clients' },
-        { icon: <Star size={48} color={premiumColors.neonAmber} />, title: 'Trade Badges', desc: 'Earn trade-specific badges from Copper to Diamond as you master your craft' },
-        { icon: <Users size={48} color={premiumColors.neonMagenta} />, title: 'Form Squads', desc: 'Team up with other tradesmen for larger projects and bigger payouts' },
+        { icon: <Briefcase size={48} color={premiumColors.neonBlue} />, title: translations[68], desc: translations[69] },
+        { icon: <Star size={48} color={premiumColors.neonAmber} />, title: translations[70], desc: translations[71] },
+        { icon: <Users size={48} color={premiumColors.neonMagenta} />, title: translations[72], desc: translations[73] },
       ],
       business: [
-        { icon: <Sparkles size={48} color={premiumColors.neonMagenta} />, title: 'Post Jobs', desc: 'Create tasks and get matched with qualified workers in seconds' },
-        { icon: <Users size={48} color={premiumColors.neonCyan} />, title: 'Instant Match', desc: 'AI finds the perfect worker based on skills, location, and trust score' },
-        { icon: <Star size={48} color={premiumColors.neonAmber} />, title: 'Track Progress', desc: 'Monitor work with GPS check-ins, proof photos, and real-time updates' },
+        { icon: <Sparkles size={48} color={premiumColors.neonMagenta} />, title: translations[74], desc: translations[75] },
+        { icon: <Users size={48} color={premiumColors.neonCyan} />, title: translations[76], desc: translations[77] },
+        { icon: <Star size={48} color={premiumColors.neonAmber} />, title: translations[78], desc: translations[79] },
       ],
     };
 
@@ -680,7 +683,7 @@ export default function OnboardingScreen() {
                   style={styles.tutorialButtonGradient}
                 >
                   <Text style={styles.tutorialButtonText}>
-                    {tutorialIndex < slides.length - 1 ? 'Next' : 'Start Hustling!'}
+                    {tutorialIndex < slides.length - 1 ? translations[80] : translations[81]}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -724,7 +727,7 @@ export default function OnboardingScreen() {
                   }
                 }}
               >
-                <Text style={styles.tutorialSkipText}>Skip</Text>
+                <Text style={styles.tutorialSkipText}>{translations[82]}</Text>
               </TouchableOpacity>
             </BlurView>
           </Animated.View>
@@ -1166,8 +1169,8 @@ export default function OnboardingScreen() {
         ) : step === 2 ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>Secure Your Account</Text>
-              <Text style={styles.pathSubtitle}>Set up your credentials</Text>
+              <Text style={styles.pathTitle}>{translations[14]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[15]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1313,7 +1316,7 @@ export default function OnboardingScreen() {
 
               <View style={styles.securityBadge}>
                 <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2.5} />
-                <Text style={styles.securityText}>Your info is secure with 256-bit encryption</Text>
+                <Text style={styles.securityText}>{translations[11]}</Text>
               </View>
 
               <TouchableOpacity
@@ -1346,7 +1349,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Zap size={24} color={email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={email.trim() && password.trim() ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.buttonText, (!email.trim() || !password.trim()) && styles.buttonTextDisabled]}>Continue 🔒</Text>
+                <Text style={[styles.buttonText, (!email.trim() || !password.trim()) && styles.buttonTextDisabled]}>{translations[16]}</Text>
                 <Sparkles size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1355,8 +1358,8 @@ export default function OnboardingScreen() {
         ) : step === 3 ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>{translations[14]}</Text>
-              <Text style={styles.pathSubtitle}>{translations[15]}</Text>
+              <Text style={styles.pathTitle}>{translations[17]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[18]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1387,24 +1390,24 @@ export default function OnboardingScreen() {
                 {
                   type: 'worker' as const,
                   icon: Hammer,
-                  title: translations[16],
-                  description: translations[17],
+                  title: translations[19],
+                  description: translations[20],
                   gradient: [premiumColors.neonCyan, premiumColors.neonBlue],
                   accentColor: premiumColors.neonCyan,
                 },
                 {
                   type: 'poster' as const,
                   icon: Building2,
-                  title: translations[18],
-                  description: translations[19],
+                  title: translations[21],
+                  description: translations[22],
                   gradient: [premiumColors.neonMagenta, premiumColors.neonViolet],
                   accentColor: premiumColors.neonMagenta,
                 },
                 {
                   type: 'both' as const,
                   icon: Users,
-                  title: translations[20],
-                  description: translations[21],
+                  title: translations[23],
+                  description: translations[24],
                   gradient: [premiumColors.neonAmber, '#FF6B00'],
                   accentColor: premiumColors.neonAmber,
                 },
@@ -1468,7 +1471,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Zap size={24} color={userIntent ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={userIntent ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.buttonText, !userIntent && styles.buttonTextDisabled]}>Continue 🚀</Text>
+                <Text style={[styles.buttonText, !userIntent && styles.buttonTextDisabled]}>{translations[25]}</Text>
                 <Sparkles size={22} color={userIntent ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1477,8 +1480,8 @@ export default function OnboardingScreen() {
         ) : step === 4 && userIntent === 'poster' ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>Set Your Location</Text>
-              <Text style={styles.pathSubtitle}>Help workers find your tasks</Text>
+              <Text style={styles.pathTitle}>{translations[26]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[27]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1507,7 +1510,7 @@ export default function OnboardingScreen() {
             <View style={styles.form}>
               <BlurView intensity={40} tint="dark" style={styles.locationCard}>
                 <Text style={styles.locationIcon}>📍</Text>
-                <Text style={styles.locationTitle}>Max Distance</Text>
+                <Text style={styles.locationTitle}>{translations[29]}</Text>
                 <Text style={styles.locationValue}>{maxDistance} miles</Text>
                 <DistanceSlider
                   value={maxDistance}
@@ -1533,7 +1536,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Zap size={24} color={premiumColors.deepBlack} strokeWidth={3} fill={premiumColors.deepBlack} />
-                <Text style={styles.buttonText}>Begin Your Journey 💪</Text>
+                <Text style={styles.buttonText}>{translations[31]}</Text>
                 <Sparkles size={22} color={premiumColors.deepBlack} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1541,8 +1544,8 @@ export default function OnboardingScreen() {
         ) : step === 4 ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>Set Your Location</Text>
-              <Text style={styles.pathSubtitle}>Help us find tasks nearby</Text>
+              <Text style={styles.pathTitle}>{translations[26]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[28]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1571,7 +1574,7 @@ export default function OnboardingScreen() {
             <View style={styles.form}>
               <BlurView intensity={40} tint="dark" style={styles.locationCard}>
                 <Text style={styles.locationIcon}>📍</Text>
-                <Text style={styles.locationTitle}>Max Distance</Text>
+                <Text style={styles.locationTitle}>{translations[29]}</Text>
                 <Text style={styles.locationValue}>{maxDistance} miles</Text>
                 <DistanceSlider
                   value={maxDistance}
@@ -1597,7 +1600,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Zap size={24} color={premiumColors.deepBlack} strokeWidth={3} fill={premiumColors.deepBlack} />
-                <Text style={styles.buttonText}>Continue 📍</Text>
+                <Text style={styles.buttonText}>{translations[30]}</Text>
                 <Sparkles size={22} color={premiumColors.deepBlack} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1605,8 +1608,8 @@ export default function OnboardingScreen() {
         ) : step === 5 ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>Task Categories</Text>
-              <Text style={styles.pathSubtitle}>What type of work interests you?</Text>
+              <Text style={styles.pathTitle}>{translations[32]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[33]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1687,7 +1690,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Sparkles size={22} color={preferredCategories.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={preferredCategories.length > 0 ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.buttonText, preferredCategories.length === 0 && styles.buttonTextDisabled]}>Continue 🎯</Text>
+                <Text style={[styles.buttonText, preferredCategories.length === 0 && styles.buttonTextDisabled]}>{translations[34]}</Text>
                 <Zap size={22} color={preferredCategories.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={preferredCategories.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1696,8 +1699,8 @@ export default function OnboardingScreen() {
         ) : step === 6 ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.pathTitle}>Price & Availability</Text>
-              <Text style={styles.pathSubtitle}>When can you hustle?</Text>
+              <Text style={styles.pathTitle}>{translations[35]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[36]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1725,7 +1728,7 @@ export default function OnboardingScreen() {
 
             <View style={styles.form}>
               <BlurView intensity={40} tint="dark" style={styles.priceCard}>
-                <Text style={styles.priceTitle}>💰 Price Range</Text>
+                <Text style={styles.priceTitle}>💰 {translations[37]}</Text>
                 <Text style={styles.priceValue}>${priceRange[0]} - ${priceRange[1]}</Text>
                 <View style={styles.priceSliders}>
                   <View style={styles.priceSliderRow}>
@@ -1766,16 +1769,16 @@ export default function OnboardingScreen() {
               </BlurView>
 
               <BlurView intensity={40} tint="dark" style={styles.availabilityCard}>
-                <Text style={styles.availabilityTitle}>⏰ When Are You Free?</Text>
+                <Text style={styles.availabilityTitle}>⏰ {translations[38]}</Text>
                 <View style={styles.availabilityGrid}>
                   {['weekday_morning', 'weekday_afternoon', 'weekday_evening', 'weekend', 'flexible'].map((time) => {
                     const isSelected = availability.includes(time);
                     const labels: Record<string, string> = {
-                      weekday_morning: '🌅 Weekday AM',
-                      weekday_afternoon: '☀️ Weekday PM',
-                      weekday_evening: '🌙 Weekday Eve',
-                      weekend: '🎉 Weekend',
-                      flexible: '⚡ Flexible',
+                      weekday_morning: translations[39],
+                      weekday_afternoon: translations[40],
+                      weekday_evening: translations[41],
+                      weekend: translations[42],
+                      flexible: translations[43],
                     };
                     return (
                       <TouchableOpacity
@@ -1818,7 +1821,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Sparkles size={22} color={availability.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={availability.length > 0 ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.buttonText, availability.length === 0 && styles.buttonTextDisabled]}>AI Analyze Me 🤖</Text>
+                <Text style={[styles.buttonText, availability.length === 0 && styles.buttonTextDisabled]}>{translations[44]}</Text>
                 <Zap size={22} color={availability.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={availability.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -1842,8 +1845,8 @@ export default function OnboardingScreen() {
                   </View>
                 </LinearGradient>
               </Animated.View>
-              <Text style={styles.pathTitle}>AI Recommends Your Path</Text>
-              <Text style={styles.pathSubtitle}>Based on your preferences, but you choose!</Text>
+              <Text style={styles.pathTitle}>{translations[45]}</Text>
+              <Text style={styles.pathSubtitle}>{translations[46]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -1874,27 +1877,27 @@ export default function OnboardingScreen() {
                 { 
                   mode: 'everyday' as const, 
                   icon: Hammer, 
-                  title: 'Everyday Hustler', 
-                  description: 'Simple tasks, errands, and gigs—quick XP gains!', 
-                  tooltip: 'Perfect for side hustles and fast cash',
+                  title: translations[47], 
+                  description: translations[48], 
+                  tooltip: translations[49],
                   gradient: [premiumColors.neonAmber, '#FF6B00'],
                   accentColor: premiumColors.neonAmber,
                 },
                 { 
                   mode: 'tradesmen' as const, 
                   icon: Wrench, 
-                  title: 'Tradesman Pro', 
-                  description: 'Skilled trades and professional work—unlock premium badges!', 
-                  tooltip: 'For certified professionals and skilled workers',
+                  title: translations[50], 
+                  description: translations[51], 
+                  tooltip: translations[52],
                   gradient: [premiumColors.neonBlue, premiumColors.neonCyan],
                   accentColor: premiumColors.neonBlue,
                 },
                 { 
                   mode: 'business' as const, 
                   icon: Building2, 
-                  title: 'Business Poster', 
-                  description: 'Post jobs and hire workers—build your empire!', 
-                  tooltip: 'Manage projects and hire top talent',
+                  title: translations[53], 
+                  description: translations[54], 
+                  tooltip: translations[55],
                   gradient: [premiumColors.neonMagenta, premiumColors.neonViolet],
                   accentColor: premiumColors.neonMagenta,
                 },
@@ -1950,7 +1953,7 @@ export default function OnboardingScreen() {
                             {isRecommended && (
                               <View style={styles.aiRecommendBadge}>
                                 <Sparkles size={16} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} strokeWidth={2.5} />
-                                <Text style={styles.aiRecommendText}>AI Pick</Text>
+                                <Text style={styles.aiRecommendText}>{translations[56]}</Text>
                               </View>
                             )}
                             <View style={[styles.roleIconContainer, isSelected && { backgroundColor: option.accentColor + '20' }]}>
@@ -2003,7 +2006,7 @@ export default function OnboardingScreen() {
                 style={styles.pathButtonGradient}
               >
                 <Sparkles size={22} color={selectedMode ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={selectedMode ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.pathButtonText, !selectedMode && styles.buttonTextDisabled]}>Begin Your Grind 💪</Text>
+                <Text style={[styles.pathButtonText, !selectedMode && styles.buttonTextDisabled]}>{translations[57]}</Text>
                 <Zap size={22} color={selectedMode ? premiumColors.deepBlack : Colors.textSecondary} fill={selectedMode ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
@@ -2024,8 +2027,8 @@ export default function OnboardingScreen() {
                   </View>
                 </LinearGradient>
               </Animated.View>
-              <Text style={styles.title}>Select Your Trades</Text>
-              <Text style={styles.subtitle}>Choose up to 3 trades you specialize in</Text>
+              <Text style={styles.title}>{translations[58]}</Text>
+              <Text style={styles.subtitle}>{translations[59]}</Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <Animated.View
@@ -2047,7 +2050,7 @@ export default function OnboardingScreen() {
                     />
                   </Animated.View>
                 </View>
-                <Text style={styles.progressText}>Step 8 of 8 - Final Step!</Text>
+                <Text style={styles.progressText}>{translations[60]}</Text>
               </View>
             </View>
 
@@ -2111,7 +2114,7 @@ export default function OnboardingScreen() {
                 style={styles.buttonGradient}
               >
                 <Sparkles size={22} color={selectedTrades.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={selectedTrades.length > 0 ? premiumColors.deepBlack : 'transparent'} />
-                <Text style={[styles.buttonText, selectedTrades.length === 0 && styles.buttonTextDisabled]}>Unlock Your Journey ⚡</Text>
+                <Text style={[styles.buttonText, selectedTrades.length === 0 && styles.buttonTextDisabled]}>{translations[61]}</Text>
                 <Zap size={22} color={selectedTrades.length > 0 ? premiumColors.deepBlack : Colors.textSecondary} fill={selectedTrades.length > 0 ? premiumColors.deepBlack : 'transparent'} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
