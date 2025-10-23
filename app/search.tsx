@@ -398,7 +398,7 @@ function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
             <View style={styles.taskMetaItem}>
               <MapPin size={14} color={theme.textSecondary} />
               <Text style={[styles.taskMetaText, { color: theme.textSecondary }]}>
-                {task.location?.address || 'Remote'}
+                {typeof task.location === 'object' && task.location?.address ? task.location.address : (typeof task.location === 'string' ? task.location : 'Remote')}
               </Text>
             </View>
             <View style={styles.taskMetaItem}>
