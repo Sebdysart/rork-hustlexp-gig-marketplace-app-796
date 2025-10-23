@@ -3,6 +3,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, TrendingUp, DollarSign, Download, Calendar, Clock, CheckCircle, X, TrendingDown, Sparkles, Target, Info } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -58,6 +60,22 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
 export default function WalletScreen() {
   const { currentUser, myAcceptedTasks } = useApp();
+  
+  const translationKeys = [
+    'Available Balance', 'Pending', 'Instant Payout', 'This Week', 'This Month', 'All Time',
+    'Earnings Overview', '7 days ago', 'Today', 'Get your earnings in 30 minutes or less. No waiting, no hassle.',
+    '30-minute transfer', 'No minimum amount', 'Secure & encrypted',
+    'Analyzing your earnings patterns...', 'AI Earnings Forecast', 'Next Week', 'Next Month',
+    'confident', 'Weekly', 'Monthly', 'Breakdown', 'Base Pay', 'Bonuses', 'Tips', 'Streak Bonus',
+    'Recommendations', 'AI-powered predictions based on your task history, completion rate, and market trends',
+    'Your earnings are trending upward! Keep up the momentum!',
+    'Earnings may be lower than usual. Check recommendations above.',
+    'HustleXP takes a 12.5% commission on completed tasks',
+    'Enter amount', 'Confirm Payout', 'Funds will arrive in your account within 30 minutes',
+    'Invalid Amount', 'Please enter a valid amount', 'Insufficient Funds', "You don't have enough available balance",
+    'Payout Initiated! 💸', 'will be transferred to your account within 30 minutes.', 'OK'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
   const [showPayoutModal, setShowPayoutModal] = useState<boolean>(false);
   const [payoutAmount, setPayoutAmount] = useState<string>('');
@@ -184,19 +202,19 @@ export default function WalletScreen() {
   const handleConfirmPayout = () => {
     const amount = parseFloat(payoutAmount);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount');
+      Alert.alert(translations[33], translations[34]);
       return;
     }
     if (amount > walletData.available) {
-      Alert.alert('Insufficient Funds', 'You don\'t have enough available balance');
+      Alert.alert(translations[35], translations[36]);
       return;
     }
 
     triggerHaptic('success');
     Alert.alert(
-      'Payout Initiated! 💸',
-      `$${amount.toFixed(2)} will be transferred to your account within 30 minutes.`,
-      [{ text: 'OK', onPress: () => setShowPayoutModal(false) }]
+      translations[37],
+      `${amount.toFixed(2)} ${translations[38]}`,
+      [{ text: translations[39], onPress: () => setShowPayoutModal(false) }]
     );
     setPayoutAmount('');
   };
@@ -224,7 +242,7 @@ export default function WalletScreen() {
               style={styles.balanceGradient}
             >
               <View style={styles.balanceHeader}>
-                <Text style={styles.balanceLabel}>Available Balance</Text>
+                <Text style={styles.balanceLabel}>{translations[0]}</Text>
                 <TouchableOpacity onPress={() => triggerHaptic('light')}>
                   <DollarSign size={20} color={Colors.text} />
                 </TouchableOpacity>
@@ -234,7 +252,7 @@ export default function WalletScreen() {
                 <View style={styles.pendingContainer}>
                   <Clock size={16} color={Colors.text} />
                   <View>
-                    <Text style={styles.pendingLabel}>Pending</Text>
+                    <Text style={styles.pendingLabel}>{translations[1]}</Text>
                     <Text style={styles.pendingAmount}>${walletData.pending.toFixed(2)}</Text>
                   </View>
                 </View>
@@ -244,7 +262,7 @@ export default function WalletScreen() {
                   disabled={walletData.available <= 0}
                 >
                   <Zap size={16} color={Colors.text} />
-                  <Text style={styles.instantPayoutText}>Instant Payout</Text>
+                  <Text style={styles.instantPayoutText}>{translations[2]}</Text>
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -269,7 +287,7 @@ export default function WalletScreen() {
                     selectedPeriod === period && styles.periodTextActive,
                   ]}
                 >
-                  {period === 'week' ? 'This Week' : period === 'month' ? 'This Month' : 'All Time'}
+                  {period === 'week' ? translations[3] : period === 'month' ? translations[4] : translations[5]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -278,15 +296,15 @@ export default function WalletScreen() {
           <View style={styles.statsCard}>
             <View style={styles.statsHeader}>
               <TrendingUp size={20} color={Colors.accent} />
-              <Text style={styles.statsTitle}>Earnings Overview</Text>
+              <Text style={styles.statsTitle}>{translations[6]}</Text>
             </View>
             <Text style={styles.statsAmount}>${getPeriodData().toFixed(2)}</Text>
             <View style={styles.chartContainer}>
               <Sparkline data={walletData.weeklyHistory} color={Colors.accent} />
             </View>
             <View style={styles.chartLabels}>
-              <Text style={styles.chartLabel}>7 days ago</Text>
-              <Text style={styles.chartLabel}>Today</Text>
+              <Text style={styles.chartLabel}>{translations[7]}</Text>
+              <Text style={styles.chartLabel}>{translations[8]}</Text>
             </View>
           </View>
 
@@ -294,35 +312,35 @@ export default function WalletScreen() {
             <View style={styles.statCard}>
               <Calendar size={24} color={Colors.accent} />
               <Text style={styles.statValue}>${walletData.thisWeek.toFixed(2)}</Text>
-              <Text style={styles.statLabel}>This Week</Text>
+              <Text style={styles.statLabel}>{translations[3]}</Text>
             </View>
             <View style={styles.statCard}>
               <TrendingUp size={24} color={Colors.accent} />
               <Text style={styles.statValue}>${walletData.thisMonth.toFixed(2)}</Text>
-              <Text style={styles.statLabel}>This Month</Text>
+              <Text style={styles.statLabel}>{translations[4]}</Text>
             </View>
           </View>
 
           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Zap size={20} color={Colors.accent} />
-              <Text style={styles.infoTitle}>Instant Payout</Text>
+              <Text style={styles.infoTitle}>{translations[2]}</Text>
             </View>
             <Text style={styles.infoText}>
-              Get your earnings in 30 minutes or less. No waiting, no hassle.
+              {translations[9]}
             </Text>
             <View style={styles.infoFeatures}>
               <View style={styles.infoFeature}>
                 <CheckCircle size={16} color={Colors.success} />
-                <Text style={styles.infoFeatureText}>30-minute transfer</Text>
+                <Text style={styles.infoFeatureText}>{translations[10]}</Text>
               </View>
               <View style={styles.infoFeature}>
                 <CheckCircle size={16} color={Colors.success} />
-                <Text style={styles.infoFeatureText}>No minimum amount</Text>
+                <Text style={styles.infoFeatureText}>{translations[11]}</Text>
               </View>
               <View style={styles.infoFeature}>
                 <CheckCircle size={16} color={Colors.success} />
-                <Text style={styles.infoFeatureText}>Secure & encrypted</Text>
+                <Text style={styles.infoFeatureText}>{translations[12]}</Text>
               </View>
             </View>
           </View>
@@ -331,7 +349,7 @@ export default function WalletScreen() {
             <GlassCard variant="dark" style={styles.predictionsCard}>
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={premiumColors.neonCyan} />
-                <Text style={styles.loadingText}>Analyzing your earnings patterns...</Text>
+                <Text style={styles.loadingText}>{translations[13]}</Text>
               </View>
             </GlassCard>
           )}
@@ -341,7 +359,7 @@ export default function WalletScreen() {
               <GlassCard variant="dark" style={styles.predictionsCard}>
                 <View style={styles.predictionsHeader}>
                   <Sparkles size={20} color={premiumColors.neonCyan} />
-                  <Text style={styles.predictionsTitle}>AI Earnings Forecast</Text>
+                  <Text style={styles.predictionsTitle}>{translations[14]}</Text>
                   <TouchableOpacity
                     onPress={() => setShowBreakdown(!showBreakdown)}
                     style={styles.infoButton}
@@ -361,7 +379,7 @@ export default function WalletScreen() {
                       triggerHaptic('light');
                     }}
                   >
-                    <Text style={styles.predictionLabel}>Next Week</Text>
+                    <Text style={styles.predictionLabel}>{translations[15]}</Text>
                     <Text style={styles.predictionAmount}>${predictions.weekly.amount.toFixed(2)}</Text>
                     <View style={styles.predictionMeta}>
                       {predictions.weekly.trend === 'up' ? (
@@ -370,7 +388,7 @@ export default function WalletScreen() {
                         <TrendingDown size={14} color={premiumColors.neonAmber} />
                       ) : null}
                       <Text style={styles.predictionConfidence}>
-                        {(predictions.weekly.confidence * 100).toFixed(0)}% confident
+                        {(predictions.weekly.confidence * 100).toFixed(0)}% {translations[17]}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -387,7 +405,7 @@ export default function WalletScreen() {
                       triggerHaptic('light');
                     }}
                   >
-                    <Text style={styles.predictionLabel}>Next Month</Text>
+                    <Text style={styles.predictionLabel}>{translations[16]}</Text>
                     <Text style={styles.predictionAmount}>${predictions.monthly.amount.toFixed(2)}</Text>
                     <View style={styles.predictionMeta}>
                       {predictions.monthly.trend === 'up' ? (
@@ -396,7 +414,7 @@ export default function WalletScreen() {
                         <TrendingDown size={14} color={premiumColors.neonAmber} />
                       ) : null}
                       <Text style={styles.predictionConfidence}>
-                        {(predictions.monthly.confidence * 100).toFixed(0)}% confident
+                        {(predictions.monthly.confidence * 100).toFixed(0)}% {translations[17]}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -407,7 +425,7 @@ export default function WalletScreen() {
                     <View style={styles.breakdownHeader}>
                       <Target size={16} color={premiumColors.neonCyan} />
                       <Text style={styles.breakdownTitle}>
-                        {selectedPrediction === 'weekly' ? 'Weekly' : 'Monthly'} Breakdown
+                        {selectedPrediction === 'weekly' ? translations[18] : translations[19]} {translations[20]}
                       </Text>
                     </View>
                     
@@ -422,10 +440,10 @@ export default function WalletScreen() {
                         return Object.entries(breakdown).map(([key, value]) => (
                           <View key={key} style={styles.breakdownItem}>
                             <Text style={styles.breakdownLabel}>
-                              {key === 'basePay' ? '💰 Base Pay' :
-                               key === 'bonuses' ? '🎁 Bonuses' :
-                               key === 'tips' ? '💵 Tips' :
-                               key === 'streakBonus' ? '🔥 Streak Bonus' : key}
+                              {key === 'basePay' ? `💰 ${translations[21]}` :
+                               key === 'bonuses' ? `🎁 ${translations[22]}` :
+                               key === 'tips' ? `💵 ${translations[23]}` :
+                               key === 'streakBonus' ? `🔥 ${translations[24]}` : key}
                             </Text>
                             <Text style={styles.breakdownValue}>${(value as number).toFixed(2)}</Text>
                           </View>
@@ -435,7 +453,7 @@ export default function WalletScreen() {
 
                     {selectedPrediction === 'weekly' && predictions.weekly.recommendations.length > 0 && (
                       <View style={styles.recommendationsContainer}>
-                        <Text style={styles.recommendationsTitle}>💡 Recommendations</Text>
+                        <Text style={styles.recommendationsTitle}>💡 {translations[25]}</Text>
                         {predictions.weekly.recommendations.map((rec, idx) => (
                           <Text key={idx} style={styles.recommendationText}>• {rec}</Text>
                         ))}
@@ -444,7 +462,7 @@ export default function WalletScreen() {
 
                     {selectedPrediction === 'monthly' && predictions.monthly.recommendations.length > 0 && (
                       <View style={styles.recommendationsContainer}>
-                        <Text style={styles.recommendationsTitle}>💡 Recommendations</Text>
+                        <Text style={styles.recommendationsTitle}>💡 {translations[25]}</Text>
                         {predictions.monthly.recommendations.map((rec, idx) => (
                           <Text key={idx} style={styles.recommendationText}>• {rec}</Text>
                         ))}
@@ -454,7 +472,7 @@ export default function WalletScreen() {
                 )}
 
                 <Text style={styles.predictionDisclaimer}>
-                  AI-powered predictions based on your task history, completion rate, and market trends
+                  {translations[26]}
                 </Text>
               </GlassCard>
 
@@ -462,7 +480,7 @@ export default function WalletScreen() {
                 <View style={styles.trendAlert}>
                   <TrendingUp size={20} color={premiumColors.neonGreen} />
                   <Text style={styles.trendAlertText}>
-                    📈 Your earnings are trending upward! Keep up the momentum!
+                    📈 {translations[27]}
                   </Text>
                 </View>
               )}
@@ -471,7 +489,7 @@ export default function WalletScreen() {
                 <View style={[styles.trendAlert, styles.trendAlertWarning]}>
                   <TrendingDown size={20} color={premiumColors.neonAmber} />
                   <Text style={styles.trendAlertText}>
-                    📉 Earnings may be lower than usual. Check recommendations above.
+                    📉 {translations[28]}
                   </Text>
                 </View>
               )}
@@ -480,7 +498,7 @@ export default function WalletScreen() {
 
           <View style={styles.commissionInfo}>
             <Text style={styles.commissionText}>
-              💡 HustleXP takes a 12.5% commission on completed tasks
+              💡 {translations[29]}
             </Text>
           </View>
         </ScrollView>
@@ -495,7 +513,7 @@ export default function WalletScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Instant Payout</Text>
+              <Text style={styles.modalTitle}>{translations[2]}</Text>
               <TouchableOpacity onPress={() => setShowPayoutModal(false)}>
                 <X size={24} color={Colors.text} />
               </TouchableOpacity>
@@ -509,7 +527,7 @@ export default function WalletScreen() {
                 style={styles.input}
                 value={payoutAmount}
                 onChangeText={setPayoutAmount}
-                placeholder="Enter amount"
+                placeholder={translations[30]}
                 placeholderTextColor={Colors.textSecondary}
                 keyboardType="numeric"
               />
@@ -525,11 +543,11 @@ export default function WalletScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Download size={20} color={Colors.text} />
-                <Text style={styles.confirmButtonText}>Confirm Payout</Text>
+                <Text style={styles.confirmButtonText}>{translations[31]}</Text>
               </LinearGradient>
             </TouchableOpacity>
             <Text style={styles.modalNote}>
-              Funds will arrive in your account within 30 minutes
+              {translations[32]}
             </Text>
           </View>
         </View>

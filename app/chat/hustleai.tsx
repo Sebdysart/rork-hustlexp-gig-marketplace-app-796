@@ -16,6 +16,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { Send, Brain, DollarSign, Clock, Zap, ChevronRight } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import { premiumColors } from '@/constants/designTokens';
@@ -29,6 +30,15 @@ export default function HustleAIChatScreen() {
   const router = useRouter();
   const { currentUser } = useApp();
   const [input, setInput] = useState<string>('');
+  
+  const translationKeys = [
+    'Message Too Long', 'Your message is', 'characters. Please keep it under', 'characters.', 'OK',
+    'View Details', 'URGENT', 'Searching for tasks...', 'Error:', 'Please log in',
+    'HustleAI', 'Your AI Task Assistant', 'Welcome to HustleAI!',
+    'Ask me to show you tasks nearby, find gigs, or help you with anything!',
+    'Show tasks nearby', 'Find high-paying gigs', 'Ask HustleAI anything...'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
   const flatListRef = useRef<FlatList>(null);
 
   const { messages, error, sendMessage, status } = useRorkAgent({
@@ -52,9 +62,9 @@ export default function HustleAIChatScreen() {
     
     if (messageText.length > MAX_MESSAGE_LENGTH) {
       Alert.alert(
-        'Message Too Long',
-        `Your message is ${messageText.length} characters. Please keep it under ${MAX_MESSAGE_LENGTH} characters.`,
-        [{ text: 'OK' }]
+        translations[0],
+        `${translations[1]} ${messageText.length} ${translations[2]} ${MAX_MESSAGE_LENGTH} ${translations[3]}`,
+        [{ text: translations[4] }]
       );
       return;
     }
@@ -117,12 +127,12 @@ export default function HustleAIChatScreen() {
               {task.urgency === 'high' && (
                 <View style={styles.urgencyBadge}>
                   <Zap size={10} color={premiumColors.neonOrange} fill={premiumColors.neonOrange} />
-                  <Text style={styles.urgencyText}>URGENT</Text>
+                  <Text style={styles.urgencyText}>{translations[6]}</Text>
                 </View>
               )}
 
               <TouchableOpacity style={styles.viewTaskButton}>
-                <Text style={styles.viewTaskButtonText}>View Details</Text>
+                <Text style={styles.viewTaskButtonText}>{translations[5]}</Text>
                 <ChevronRight size={16} color={premiumColors.neonCyan} />
               </TouchableOpacity>
             </GlassCard>
@@ -182,7 +192,7 @@ export default function HustleAIChatScreen() {
                         <View key={`${item.id}-${i}`} style={styles.toolLoadingContainer}>
                           <ActivityIndicator size="small" color={premiumColors.neonViolet} />
                           <Text style={styles.toolLoadingText}>
-                            Searching for tasks...
+                            {translations[7]}
                           </Text>
                         </View>
                       );
@@ -203,7 +213,7 @@ export default function HustleAIChatScreen() {
                     case 'output-error':
                       return (
                         <View key={`${item.id}-${i}`} style={styles.errorContainer}>
-                          <Text style={styles.errorText}>Error: {part.errorText}</Text>
+                          <Text style={styles.errorText}>{translations[8]} {part.errorText}</Text>
                         </View>
                       );
 
@@ -228,7 +238,7 @@ export default function HustleAIChatScreen() {
   if (!currentUser) {
     return (
       <View style={styles.errorScreen}>
-        <Text style={styles.errorScreenText}>Please log in</Text>
+        <Text style={styles.errorScreenText}>{translations[9]}</Text>
       </View>
     );
   }
@@ -237,7 +247,7 @@ export default function HustleAIChatScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'HustleAI',
+          title: translations[10],
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.text,
         }}
@@ -252,8 +262,8 @@ export default function HustleAIChatScreen() {
             <Brain size={28} color={premiumColors.neonViolet} strokeWidth={2} />
           </View>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>HustleAI</Text>
-            <Text style={styles.headerSubtitle}>Your AI Task Assistant</Text>
+            <Text style={styles.headerTitle}>{translations[10]}</Text>
+            <Text style={styles.headerSubtitle}>{translations[11]}</Text>
           </View>
         </View>
 
@@ -267,22 +277,22 @@ export default function HustleAIChatScreen() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Brain size={64} color={premiumColors.neonViolet} strokeWidth={1.5} />
-              <Text style={styles.emptyTitle}>Welcome to HustleAI!</Text>
+              <Text style={styles.emptyTitle}>{translations[12]}</Text>
               <Text style={styles.emptySubtitle}>
-                Ask me to show you tasks nearby, find gigs, or help you with anything!
+                {translations[13]}
               </Text>
               <View style={styles.suggestionsContainer}>
                 <TouchableOpacity
                   style={styles.suggestionButton}
-                  onPress={() => setInput('show me tasks nearby')}
+                  onPress={() => setInput(translations[14])}
                 >
-                  <Text style={styles.suggestionText}>Show tasks nearby</Text>
+                  <Text style={styles.suggestionText}>{translations[14]}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.suggestionButton}
-                  onPress={() => setInput('find high-paying gigs')}
+                  onPress={() => setInput(translations[15])}
                 >
-                  <Text style={styles.suggestionText}>Find high-paying gigs</Text>
+                  <Text style={styles.suggestionText}>{translations[15]}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -301,7 +311,7 @@ export default function HustleAIChatScreen() {
               style={styles.input}
               value={input}
               onChangeText={setInput}
-              placeholder="Ask HustleAI anything..."
+              placeholder={translations[16]}
               placeholderTextColor={Colors.textSecondary}
               multiline
               maxLength={MAX_MESSAGE_LENGTH}

@@ -19,6 +19,7 @@ import {
 import { BlurView } from 'expo-blur';
 
 import { useApp } from '@/contexts/AppContext';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { premiumColors } from '@/constants/designTokens';
 import Colors from '@/constants/colors';
 import {
@@ -37,6 +38,16 @@ type TabType = 'daily' | 'weekly' | 'seasonal' | 'ai';
 export default function QuestsScreen() {
   const { currentUser } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('daily');
+  
+  const translationKeys = [
+    'Quests', 'Your Daily Grind Map', 'Small wins. Big momentum.', 'Grit Multiplier Active!',
+    'Progress', 'Daily', 'Weekly', 'Seasonal', 'AI Quests', 'No Quests Available',
+    'Check back later for new challenges!', 'Powered by HustleBot AI — personalized just for you',
+    'First Milestone', 'Complete', 'more gigs to unlock new features',
+    'Level Up Soon!', "You're", 'XP away from Level', 'Grit Grind', 'Earn',
+    'more Grit to unlock premium features'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
 
 
   const questStreak = currentUser?.dailyStreak?.count || 0;
@@ -113,8 +124,8 @@ export default function QuestsScreen() {
         id: 'ai_first_milestone',
         type: 'ai',
         category: 'completion',
-        title: 'First Milestone',
-        description: `Complete ${5 - currentUser.tasksCompleted} more gigs to unlock new features`,
+        title: translations[12] || 'First Milestone',
+        description: `${translations[13]} ${5 - currentUser.tasksCompleted} ${translations[14]}`,
         icon: 'Target',
         target: 5,
         progress: currentUser.tasksCompleted,
@@ -135,8 +146,8 @@ export default function QuestsScreen() {
         id: 'ai_level_up',
         type: 'ai',
         category: 'completion',
-        title: 'Level Up Soon!',
-        description: `You're ${xpToGo} XP away from Level ${nextLevel}`,
+        title: translations[15] || 'Level Up Soon!',
+        description: `${translations[16]} ${xpToGo} ${translations[17]} ${nextLevel}`,
         icon: 'TrendingUp',
         target: xpNeeded,
         progress: currentUser.xp,
@@ -154,8 +165,8 @@ export default function QuestsScreen() {
         id: 'ai_grit_grind',
         type: 'ai',
         category: 'completion',
-        title: 'Grit Grind',
-        description: `Earn ${1000 - grit} more Grit to unlock premium features`,
+        title: translations[18] || 'Grit Grind',
+        description: `${translations[19]} ${1000 - grit} ${translations[20]}`,
         icon: 'Zap',
         target: 1000,
         progress: grit,
@@ -190,17 +201,17 @@ export default function QuestsScreen() {
   const completionPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   const tabs: { id: TabType; label: string; icon: any }[] = [
-    { id: 'daily', label: 'Daily', icon: Zap },
-    { id: 'weekly', label: 'Weekly', icon: Calendar },
-    { id: 'seasonal', label: 'Seasonal', icon: Trophy },
-    { id: 'ai', label: 'AI Quests', icon: Sparkles },
+    { id: 'daily', label: translations[5] || 'Daily', icon: Zap },
+    { id: 'weekly', label: translations[6] || 'Weekly', icon: Calendar },
+    { id: 'seasonal', label: translations[7] || 'Seasonal', icon: Trophy },
+    { id: 'ai', label: translations[8] || 'AI Quests', icon: Sparkles },
   ];
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Quests',
+          title: translations[0],
           headerStyle: {
             backgroundColor: premiumColors.richBlack,
           },
@@ -222,9 +233,9 @@ export default function QuestsScreen() {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
-              <Text style={styles.headerTitle}>Your Daily Grind Map</Text>
+              <Text style={styles.headerTitle}>{translations[1]}</Text>
               <Text style={styles.headerSubtitle}>
-                Small wins. Big momentum.
+                {translations[2]}
               </Text>
             </View>
             <View style={styles.streakContainer}>
@@ -238,7 +249,7 @@ export default function QuestsScreen() {
               <BlurView intensity={20} style={styles.multiplierBlur}>
                 <Sparkles color={premiumColors.neonPurple} size={16} />
                 <Text style={styles.multiplierText}>
-                  {streakMultiplier}x Grit Multiplier Active!
+                  {streakMultiplier}x {translations[3]}
                 </Text>
               </BlurView>
             </View>
@@ -248,7 +259,7 @@ export default function QuestsScreen() {
             <BlurView intensity={30} style={styles.progressBlur}>
               <View style={styles.progressHeader}>
                 <Text style={styles.progressTitle}>
-                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Progress
+                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} {translations[4]}
                 </Text>
                 <Text style={styles.progressCount}>
                   {completedCount}/{totalCount}
@@ -338,9 +349,9 @@ export default function QuestsScreen() {
           {currentQuests.length === 0 ? (
             <View style={styles.emptyState}>
               <Sparkles color={Colors.textSecondary} size={48} />
-              <Text style={styles.emptyTitle}>No Quests Available</Text>
+              <Text style={styles.emptyTitle}>{translations[9]}</Text>
               <Text style={styles.emptySubtitle}>
-                Check back later for new challenges!
+                {translations[10]}
               </Text>
             </View>
           ) : (
@@ -360,7 +371,7 @@ export default function QuestsScreen() {
             <BlurView intensity={20} style={styles.aiFooterBlur}>
               <Sparkles color={premiumColors.neonPurple} size={20} />
               <Text style={styles.aiFooterText}>
-                Powered by HustleBot AI — personalized just for you
+                {translations[11]}
               </Text>
             </BlurView>
           </View>
