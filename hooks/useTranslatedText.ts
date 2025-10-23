@@ -46,12 +46,13 @@ export function useTranslatedTexts(texts: string[]): string[] {
   const [translatedTexts, setTranslatedTexts] = useState<string[]>(texts);
   const prevTextsRef = useRef<string>('');
   const prevLangRef = useRef<string>('');
-  const prevCacheRef = useRef<Record<string, string>>({});
+  const prevCacheKeysRef = useRef<string>('');
 
   useEffect(() => {
     if (!useAITranslation || currentLanguage === 'en') {
       const textsKey = JSON.stringify(texts);
       if (prevTextsRef.current !== textsKey) {
+        console.log('[useTranslatedTexts] Setting to original texts (AI disabled or EN)');
         prevTextsRef.current = textsKey;
         setTranslatedTexts(texts);
       }
@@ -59,22 +60,33 @@ export function useTranslatedTexts(texts: string[]): string[] {
     }
 
     const textsKey = JSON.stringify(texts);
-    const cacheKey = JSON.stringify(aiTranslationCache);
+    const relevantCacheKeys = texts.map(t => `${currentLanguage}:${t}`).sort().join('|');
+    const cacheKeysInCache = relevantCacheKeys.split('|').filter(k => 
+      (aiTranslationCache as Record<string, string>)[k]
+    ).join('|');
+    
     const hasChanged = prevTextsRef.current !== textsKey || 
                        prevLangRef.current !== currentLanguage ||
-                       prevCacheRef.current !== aiTranslationCache;
+                       prevCacheKeysRef.current !== cacheKeysInCache;
     
     if (!hasChanged) {
       return;
     }
     
+    console.log(`[useTranslatedTexts] Re-rendering for language: ${currentLanguage}`);
+    console.log(`[useTranslatedTexts] Cache keys available: ${cacheKeysInCache.split('|').length}`);
+    
     prevTextsRef.current = textsKey;
     prevLangRef.current = currentLanguage;
-    prevCacheRef.current = aiTranslationCache;
+    prevCacheKeysRef.current = cacheKeysInCache;
 
     const translated = texts.map(text => {
       const key = `${currentLanguage}:${text}`;
-      return (aiTranslationCache as Record<string, string>)[key] || text;
+      const translation = (aiTranslationCache as Record<string, string>)[key];
+      if (translation) {
+        console.log(`[useTranslatedTexts] ✅ "${text.substring(0, 30)}..." → "${translation.substring(0, 30)}..."`);
+      }
+      return translation || text;
     });
 
     setTranslatedTexts(translated);
