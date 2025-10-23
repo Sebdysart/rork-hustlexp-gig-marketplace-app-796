@@ -159,10 +159,10 @@ export default function AIOnboardingScreen() {
 
     // Extract trades
     const trades: TradeCategory[] = [];
-    if (lowerMessage.includes('plumb')) trades.push('plumbing');
-    if (lowerMessage.includes('electric')) trades.push('electrical');
-    if (lowerMessage.includes('carpent') || lowerMessage.includes('wood')) trades.push('carpentry');
-    if (lowerMessage.includes('paint')) trades.push('painting');
+    if (lowerMessage.includes('plumb')) trades.push('plumber');
+    if (lowerMessage.includes('electric')) trades.push('electrician');
+    if (lowerMessage.includes('carpent') || lowerMessage.includes('wood')) trades.push('carpenter');
+    if (lowerMessage.includes('paint')) trades.push('painter');
     if (lowerMessage.includes('hvac') || lowerMessage.includes('ac') || lowerMessage.includes('heat')) trades.push('hvac');
     if (trades.length > 0) {
       extracted.trades = trades;
