@@ -45,40 +45,112 @@ export default function SquadsScreen() {
         name: 'Weekend Warriors',
         description: 'Crushing tasks every weekend!',
         leaderId: users[0]?.id || '',
-        memberIds: users.slice(0, 4).map(u => u.id),
-        totalEarnings: 2450,
-        totalXP: 8900,
+        members: users.slice(0, 4).map(u => ({
+          userId: u.id,
+          role: 'member' as const,
+          joinedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+          contribution: {
+            tasksCompleted: 10,
+            xpEarned: 2000,
+            earningsGenerated: 500,
+          },
+        })),
+        status: 'active' as const,
+        maxMembers: 8,
+        emblem: {
+          icon: 'users',
+          color: '#6366F1',
+          pattern: 'solid',
+        },
+        stats: {
+          totalEarnings: 2450,
+          totalXP: 8900,
+          tasksCompleted: 45,
+          averageRating: 4.8,
+          projectsCompleted: 12,
+        },
+        badges: [],
         createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         avatar: 'https://i.pravatar.cc/150?img=1',
+        isPublic: true,
+        tags: ['weekend', 'active'],
       },
       {
         id: 'squad-2',
         name: 'Hustle Squad',
         description: 'Daily grinders making moves',
         leaderId: users[1]?.id || '',
-        memberIds: users.slice(1, 6).map(u => u.id),
-        totalEarnings: 3200,
-        totalXP: 12500,
+        members: users.slice(1, 6).map(u => ({
+          userId: u.id,
+          role: 'member' as const,
+          joinedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+          contribution: {
+            tasksCompleted: 15,
+            xpEarned: 2500,
+            earningsGenerated: 650,
+          },
+        })),
+        status: 'active' as const,
+        maxMembers: 10,
+        emblem: {
+          icon: 'zap',
+          color: '#F59E0B',
+          pattern: 'gradient',
+        },
+        stats: {
+          totalEarnings: 3200,
+          totalXP: 12500,
+          tasksCompleted: 68,
+          averageRating: 4.9,
+          projectsCompleted: 18,
+        },
+        badges: [],
         createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
         avatar: 'https://i.pravatar.cc/150?img=2',
+        isPublic: true,
+        tags: ['hustle', 'daily'],
       },
       {
         id: 'squad-3',
         name: 'Night Owls',
         description: 'Late night task masters',
         leaderId: users[2]?.id || '',
-        memberIds: users.slice(2, 5).map(u => u.id),
-        totalEarnings: 1800,
-        totalXP: 6400,
+        members: users.slice(2, 5).map(u => ({
+          userId: u.id,
+          role: 'member' as const,
+          joinedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+          contribution: {
+            tasksCompleted: 8,
+            xpEarned: 1600,
+            earningsGenerated: 400,
+          },
+        })),
+        status: 'active' as const,
+        maxMembers: 6,
+        emblem: {
+          icon: 'moon',
+          color: '#8B5CF6',
+          pattern: 'dots',
+        },
+        stats: {
+          totalEarnings: 1800,
+          totalXP: 6400,
+          tasksCompleted: 32,
+          averageRating: 4.7,
+          projectsCompleted: 8,
+        },
+        badges: [],
         createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
         avatar: 'https://i.pravatar.cc/150?img=3',
+        isPublic: true,
+        tags: ['night', 'flexible'],
       },
     ];
   }, [currentUser, users]);
 
   const mySquad = useMemo(() => {
     if (!currentUser) return null;
-    return mockSquads.find(s => s.memberIds.includes(currentUser.id));
+    return mockSquads.find(s => s.members.some(m => m.userId === currentUser.id));
   }, [mockSquads, currentUser]);
 
   if (!currentUser) {
@@ -142,18 +214,18 @@ export default function SquadsScreen() {
                   <View style={styles.mySquadInfo}>
                     <Text style={styles.mySquadName}>{mySquad.name}</Text>
                     <Text style={styles.mySquadMembers}>
-                      {mySquad.memberIds.length} {t3}
+                      {mySquad.members.length} {t3}
                     </Text>
                   </View>
                   <Crown size={24} color={Colors.accent} />
                 </View>
                 <View style={styles.mySquadStats}>
                   <View style={styles.mySquadStat}>
-                    <Text style={styles.mySquadStatValue}>${mySquad.totalEarnings}</Text>
+                    <Text style={styles.mySquadStatValue}>${mySquad.stats.totalEarnings}</Text>
                     <Text style={styles.mySquadStatLabel}>{t4}</Text>
                   </View>
                   <View style={styles.mySquadStat}>
-                    <Text style={styles.mySquadStatValue}>{mySquad.totalXP}</Text>
+                    <Text style={styles.mySquadStatValue}>{mySquad.stats.totalXP}</Text>
                     <Text style={styles.mySquadStatLabel}>{t5}</Text>
                   </View>
                 </View>
@@ -200,8 +272,8 @@ export default function SquadsScreen() {
           <Text style={styles.sectionTitle}>{t9}</Text>
 
           {mockSquads.map((squad) => {
-            const members = users.filter(u => squad.memberIds.includes(u.id));
-            const isMember = squad.memberIds.includes(currentUser.id);
+            const members = users.filter(u => squad.members.some(m => m.userId === u.id));
+            const isMember = squad.members.some(m => m.userId === currentUser.id);
 
             return (
               <TouchableOpacity
@@ -229,19 +301,19 @@ export default function SquadsScreen() {
                     <View style={styles.squadStat}>
                       <Users size={14} color={Colors.textSecondary} />
                       <Text style={styles.squadStatText}>
-                        {squad.memberIds.length} {t3}
+                        {squad.members.length} {t3}
                       </Text>
                     </View>
                     <View style={styles.squadStat}>
                       <TrendingUp size={14} color={Colors.accent} />
                       <Text style={styles.squadStatText}>
-                        ${squad.totalEarnings}
+                        ${squad.stats.totalEarnings}
                       </Text>
                     </View>
                     <View style={styles.squadStat}>
                       <Zap size={14} color={Colors.accent} />
                       <Text style={styles.squadStatText}>
-                        {squad.totalXP} XP
+                        {squad.stats.totalXP} XP
                       </Text>
                     </View>
                   </View>
