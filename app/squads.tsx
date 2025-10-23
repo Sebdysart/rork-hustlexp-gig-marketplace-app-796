@@ -15,7 +15,7 @@ export default function SquadsScreen() {
   const [squadName, setSquadName] = useState<string>('');
   const [squadDescription, setSquadDescription] = useState<string>('');
 
-  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18] = useTranslatedTexts([
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21] = useTranslatedTexts([
     'Squads',
     'Team up and earn together',
     'members',
@@ -33,7 +33,10 @@ export default function SquadsScreen() {
     'Enter squad name...',
     'Description',
     'Describe your squad...',
-    'Missing Name'
+    'Missing Name',
+    'Please enter a squad name',
+    'Squad Created! 🎉',
+    'is ready to hustle!'
   ]);
 
   const mockSquads = useMemo((): Squad[] => {
@@ -159,14 +162,14 @@ export default function SquadsScreen() {
 
   const handleCreateSquad = () => {
     if (!squadName.trim()) {
-      Alert.alert('Missing Name', 'Please enter a squad name');
+      Alert.alert(t18, t19);
       return;
     }
 
     triggerHaptic('success');
     Alert.alert(
-      'Squad Created! 🎉',
-      `${squadName} is ready to hustle!`,
+      t20,
+      `${squadName} ${t21}`,
       [{ text: 'OK', onPress: () => setShowCreateModal(false) }]
     );
     setSquadName('');
