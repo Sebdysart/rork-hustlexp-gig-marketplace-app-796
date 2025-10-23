@@ -21,6 +21,7 @@ import { HUSTLER_JOURNEY, getTierForLevel, getProgressToNextTier, canPrestige } 
 import { getPrestigeDisplayName } from '@/utils/prestige';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +32,14 @@ export default function RoadmapScreen() {
   const router = useRouter();
   const { currentUser } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('roadmap');
+  
+  const translationKeys = [
+    'Roadmap', 'Track Your Journey', 'Leaderboard', 'Quests', 'Level', 'to next tier',
+    'Your Journey', 'Tier', 'Levels', 'Rewards', 'Grit', 'Credits', 'Boosts', 'Payout',
+    'Badge', 'Unlocks', 'Prestige Mode Unlocked!', 'Reset to Level 1 with permanent bonuses',
+    'Enter Prestige'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
 
   if (!currentUser) return null;
 
@@ -53,7 +62,7 @@ export default function RoadmapScreen() {
                 <Text style={styles.prestigeBadge}>{getPrestigeDisplayName(prestigeLevel)}</Text>
               )}
             </View>
-            <Text style={styles.tierLevel}>Level {currentUser.level}</Text>
+            <Text style={styles.tierLevel}>{translations[4]} {currentUser.level}</Text>
             <Text style={styles.tierVibe}>{currentTier.vibe}</Text>
             
             <View style={styles.progressContainer}>
@@ -61,7 +70,7 @@ export default function RoadmapScreen() {
                 <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
               </View>
               <Text style={styles.progressText}>
-                {Math.round(progress * 100)}% to next tier
+                {Math.round(progress * 100)}% {translations[5]}
               </Text>
             </View>
           </LinearGradient>
@@ -69,7 +78,7 @@ export default function RoadmapScreen() {
       </View>
 
       <View style={styles.journeyContainer}>
-        <Text style={styles.sectionTitle}>Your Journey</Text>
+        <Text style={styles.sectionTitle}>{translations[6]}</Text>
         
         {HUSTLER_JOURNEY.map((tier, index) => {
           const isUnlocked = currentUser.level >= tier.minLevel;
@@ -111,55 +120,55 @@ export default function RoadmapScreen() {
                           {!isUnlocked && <Lock size={20} color="#6B7280" />}
                         </View>
                         <Text style={[styles.tierRange, !isUnlocked && styles.lockedText]}>
-                          Levels {tier.minLevel}-{tier.maxLevel}
+                          {translations[8]} {tier.minLevel}-{tier.maxLevel}
                         </Text>
                         <Text style={[styles.tierCardVibe, !isUnlocked && styles.lockedText]}>
                           {tier.vibe}
                         </Text>
                       </View>
-                      <Text style={styles.tierNumber}>Tier {tier.tier}</Text>
+                      <Text style={styles.tierNumber}>{translations[7]} {tier.tier}</Text>
                     </View>
 
                     {isUnlocked && (
                       <>
                         <View style={styles.rewardsSection}>
-                          <Text style={styles.rewardsTitle}>Rewards</Text>
+                          <Text style={styles.rewardsTitle}>{translations[9]}</Text>
                           <View style={styles.rewardsList}>
                             {tier.rewards.grit && (
                               <View style={styles.rewardItem}>
                                 <Zap size={16} color="#FFD700" />
-                                <Text style={styles.rewardText}>{tier.rewards.grit}⚡ Grit</Text>
+                                <Text style={styles.rewardText}>{tier.rewards.grit}⚡ {translations[10]}</Text>
                               </View>
                             )}
                             {tier.rewards.taskCredits && (
                               <View style={styles.rewardItem}>
                                 <DollarSign size={16} color="#10B981" />
-                                <Text style={styles.rewardText}>${tier.rewards.taskCredits} Credits</Text>
+                                <Text style={styles.rewardText}>${tier.rewards.taskCredits} {translations[11]}</Text>
                               </View>
                             )}
                             {tier.rewards.boostTokens && (
                               <View style={styles.rewardItem}>
                                 <Award size={16} color="#A855F7" />
-                                <Text style={styles.rewardText}>{tier.rewards.boostTokens} Boosts</Text>
+                                <Text style={styles.rewardText}>{tier.rewards.boostTokens} {translations[12]}</Text>
                               </View>
                             )}
                             {tier.rewards.payoutBoost && (
                               <View style={styles.rewardItem}>
                                 <DollarSign size={16} color="#10B981" />
-                                <Text style={styles.rewardText}>+{tier.rewards.payoutBoost}% Payout</Text>
+                                <Text style={styles.rewardText}>+{tier.rewards.payoutBoost}% {translations[13]}</Text>
                               </View>
                             )}
                             {tier.rewards.badge && (
                               <View style={styles.rewardItem}>
                                 <Award size={16} color="#F59E0B" />
-                                <Text style={styles.rewardText}>{tier.rewards.badge} Badge</Text>
+                                <Text style={styles.rewardText}>{tier.rewards.badge} {translations[14]}</Text>
                               </View>
                             )}
                           </View>
                         </View>
 
                         <View style={styles.unlocksSection}>
-                          <Text style={styles.unlocksTitle}>Unlocks</Text>
+                          <Text style={styles.unlocksTitle}>{translations[15]}</Text>
                           {tier.unlocks.map((unlock, i) => (
                             <Text key={i} style={styles.unlockItem}>• {unlock}</Text>
                           ))}
@@ -186,12 +195,12 @@ export default function RoadmapScreen() {
               style={styles.prestigeGradient}
             >
               <Crown size={48} color="#FFD700" />
-              <Text style={styles.prestigeTitle}>Prestige Mode Unlocked!</Text>
+              <Text style={styles.prestigeTitle}>{translations[16]}</Text>
               <Text style={styles.prestigeSubtitle}>
-                Reset to Level 1 with permanent bonuses
+                {translations[17]}
               </Text>
               <View style={styles.prestigeButton}>
-                <Text style={styles.prestigeButtonText}>Enter Prestige</Text>
+                <Text style={styles.prestigeButtonText}>{translations[18]}</Text>
                 <ArrowRight size={20} color="#000000" />
               </View>
             </LinearGradient>
@@ -208,8 +217,8 @@ export default function RoadmapScreen() {
         style={styles.gradient}
       >
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 40 }]}>
-          <Text style={styles.headerTitle}>Roadmap</Text>
-          <Text style={styles.headerSubtitle}>Track Your Journey</Text>
+          <Text style={styles.headerTitle}>{translations[0]}</Text>
+          <Text style={styles.headerSubtitle}>{translations[1]}</Text>
 
           <View style={styles.tabsContainer}>
             <TouchableOpacity
@@ -241,7 +250,7 @@ export default function RoadmapScreen() {
                   activeTab === 'roadmap' && styles.tabTextActive,
                 ]}
               >
-                Roadmap
+                {translations[0]}
               </Text>
               {activeTab === 'roadmap' && (
                 <View style={styles.tabIndicator}>
@@ -284,7 +293,7 @@ export default function RoadmapScreen() {
                   activeTab === 'leaderboard' && styles.tabTextActive,
                 ]}
               >
-                Leaderboard
+                {translations[2]}
               </Text>
               {activeTab === 'leaderboard' && (
                 <View style={styles.tabIndicator}>
@@ -327,7 +336,7 @@ export default function RoadmapScreen() {
                   activeTab === 'quests' && styles.tabTextActive,
                 ]}
               >
-                Quests
+                {translations[3]}
               </Text>
               {activeTab === 'quests' && (
                 <View style={styles.tabIndicator}>

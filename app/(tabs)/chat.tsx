@@ -9,6 +9,7 @@ import Colors from '@/constants/colors';
 import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 
 
@@ -16,6 +17,14 @@ export default function ChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { currentUser, tasks, messages, users } = useApp();
+  
+  const translationKeys = [
+    'Task Tickets', 'Active Conversations', 'Just now', 'ago', 'h', 'd', 'NEW', 'URGENT',
+    'Safety', 'Please log in', 'Sign in to view your task conversations',
+    'No Active Tickets', 'Task conversations appear here when you accept or post a quest',
+    'Task Offers', 'HustleAI Task Recommendations', 'Your AI task assistant'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
 
   const conversations = useMemo(() => {
     if (!currentUser) return [];
@@ -87,9 +96,9 @@ export default function ChatScreen() {
     const diff = now.getTime() - date.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
+    if (hours < 1) return translations[2];
+    if (hours < 24) return `${hours}${translations[4]} ${translations[3]}`;
+    return `${Math.floor(hours / 24)}${translations[5]} ${translations[3]}`;
   };
 
   const renderConversation = ({ item }: { item: typeof conversations[0] }) => {
@@ -138,13 +147,13 @@ export default function ChatScreen() {
                 {isHustleAI && item.unreadCount > 0 && (
                   <View style={styles.urgentBadge}>
                     <Zap size={10} color={premiumColors.neonViolet} fill={premiumColors.neonViolet} />
-                    <Text style={[styles.urgentText, { color: premiumColors.neonViolet }]}>{item.unreadCount} NEW</Text>
+                    <Text style={[styles.urgentText, { color: premiumColors.neonViolet }]}>{item.unreadCount} {translations[6]}</Text>
                   </View>
                 )}
                 {!isHustleAI && 'urgency' in item.task && item.task.urgency === 'today' && (
                   <View style={styles.urgentBadge}>
                     <Zap size={10} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
-                    <Text style={styles.urgentText}>URGENT</Text>
+                    <Text style={styles.urgentText}>{translations[7]}</Text>
                   </View>
                 )}
               </View>
@@ -206,7 +215,7 @@ export default function ChatScreen() {
               }}
             >
               <Shield size={16} color="#fff" />
-              <Text style={styles.panicText}>Safety</Text>
+              <Text style={styles.panicText}>{translations[8]}</Text>
             </TouchableOpacity>
           )}
           {item.unreadCount > 0 && (
@@ -225,8 +234,8 @@ export default function ChatScreen() {
         <View style={styles.emptyIconContainer}>
           <MessageCircle size={64} color={premiumColors.neonCyan} strokeWidth={1.5} />
         </View>
-        <Text style={styles.emptyText}>Please log in</Text>
-        <Text style={styles.emptySubtext}>Sign in to view your task conversations</Text>
+        <Text style={styles.emptyText}>{translations[9]}</Text>
+        <Text style={styles.emptySubtext}>{translations[10]}</Text>
       </View>
     );
   }
@@ -239,16 +248,16 @@ export default function ChatScreen() {
           style={styles.gradient}
         >
           <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 40 }]}>
-            <Text style={styles.headerTitle}>Task Tickets</Text>
-            <Text style={styles.headerSubtitle}>Active Conversations</Text>
+            <Text style={styles.headerTitle}>{translations[0]}</Text>
+            <Text style={styles.headerSubtitle}>{translations[1]}</Text>
           </View>
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
               <MessageCircle size={64} color={premiumColors.neonCyan} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyText}>No Active Tickets</Text>
+            <Text style={styles.emptyText}>{translations[11]}</Text>
             <Text style={styles.emptySubtext}>
-              Task conversations appear here when you accept or post a quest
+              {translations[12]}
             </Text>
           </View>
         </LinearGradient>
@@ -263,8 +272,8 @@ export default function ChatScreen() {
         style={styles.gradient}
       >
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 40 }]}>
-          <Text style={styles.headerTitle}>Task Tickets</Text>
-          <Text style={styles.headerSubtitle}>Active Conversations</Text>
+          <Text style={styles.headerTitle}>{translations[0]}</Text>
+          <Text style={styles.headerSubtitle}>{translations[1]}</Text>
         </View>
         <FlatList
           data={conversations}
