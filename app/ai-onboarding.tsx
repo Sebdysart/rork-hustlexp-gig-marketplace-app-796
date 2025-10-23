@@ -594,10 +594,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   userBubble: {
-    marginLeft: 'auto',
+    alignSelf: 'flex-end',
   },
   assistantBubble: {
-    marginRight: 'auto',
+    alignSelf: 'flex-start',
   },
   messageBlur: {
     borderRadius: borderRadius.xl,
