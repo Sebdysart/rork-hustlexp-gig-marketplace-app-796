@@ -113,30 +113,33 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   const preloadAllAppTranslations = useCallback(async (lang: LanguageCodeType) => {
     if (lang === 'en') {
       console.log('[Language] English selected, no translation needed');
+      setTranslationProgress(100);
       return;
     }
     
     try {
-      console.log('[Language] Generating all app texts...');
+      console.log('[Language] 🌐 Generating all app texts for full translation...');
       const allTexts = generateAllAppTexts();
       const totalTexts = allTexts.length;
-      console.log(`[Language] Found ${totalTexts} texts to translate`);
+      console.log(`[Language] 📝 Found ${totalTexts} texts to translate`);
       
-      const BATCH_SIZE = 50;
+      const BATCH_SIZE = 30;
       const batches: string[][] = [];
       
       for (let i = 0; i < allTexts.length; i += BATCH_SIZE) {
         batches.push(allTexts.slice(i, i + BATCH_SIZE));
       }
       
-      console.log(`[Language] Processing ${batches.length} batches...`);
+      console.log(`[Language] 📦 Processing ${batches.length} batches with rate limit handling...`);
       
+      let successfulBatches = 0;
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
-        setTranslationProgress(Math.floor((i / batches.length) * 100));
+        const progressPercent = Math.floor((i / batches.length) * 100);
+        setTranslationProgress(progressPercent);
         
         try {
-          console.log(`[Language] Translating batch ${i + 1}/${batches.length} (${batch.length} texts)`);
+          console.log(`[Language] ⏳ Translating batch ${i + 1}/${batches.length} (${batch.length} texts) - ${progressPercent}%`);
           const translated = await aiTranslationService.translate(batch, lang, 'en');
           
           const newCache: Record<string, string> = {};
@@ -146,25 +149,28 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
           });
           
           setAITranslationCache(prev => ({ ...prev, ...newCache }));
+          successfulBatches++;
           
           if (i < batches.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
         } catch (error: any) {
-          console.error(`[Language] Batch ${i + 1} failed:`, error?.message || error);
+          console.error(`[Language] ❌ Batch ${i + 1} failed:`, error?.message || error);
           
           if (error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
             const retryAfterMatch = error?.message?.match(/(\d+)\s*second/i);
             const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1]) : 60;
-            console.log(`[Language] Rate limited. Waiting ${retryAfter}s before continuing...`);
+            console.log(`[Language] ⏸️ Rate limited. Waiting ${retryAfter}s before continuing...`);
             await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
             i--;
+          } else {
+            console.warn(`[Language] ⚠️ Skipping failed batch and continuing...`);
           }
         }
       }
       
       setTranslationProgress(100);
-      console.log(`[Language] ✅ Translation complete! ${totalTexts} texts translated to ${lang}`);
+      console.log(`[Language] ✅ Translation complete! ${successfulBatches}/${batches.length} batches successful (${totalTexts} texts) → ${lang}`);
     } catch (error) {
       console.error('[Language] Preload failed:', error);
       setTranslationProgress(0);
