@@ -555,18 +555,24 @@ class HustleAIClient {
       targetLanguage: string;
       sourceLanguage?: string;
       context?: string;
+      includeQualityScore?: boolean;
     },
     retries = 3
-  ): Promise<{ translations: string[] }> {
+  ): Promise<{ translations: string[]; qualityScores?: any[]; detectedLanguages?: string[] }> {
     const textsArray = Array.isArray(params.text) ? params.text : [params.text];
     
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        const response = await this.makeRequest<{ translations: string[] }>('/translate', 'POST', {
+        const response = await this.makeRequest<{ 
+          translations: string[];
+          qualityScores?: any[];
+          detectedLanguages?: string[];
+        }>('/api/translate', 'POST', {
           text: textsArray,
           targetLanguage: params.targetLanguage,
           sourceLanguage: params.sourceLanguage || 'en',
-          context: params.context || 'mobile app UI',
+          context: params.context || 'HustleXP mobile app',
+          includeQualityScore: params.includeQualityScore || false,
         });
         
         return response;
@@ -599,6 +605,64 @@ class HustleAIClient {
     }
     
     return { translations: textsArray };
+  }
+
+  async translateAuto(
+    params: {
+      text: string | string[];
+      targetLanguage: string;
+      context?: string;
+      includeQualityScore?: boolean;
+    },
+    retries = 3
+  ): Promise<{ translations: string[]; detectedLanguages: string[]; qualityScores?: any[] }> {
+    const textsArray = Array.isArray(params.text) ? params.text : [params.text];
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const response = await this.makeRequest<{ 
+          translations: string[];
+          detectedLanguages: string[];
+          qualityScores?: any[];
+        }>('/api/translate/auto', 'POST', {
+          text: textsArray,
+          targetLanguage: params.targetLanguage,
+          context: params.context || 'HustleXP mobile app',
+          includeQualityScore: params.includeQualityScore || false,
+        });
+        
+        return response;
+      } catch (error: any) {
+        console.warn('[HUSTLEAI] Auto-detect translation failed, falling back to standard translate');
+        const fallback = await this.translate({ ...params, sourceLanguage: 'en' }, retries);
+        return {
+          translations: fallback.translations,
+          detectedLanguages: textsArray.map(() => 'en'),
+          qualityScores: fallback.qualityScores,
+        };
+      }
+    }
+    
+    return {
+      translations: textsArray,
+      detectedLanguages: textsArray.map(() => 'en'),
+    };
+  }
+
+  async detectLanguage(text: string | string[]): Promise<{ detectedLanguages: string[] }> {
+    const textsArray = Array.isArray(text) ? text : [text];
+    
+    try {
+      const response = await this.makeRequest<{ detectedLanguages: string[] }>(
+        '/api/translate/detect',
+        'POST',
+        { text: textsArray }
+      );
+      return response;
+    } catch (error) {
+      console.warn('[HUSTLEAI] Language detection failed');
+      return { detectedLanguages: textsArray.map(() => 'en') };
+    }
   }
 }
 
