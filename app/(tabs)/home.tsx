@@ -7,6 +7,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAIProfile } from '@/contexts/AIProfileContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import Colors from '@/constants/colors';
 import { TaskCardSkeleton, StatCardSkeleton } from '@/components/SkeletonLoader';
 
@@ -45,6 +46,25 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
+
+  const translationKeys = [
+    'Morning', 'Afternoon', 'Evening',
+    'nearby gig', 'nearby gigs', 'hiring now',
+    'Your quests are live', 'Ready to hustle?',
+    'What do you need done today?', 'Tell me or type your task, and I\'ll create it for you',
+    'Type your task here...', 'Inspire me with trending tasks',
+    'Quest Command Center', 'Manage your missions & find adventurers',
+    'Active', 'In Progress', 'Completed',
+    'AI Task Creator', 'Tell me what you need', 'Manual Post',
+    'Your Active Quests', 'View All', 'No Active Quests',
+    'Create your first quest using AI or manual posting',
+    'Open', 'Quests', 'Rating', 'Streak',
+    'Quick Access', 'Watchlist', 'Seasons', 'Squad Quests', 'Streak Savers',
+    'AI Coach', 'Get personalized insights & recommendations',
+    'Go Available Mode', 'You\'re visible to posters nearby', 'You\'re offline',
+    'You\'re all set! Check Messages for task offers 💬'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
 
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -174,15 +194,16 @@ export default function HomeScreen() {
 
   const getMissionCopy = () => {
     const hour = new Date().getHours();
-    const greetingKey = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+    const greetingKey = hour < 12 ? translations[0] : hour < 18 ? translations[1] : translations[2];
     
     if (isWorker && nearbyGigs.length > 0) {
-      return `${greetingKey}, ${currentUser.name}. ${nearbyGigs.length} nearby gig${nearbyGigs.length > 1 ? 's' : ''} hiring now.`;
+      const gigText = nearbyGigs.length > 1 ? translations[4] : translations[3];
+      return `${greetingKey}, ${currentUser.name}. ${nearbyGigs.length} ${gigText} ${translations[5]}.`;
     }
     if (isPoster && myTasks.filter(t => t.status === 'open').length > 0) {
-      return `${greetingKey}, ${currentUser.name}. Your quests are live.`;
+      return `${greetingKey}, ${currentUser.name}. ${translations[6]}.`;
     }
-    return `${greetingKey}, ${currentUser.name}. Ready to hustle?`;
+    return `${greetingKey}, ${currentUser.name}. ${translations[7]}`;
   };
 
   const getBackgroundGradient = (): [string, string, ...string[]] => {
@@ -268,8 +289,8 @@ export default function HomeScreen() {
                 </Animated.View>
               </View>
 
-              <Text style={styles.aiPromptTitle}>What do you need done today?</Text>
-              <Text style={styles.aiPromptSubtitle}>Tell me or type your task, and I'll create it for you</Text>
+              <Text style={styles.aiPromptTitle}>{translations[8]}</Text>
+              <Text style={styles.aiPromptSubtitle}>{translations[9]}</Text>
 
               <View style={styles.aiInputRow}>
                 <TouchableOpacity
@@ -297,7 +318,7 @@ export default function HomeScreen() {
                   activeOpacity={0.9}
                 >
                   <GlassCard variant="darkStrong" neonBorder glowColor="neonCyan" style={styles.textInputCard}>
-                    <Text style={styles.textInputPlaceholder}>Type your task here...</Text>
+                    <Text style={styles.textInputPlaceholder}>{translations[10]}</Text>
                     <Wand2 size={20} color={premiumColors.neonCyan} strokeWidth={2} />
                   </GlassCard>
                 </TouchableOpacity>
@@ -312,7 +333,7 @@ export default function HomeScreen() {
                 activeOpacity={0.8}
               >
                 <Lightbulb size={16} color={premiumColors.neonAmber} />
-                <Text style={styles.inspireMeText}>Inspire me with trending tasks</Text>
+                <Text style={styles.inspireMeText}>{translations[11]}</Text>
               </TouchableOpacity>
             </View>
 
@@ -329,25 +350,25 @@ export default function HomeScreen() {
                       <Briefcase size={32} color={premiumColors.neonCyan} strokeWidth={2.5} />
                     </View>
                     <View style={styles.posterHeroText}>
-                      <Text style={styles.posterHeroTitle}>Quest Command Center</Text>
-                      <Text style={styles.posterHeroSubtitle}>Manage your missions & find adventurers</Text>
+                      <Text style={styles.posterHeroTitle}>{translations[12]}</Text>
+                      <Text style={styles.posterHeroSubtitle}>{translations[13]}</Text>
                     </View>
                   </View>
                   
                   <View style={styles.posterStatsGrid}>
                     <View style={styles.posterStatItem}>
                       <Text style={styles.posterStatValue}>{myTasks.filter(t => t.status === 'open').length}</Text>
-                      <Text style={styles.posterStatLabel}>Active</Text>
+                      <Text style={styles.posterStatLabel}>{translations[14]}</Text>
                     </View>
                     <View style={styles.posterStatDivider} />
                     <View style={styles.posterStatItem}>
                       <Text style={styles.posterStatValue}>{myTasks.filter(t => t.status === 'in_progress').length}</Text>
-                      <Text style={styles.posterStatLabel}>In Progress</Text>
+                      <Text style={styles.posterStatLabel}>{translations[15]}</Text>
                     </View>
                     <View style={styles.posterStatDivider} />
                     <View style={styles.posterStatItem}>
                       <Text style={styles.posterStatValue}>{myTasks.filter(t => t.status === 'completed').length}</Text>
-                      <Text style={styles.posterStatLabel}>Completed</Text>
+                      <Text style={styles.posterStatLabel}>{translations[16]}</Text>
                     </View>
                   </View>
                 </View>
@@ -371,8 +392,8 @@ export default function HomeScreen() {
                 >
                   <Wand2 size={24} color={Colors.text} strokeWidth={2.5} />
                   <View style={styles.posterActionText}>
-                    <Text style={styles.posterActionTitle}>AI Task Creator</Text>
-                    <Text style={styles.posterActionSubtitle}>Tell me what you need</Text>
+                    <Text style={styles.posterActionTitle}>{translations[17]}</Text>
+                    <Text style={styles.posterActionSubtitle}>{translations[18]}</Text>
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -387,14 +408,14 @@ export default function HomeScreen() {
               >
                 <GlassCard variant="dark" neonBorder glowColor="neonCyan" style={styles.posterSecondaryActionCard}>
                   <Plus size={28} color={premiumColors.neonCyan} strokeWidth={2.5} />
-                  <Text style={styles.posterSecondaryActionText}>Manual Post</Text>
+                  <Text style={styles.posterSecondaryActionText}>{translations[19]}</Text>
                 </GlassCard>
               </TouchableOpacity>
             </View>
 
             <View style={styles.posterQuestsSection}>
               <View style={styles.posterQuestsHeader}>
-                <Text style={styles.posterQuestsTitle}>Your Active Quests</Text>
+                <Text style={styles.posterQuestsTitle}>{translations[20]}</Text>
                 {myTasks.length > 0 && (
                   <TouchableOpacity
                     style={styles.viewAllButton}
@@ -403,7 +424,7 @@ export default function HomeScreen() {
                       router.push('/(tabs)/tasks');
                     }}
                   >
-                    <Text style={styles.viewAllText}>View All</Text>
+                    <Text style={styles.viewAllText}>{translations[21]}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -439,7 +460,7 @@ export default function HomeScreen() {
                               styles.posterQuestStatusText,
                               { color: task.status === 'open' ? premiumColors.neonCyan : task.status === 'in_progress' ? premiumColors.neonAmber : premiumColors.neonGreen }
                             ]}>
-                              {task.status === 'open' ? 'Open' : task.status === 'in_progress' ? 'In Progress' : 'Completed'}
+                              {task.status === 'open' ? translations[23] : task.status === 'in_progress' ? translations[15] : translations[16]}
                             </Text>
                           </View>
                           <Text style={styles.posterQuestPay}>${task.payAmount}</Text>
@@ -455,8 +476,8 @@ export default function HomeScreen() {
                   <View style={styles.posterEmptyIcon}>
                     <Sparkles size={48} color={premiumColors.neonCyan} strokeWidth={1.5} />
                   </View>
-                  <Text style={styles.posterEmptyTitle}>No Active Quests</Text>
-                  <Text style={styles.posterEmptyText}>Create your first quest using AI or manual posting</Text>
+                  <Text style={styles.posterEmptyTitle}>{translations[22]}</Text>
+                  <Text style={styles.posterEmptyText}>{translations[23]}</Text>
                 </GlassCard>
               )}
             </View>
@@ -553,11 +574,11 @@ export default function HomeScreen() {
                       <Power size={28} color={isAvailable ? premiumColors.neonGreen : premiumColors.neonCyan} strokeWidth={2.5} />
                     </Animated.View>
                     <View style={styles.availabilityTextContainer}>
-                      <Text style={styles.availabilityTitle}>Go Available Mode</Text>
+                      <Text style={styles.availabilityTitle}>{translations[34]}</Text>
                       <View style={styles.availabilityStatus}>
                         <View style={[styles.statusDot, { backgroundColor: isAvailable ? premiumColors.neonGreen : Colors.textSecondary }]} />
                         <Text style={[styles.statusText, { color: isAvailable ? premiumColors.neonGreen : Colors.textSecondary }]}>
-                          {isAvailable ? "You're visible to posters nearby" : "You're offline"}
+                          {isAvailable ? translations[35] : translations[36]}
                         </Text>
                       </View>
                     </View>
@@ -579,7 +600,7 @@ export default function HomeScreen() {
                     }),
                   }]}>
                     <Brain size={20} color={premiumColors.neonViolet} />
-                    <Text style={styles.hustleAIText}>You're all set! Check Messages for task offers 💬</Text>
+                    <Text style={styles.hustleAIText}>{translations[37]}</Text>
                   </Animated.View>
                 )}
               </LinearGradient>
@@ -605,21 +626,21 @@ export default function HomeScreen() {
                   <GlassCard variant="dark" style={styles.statCard}>
                     <TrendingUp size={24} color={premiumColors.neonCyan} />
                     <Text style={styles.statValue}>{currentUser.tasksCompleted}</Text>
-                    <Text style={styles.statLabel}>Quests</Text>
+                    <Text style={styles.statLabel}>{translations[24]}</Text>
                   </GlassCard>
                 </View>
                 <View accessible accessibilityLabel={`${currentUser.reputationScore.toFixed(1)} star rating`}>
                   <GlassCard variant="dark" style={styles.statCard}>
                     <Text style={styles.statIcon}>⭐</Text>
                     <Text style={styles.statValue}>{currentUser.reputationScore.toFixed(1)}</Text>
-                    <Text style={styles.statLabel}>Rating</Text>
+                    <Text style={styles.statLabel}>{translations[25]}</Text>
                   </GlassCard>
                 </View>
                 <View accessible accessibilityLabel={`${currentUser.streaks.current} day streak`}>
                   <GlassCard variant="dark" style={styles.statCard}>
                     <Text style={styles.statIcon}>🔥</Text>
                     <Text style={styles.statValue}>{currentUser.streaks.current}</Text>
-                    <Text style={styles.statLabel}>Streak</Text>
+                    <Text style={styles.statLabel}>{translations[26]}</Text>
                   </GlassCard>
                 </View>
               </>
@@ -627,7 +648,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.quickAccessSection}>
-            <Text style={styles.quickAccessTitle}>Quick Access</Text>
+            <Text style={styles.quickAccessTitle}>{translations[27]}</Text>
             <View style={styles.quickAccessGrid}>
               <TouchableOpacity
                 style={styles.quickAccessCard}
@@ -643,7 +664,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonAmber + '20' }]}>
                   <Bookmark size={20} color={premiumColors.neonAmber} />
                 </View>
-                <Text style={styles.quickAccessLabel}>Watchlist</Text>
+                <Text style={styles.quickAccessLabel}>{translations[28]}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -660,7 +681,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonViolet + '20' }]}>
                   <Trophy size={20} color={premiumColors.neonViolet} />
                 </View>
-                <Text style={styles.quickAccessLabel}>Seasons</Text>
+                <Text style={styles.quickAccessLabel}>{translations[29]}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -677,7 +698,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonCyan + '20' }]}>
                   <Users size={20} color={premiumColors.neonCyan} />
                 </View>
-                <Text style={styles.quickAccessLabel}>Squad Quests</Text>
+                <Text style={styles.quickAccessLabel}>{translations[30]}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -694,7 +715,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonGreen + '20' }]}>
                   <Flame size={20} color={premiumColors.neonGreen} />
                 </View>
-                <Text style={styles.quickAccessLabel}>Streak Savers</Text>
+                <Text style={styles.quickAccessLabel}>{translations[31]}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -717,8 +738,8 @@ export default function HomeScreen() {
                 <View style={styles.aiCoachContent}>
                   <Brain size={32} color={premiumColors.neonViolet} />
                   <View style={styles.aiCoachText}>
-                    <Text style={styles.aiCoachTitle}>AI Coach</Text>
-                    <Text style={styles.aiCoachSubtitle}>Get personalized insights & recommendations</Text>
+                    <Text style={styles.aiCoachTitle}>{translations[32]}</Text>
+                    <Text style={styles.aiCoachSubtitle}>{translations[33]}</Text>
                   </View>
                   <Sparkles size={24} color={premiumColors.neonCyan} />
                 </View>
