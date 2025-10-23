@@ -158,7 +158,7 @@ export default function AIOnboardingScreen() {
     }
 
     // Extract trades
-    const trades: TradeCategory[] = [];
+    const trades: string[] = [];
     if (lowerMessage.includes('plumb')) trades.push('plumber');
     if (lowerMessage.includes('electric')) trades.push('electrician');
     if (lowerMessage.includes('carpent') || lowerMessage.includes('wood')) trades.push('carpenter');
