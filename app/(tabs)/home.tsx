@@ -61,7 +61,7 @@ export default function HomeScreen() {
     'Open', 'Quests', 'Rating', 'Streak',
     'Quick Access', 'Watchlist', 'Seasons', 'Squad Quests', 'Streak Savers',
     'AI Coach', 'Get personalized insights & recommendations',
-    'Available Mode', "You're visible to posters nearby", "You're offline",
+    'Availability Status', "You're visible to posters nearby", "You're offline",
     "You're all set! Check Messages for task offers 💬"
   ];
   const translations = useTranslatedTexts(translationKeys);
