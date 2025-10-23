@@ -19,7 +19,7 @@ export default function Index() {
     } else if (hasOnboarded) {
       router.replace('/sign-in');
     } else {
-      router.replace('/onboarding');
+      router.replace('/ai-onboarding');
     }
   }, [currentUser, hasOnboarded, isLoading, router]);
 
