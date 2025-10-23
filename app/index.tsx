@@ -16,10 +16,8 @@ export default function Index() {
 
     if (currentUser) {
       router.replace('/(tabs)/home');
-    } else if (hasOnboarded) {
-      router.replace('/sign-in');
     } else {
-      router.replace('/ai-onboarding');
+      router.replace('/sign-in');
     }
   }, [currentUser, hasOnboarded, isLoading, router]);
 

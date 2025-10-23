@@ -328,7 +328,7 @@ export default function SignInScreen() {
                 style={styles.secondaryButton}
                 onPress={() => {
                   triggerHaptic('light');
-                  router.push('/onboarding');
+                  router.push('/ai-onboarding');
                 }}
                 activeOpacity={0.85}
               >
