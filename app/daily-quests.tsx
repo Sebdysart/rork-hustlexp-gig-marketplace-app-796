@@ -12,7 +12,7 @@ import { DailyQuest } from '@/types';
 export default function DailyQuestsScreen() {
   const { currentUser, myAcceptedTasks, availableTasks } = useApp();
 
-  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14] = useTranslatedTexts([
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19] = useTranslatedTexts([
     'Daily Quests',
     'Complete quests to earn bonus XP',
     'Completed',
@@ -26,7 +26,12 @@ export default function DailyQuestsScreen() {
     'Complete 1 task today',
     'Explorer',
     'Browse 10 available tasks',
-    'Streak Master'
+    'Streak Master',
+    'Maintain your daily streak',
+    '💡 Quest Tips',
+    '\u2022 Quests reset daily at midnight',
+    '\u2022 Complete all quests for maximum XP',
+    '\u2022 Streaks multiply your rewards'
   ]);
 
   const dailyQuests = useMemo((): DailyQuest[] => {
@@ -80,7 +85,7 @@ export default function DailyQuestsScreen() {
       {
         id: 'quest-4',
         title: t14,
-        description: 'Maintain your daily streak',
+        description: t15,
         xpReward: 30,
         progress: currentUser.streaks.current >= 1 ? 1 : 0,
         target: 1,
@@ -219,11 +224,11 @@ export default function DailyQuestsScreen() {
           <View style={styles.infoCard}>
             <TrendingUp size={20} color={Colors.accent} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>💡 Quest Tips</Text>
+              <Text style={styles.infoTitle}>{t16}</Text>
               <Text style={styles.infoText}>
-                • Quests reset daily at midnight{'\n'}
-                • Complete all quests for maximum XP{'\n'}
-                • Streaks multiply your rewards{'\n'}
+                {t17}{'\n'}
+                {t18}{'\n'}
+                {t19}{'\n'}
                 • Check back tomorrow for new quests
               </Text>
             </View>
