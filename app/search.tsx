@@ -365,7 +365,11 @@ function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
   const getLocationText = (location: any): string => {
     if (!location) return 'Remote';
     if (typeof location === 'string') return location;
-    if (typeof location === 'object' && location.address) return location.address;
+    if (typeof location === 'object') {
+      if (location.address) return String(location.address);
+      if (location.city) return String(location.city);
+      return 'Location';
+    }
     return 'Remote';
   };
 
