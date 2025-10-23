@@ -303,12 +303,12 @@ export default function SignInScreen() {
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={email.trim() && password.trim() && !isLoading ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
+                  colors={email.trim() && password.trim() && !isLoading ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : ['#2D2D2D', '#1A1A1A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.buttonGradient}
                 >
-                  {!isLoading && <Zap size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={2.5} />}
+                  {!isLoading && <Zap size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={2.5} />}
                   <Text style={[styles.buttonText, (!email.trim() || !password.trim() || isLoading) && styles.buttonTextDisabled]}>
                     {isLoading ? 'Entering the Arena...' : 'Start Your Hustle'}
                   </Text>
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   buttonDisabled: {
-    opacity: 0.3,
+    opacity: 1,
   },
   buttonGradient: {
     flexDirection: 'row',
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   buttonTextDisabled: {
-    color: Colors.textSecondary,
+    color: premiumColors.glassWhiteStrong,
   },
   footer: {
     gap: spacing.md,
