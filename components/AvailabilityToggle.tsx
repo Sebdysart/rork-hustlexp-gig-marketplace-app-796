@@ -105,7 +105,7 @@ export default function AvailabilityToggle() {
                 </Text>
                 <Text style={styles.subtitle}>
                   {isAvailable
-                    ? 'You\'re visible to nearby posters'
+                    ? "You're visible to nearby posters"
                     : 'Get instant gig offers'}
                 </Text>
               </View>

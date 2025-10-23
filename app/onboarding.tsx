@@ -553,7 +553,7 @@ export default function OnboardingScreen() {
   const getStrengthText = (): string => {
     if (passwordStrength < 40) return 'Weak - Make it epic!';
     if (passwordStrength < 70) return 'Good - Almost there!';
-    return 'Epic! You&apos;re ready!';
+    return "Epic! You're ready!";
   };
 
   const glowOpacity = glowAnim.interpolate({

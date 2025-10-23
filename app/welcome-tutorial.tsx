@@ -79,7 +79,7 @@ export default function WelcomeTutorialScreen() {
     'Team up with other tradesmen for larger projects. Share earnings and tackle bigger challenges together.',
     'Explore Squads',
     'Certifications Matter',
-    'Upload certifications to boost trust score and access premium job boards. Show clients you\'re the real deal.',
+    "Upload certifications to boost trust score and access premium job boards. Show clients you're the real deal.",
     'Welcome, Everyday Hustler! ⚡',
     "You're ready to hustle! Accept tasks, earn rewards, and build your reputation.",
     'Find Tasks Nearby',

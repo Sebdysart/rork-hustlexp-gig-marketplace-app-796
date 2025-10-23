@@ -51,7 +51,7 @@ export default function HomeScreen() {
     'Morning', 'Afternoon', 'Evening',
     'nearby gig', 'nearby gigs', 'hiring now',
     'Your quests are live', 'Ready to hustle?',
-    'What do you need done today?', 'Tell me or type your task, and I\'ll create it for you',
+    'What do you need done today?', "Tell me or type your task, and I'll create it for you",
     'Type your task here...', 'Inspire me with trending tasks',
     'Quest Command Center', 'Manage your missions & find adventurers',
     'Active', 'In Progress', 'Completed',
@@ -61,8 +61,8 @@ export default function HomeScreen() {
     'Open', 'Quests', 'Rating', 'Streak',
     'Quick Access', 'Watchlist', 'Seasons', 'Squad Quests', 'Streak Savers',
     'AI Coach', 'Get personalized insights & recommendations',
-    'Go Available Mode', 'You\'re visible to posters nearby', 'You\'re offline',
-    'You\'re all set! Check Messages for task offers 💬'
+    'Available Mode', "You're visible to posters nearby", "You're offline",
+    "You're all set! Check Messages for task offers 💬"
   ];
   const translations = useTranslatedTexts(translationKeys);
 
