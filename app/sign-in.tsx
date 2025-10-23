@@ -192,7 +192,7 @@ export default function SignInScreen() {
               
               <View style={styles.titleContainer}>
                 <Text style={styles.title}>Welcome Back, Legend</Text>
-                <Text style={styles.subtitle}>Your grind continues today</Text>
+                <Text style={styles.subtitle}>Your journey starts here</Text>
               </View>
               
               <View style={styles.statsRow}>
@@ -334,7 +334,7 @@ export default function SignInScreen() {
               >
                 <BlurView intensity={30} tint="dark" style={styles.secondaryButtonBlur}>
                   <Sparkles size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
-                  <Text style={styles.secondaryButtonText}>Join the Arena</Text>
+                  <Text style={styles.secondaryButtonText}>Start Your Hustle</Text>
                 </BlurView>
               </TouchableOpacity>
 
