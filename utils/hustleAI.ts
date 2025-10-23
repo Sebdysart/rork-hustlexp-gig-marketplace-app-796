@@ -204,9 +204,10 @@ class HustleAIClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const headers: HeadersInit = {};
-      headers['Content-Type'] = 'application/json';
-      headers['Accept'] = 'application/json';
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
 
       const options: RequestInit = {
         method,

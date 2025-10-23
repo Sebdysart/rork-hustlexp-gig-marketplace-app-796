@@ -358,9 +358,16 @@ interface TaskCardItemProps {
 }
 
 function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
-  const daysUntilDue = Math.ceil(
-    (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
+  const daysUntilDue = task.dateTime
+    ? Math.ceil((new Date(task.dateTime).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 7;
+
+  const getLocationText = (location: any): string => {
+    if (!location) return 'Remote';
+    if (typeof location === 'string') return location;
+    if (typeof location === 'object' && location.address) return location.address;
+    return 'Remote';
+  };
 
   return (
     <TouchableOpacity
@@ -397,8 +404,8 @@ function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
           <View style={styles.taskMetaRow}>
             <View style={styles.taskMetaItem}>
               <MapPin size={14} color={theme.textSecondary} />
-              <Text style={[styles.taskMetaText, { color: theme.textSecondary }]}>
-                {typeof task.location === 'object' && task.location?.address ? task.location.address : (typeof task.location === 'string' ? task.location : 'Remote')}
+              <Text style={[styles.taskMetaText, { color: theme.textSecondary }]} numberOfLines={1}>
+                {getLocationText(task.location)}
               </Text>
             </View>
             <View style={styles.taskMetaItem}>
