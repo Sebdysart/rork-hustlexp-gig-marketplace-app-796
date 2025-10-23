@@ -11,6 +11,7 @@ import { triggerHaptic } from '@/utils/haptics';
 import { generateReferralCode } from '@/constants/referrals';
 import { generateReferralLink } from '@/utils/deepLinking';
 import { trackViralAction } from '@/utils/viralIncentives';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 interface InviteFriendsWidgetProps {
   userId: string;
@@ -23,6 +24,12 @@ export default function InviteFriendsWidget({
   userName,
   variant = 'full',
 }: InviteFriendsWidgetProps) {
+  const translations = useTranslatedTexts([
+    'Invite Friends', 'Earn rewards together', 'Earn rewards when they join',
+    '100 Grit', '50 XP', '$10 Credit', 'Your Code', 'Copied!', 'Copy', 'Share',
+    'View referral program details', 'Join HustleXP', 'Hey! Join me on HustleXP and earn money doing tasks. Use my code',
+    'to get bonus rewards!', 'Share link copied to clipboard'
+  ]);
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const referralCode = generateReferralCode(userId);
@@ -43,23 +50,23 @@ export default function InviteFriendsWidget({
   const handleShare = async () => {
     triggerHaptic('medium');
     const link = generateReferralLink(referralCode, userName);
-    const message = `Hey! Join me on HustleXP and earn money doing tasks. Use my code ${referralCode} to get bonus rewards!\n\n${link}`;
+    const message = `${translations[12]} ${referralCode} ${translations[13]}\n\n${link}`;
 
     try {
       if (Platform.OS === 'web') {
         if (navigator.share) {
           await navigator.share({
-            title: 'Join HustleXP',
+            title: translations[11],
             text: message,
           });
         } else {
           await Clipboard.setStringAsync(message);
-          Alert.alert('Copied!', 'Share link copied to clipboard');
+          Alert.alert(translations[7], translations[14]);
         }
       } else {
         await Share.share({
           message,
-          title: 'Join HustleXP',
+          title: translations[11],
         });
       }
 
@@ -94,8 +101,8 @@ export default function InviteFriendsWidget({
                 <Gift size={20} color={premiumColors.neonViolet} />
               </View>
               <View style={styles.compactTextContainer}>
-                <Text style={styles.compactTitle}>Invite Friends</Text>
-                <Text style={styles.compactSubtitle}>Earn rewards together</Text>
+                <Text style={styles.compactTitle}>{translations[0]}</Text>
+                <Text style={styles.compactSubtitle}>{translations[1]}</Text>
               </View>
               <Users size={16} color={Colors.textSecondary} />
             </View>
@@ -118,30 +125,30 @@ export default function InviteFriendsWidget({
             <Gift size={24} color={premiumColors.neonViolet} />
           </View>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Invite Friends</Text>
-            <Text style={styles.subtitle}>Earn rewards when they join</Text>
+            <Text style={styles.title}>{translations[0]}</Text>
+            <Text style={styles.subtitle}>{translations[2]}</Text>
           </View>
         </View>
 
         <View style={styles.rewardSection}>
           <View style={styles.rewardItem}>
             <Text style={styles.rewardEmoji}>⚡</Text>
-            <Text style={styles.rewardText}>100 Grit</Text>
+            <Text style={styles.rewardText}>{translations[3]}</Text>
           </View>
           <View style={styles.rewardDivider} />
           <View style={styles.rewardItem}>
             <Text style={styles.rewardEmoji}>✨</Text>
-            <Text style={styles.rewardText}>50 XP</Text>
+            <Text style={styles.rewardText}>{translations[4]}</Text>
           </View>
           <View style={styles.rewardDivider} />
           <View style={styles.rewardItem}>
             <Text style={styles.rewardEmoji}>💰</Text>
-            <Text style={styles.rewardText}>$10 Credit</Text>
+            <Text style={styles.rewardText}>{translations[5]}</Text>
           </View>
         </View>
 
         <View style={styles.codeSection}>
-          <Text style={styles.codeLabel}>Your Code</Text>
+          <Text style={styles.codeLabel}>{translations[6]}</Text>
           <View style={styles.codeContainer}>
             <Text style={styles.code}>{referralCode}</Text>
           </View>
@@ -156,13 +163,13 @@ export default function InviteFriendsWidget({
               <>
                 <CheckCircle2 size={18} color={premiumColors.neonGreen} />
                 <Text style={[styles.actionButtonText, { color: premiumColors.neonGreen }]}>
-                  Copied!
+                  {translations[7]}
                 </Text>
               </>
             ) : (
               <>
                 <Copy size={18} color={premiumColors.neonCyan} />
-                <Text style={styles.actionButtonText}>Copy</Text>
+                <Text style={styles.actionButtonText}>{translations[8]}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -172,12 +179,12 @@ export default function InviteFriendsWidget({
             onPress={handleShare}
           >
             <Share2 size={18} color={premiumColors.neonViolet} />
-            <Text style={styles.actionButtonText}>Share</Text>
+            <Text style={styles.actionButtonText}>{translations[9]}</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.detailsLink} onPress={handleViewDetails}>
-          <Text style={styles.detailsLinkText}>View referral program details</Text>
+          <Text style={styles.detailsLinkText}>{translations[10]}</Text>
         </TouchableOpacity>
       </LinearGradient>
     </GlassCard>

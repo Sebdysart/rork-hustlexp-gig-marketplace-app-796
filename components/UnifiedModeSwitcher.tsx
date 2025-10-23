@@ -8,12 +8,19 @@ import { UserMode } from '@/types';
 import { premiumColors, spacing, borderRadius, neonGlow } from '@/constants/designTokens';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 interface ModeSwitcherProps {
   compact?: boolean;
 }
 
 export default function UnifiedModeSwitcher({ compact = false }: ModeSwitcherProps) {
+  const translations = useTranslatedTexts([
+    'Everyday Hustler', 'Quick gigs & side hustles',
+    'Tradesman Pro', 'Professional trade work',
+    'Business Poster', 'Post jobs & hire workers',
+    'Switch Mode', 'Switch between modes anytime to access different features'
+  ]);
   const { currentUser, switchMode } = useApp();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedMode, setSelectedMode] = useState<UserMode | null>(null);
@@ -44,24 +51,24 @@ export default function UnifiedModeSwitcher({ compact = false }: ModeSwitcherPro
       case 'everyday':
         return {
           icon: Hammer,
-          title: 'Everyday Hustler',
-          subtitle: 'Quick gigs & side hustles',
+          title: translations[0],
+          subtitle: translations[1],
           gradient: [premiumColors.neonAmber, '#FF6B00'] as const,
           color: premiumColors.neonAmber,
         };
       case 'tradesmen':
         return {
           icon: Wrench,
-          title: 'Tradesman Pro',
-          subtitle: 'Professional trade work',
+          title: translations[2],
+          subtitle: translations[3],
           gradient: [premiumColors.neonBlue, premiumColors.neonCyan] as const,
           color: premiumColors.neonBlue,
         };
       case 'business':
         return {
           icon: Building2,
-          title: 'Business Poster',
-          subtitle: 'Post jobs & hire workers',
+          title: translations[4],
+          subtitle: translations[5],
           gradient: [premiumColors.neonMagenta, premiumColors.neonViolet] as const,
           color: premiumColors.neonMagenta,
         };
@@ -186,7 +193,7 @@ export default function UnifiedModeSwitcher({ compact = false }: ModeSwitcherPro
               style={styles.modalGradient}
             >
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Switch Mode</Text>
+                <Text style={styles.modalTitle}>{translations[6]}</Text>
                 <TouchableOpacity onPress={() => setShowModal(false)} style={styles.closeButton}>
                   <X size={24} color={Colors.text} strokeWidth={2.5} />
                 </TouchableOpacity>
@@ -262,7 +269,7 @@ export default function UnifiedModeSwitcher({ compact = false }: ModeSwitcherPro
               </View>
 
               <Text style={styles.modalHint}>
-                Switch between modes anytime to access different features
+                {translations[7]}
               </Text>
             </LinearGradient>
           </Animated.View>

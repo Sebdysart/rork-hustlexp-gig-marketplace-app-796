@@ -4,6 +4,7 @@ import { TrendingUp, Users, Zap } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { premiumColors } from '@/constants/designTokens';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 interface SocialProofItem {
   id: string;
@@ -12,21 +13,37 @@ interface SocialProofItem {
   timestamp: number;
 }
 
-const MOCK_SOCIAL_PROOF: SocialProofItem[] = [
-  { id: '1', type: 'signup', message: 'John just joined', timestamp: Date.now() - 30000 },
-  { id: '2', type: 'task_completed', message: 'Sarah completed a task', timestamp: Date.now() - 60000 },
-  { id: '3', type: 'level_up', message: 'Mike reached Level 10', timestamp: Date.now() - 120000 },
-  { id: '4', type: 'earning', message: 'Emma earned $50', timestamp: Date.now() - 180000 },
-  { id: '5', type: 'signup', message: 'Alex just joined', timestamp: Date.now() - 240000 },
-];
+// Mock names - these stay as names (not translated)
+const MOCK_NAMES = ['John', 'Sarah', 'Mike', 'Emma', 'Alex', 'Chris', 'Maria', 'David'];
 
 interface SocialProofBannerProps {
   compact?: boolean;
 }
 
 export default function SocialProofBanner({ compact = false }: SocialProofBannerProps) {
+  const translations = useTranslatedTexts([
+    'just joined', 'completed a task', 'reached Level', 'earned',
+    'just now', 'm ago', 'h ago', 'd ago'
+  ]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fadeAnim] = useState(new Animated.Value(1));
+
+  const getSocialProofItems = (): SocialProofItem[] => [
+    { id: '1', type: 'signup', message: `${MOCK_NAMES[0]} ${translations[0]}`, timestamp: Date.now() - 30000 },
+    { id: '2', type: 'task_completed', message: `${MOCK_NAMES[1]} ${translations[1]}`, timestamp: Date.now() - 60000 },
+    { id: '3', type: 'level_up', message: `${MOCK_NAMES[2]} ${translations[2]} 10`, timestamp: Date.now() - 120000 },
+    { id: '4', type: 'earning', message: `${MOCK_NAMES[3]} ${translations[3]} $50`, timestamp: Date.now() - 180000 },
+    { id: '5', type: 'signup', message: `${MOCK_NAMES[4]} ${translations[0]}`, timestamp: Date.now() - 240000 },
+  ];
+
+  const getTimeAgo = (timestamp: number): string => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    
+    if (seconds < 60) return translations[4];
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}${translations[5]}`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}${translations[6]}`;
+    return `${Math.floor(seconds / 86400)}${translations[7]}`;
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -43,13 +60,13 @@ export default function SocialProofBanner({ compact = false }: SocialProofBanner
         }),
       ]).start();
 
-      setCurrentIndex((prev) => (prev + 1) % MOCK_SOCIAL_PROOF.length);
+      setCurrentIndex((prev) => (prev + 1) % getSocialProofItems().length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [fadeAnim]);
+  }, [fadeAnim, getSocialProofItems]);
 
-  const currentItem = MOCK_SOCIAL_PROOF[currentIndex];
+  const currentItem = getSocialProofItems()[currentIndex];
 
   const getIcon = () => {
     switch (currentItem.type) {
@@ -95,15 +112,6 @@ export default function SocialProofBanner({ compact = false }: SocialProofBanner
       </LinearGradient>
     </Animated.View>
   );
-}
-
-function getTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
 }
 
 const styles = StyleSheet.create({

@@ -7,6 +7,7 @@ import { UserMode } from '@/types';
 import { triggerHaptic } from '@/utils/haptics';
 import { premiumColors } from '@/constants/designTokens';
 import GlassCard from './GlassCard';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 interface ModeSwitcherProps {
   currentMode: UserMode;
@@ -15,6 +16,13 @@ interface ModeSwitcherProps {
 }
 
 export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange }: ModeSwitcherProps) {
+  const translations = useTranslatedTexts([
+    'Active Mode', 'Quest Giver', 'Hustler', 'Tradesman', 'Poster',
+    'Post quests, manage tasks, and find skilled adventurers',
+    'Accept quests, complete tasks, and earn XP & rewards',
+    'Professional tradesman with verified skills, certifications, and portfolio',
+    'Unlock more modes as you level up and complete quests!'
+  ]);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const getInitialPosition = () => {
     if (currentMode === 'business') return 0;
@@ -113,9 +121,9 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
   });
 
   const getModeLabel = (mode: UserMode): string => {
-    if (mode === 'business') return '📋 Quest Giver';
-    if (mode === 'everyday') return '⚡ Hustler';
-    return '🔧 Tradesman';
+    if (mode === 'business') return `📋 ${translations[1]}`;
+    if (mode === 'everyday') return `⚡ ${translations[2]}`;
+    return `🔧 ${translations[3]}`;
   };
 
   const getModeColor = (mode: UserMode): string => {
@@ -127,7 +135,7 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>Active Mode</Text>
+        <Text style={styles.label}>{translations[0]}</Text>
         <View style={[styles.badge, { borderColor: getModeColor(currentMode) + '40' }]}>
           <Text style={styles.badgeText}>{getModeLabel(currentMode)}</Text>
         </View>
@@ -155,7 +163,7 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
                   strokeWidth={currentMode === 'business' ? 2.5 : 2}
                 />
                 <Text style={[styles.optionText, currentMode === 'business' && styles.optionTextActive, !modesUnlocked.includes('business') && styles.optionTextLocked]}>
-                  Poster
+                  {translations[4]}
                 </Text>
               </TouchableOpacity>
               
@@ -172,7 +180,7 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
                   strokeWidth={currentMode === 'everyday' ? 2.5 : 2}
                 />
                 <Text style={[styles.optionText, currentMode === 'everyday' && styles.optionTextActive, !modesUnlocked.includes('everyday') && styles.optionTextLocked]}>
-                  Hustler
+                  {translations[2]}
                 </Text>
               </TouchableOpacity>
               
@@ -188,7 +196,7 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
                   strokeWidth={currentMode === 'tradesmen' ? 2.5 : 2}
                 />
                 <Text style={[styles.optionText, currentMode === 'tradesmen' && styles.optionTextActive, !modesUnlocked.includes('tradesmen') && styles.optionTextLocked]}>
-                  Tradesman
+                  {translations[3]}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -246,10 +254,10 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
           ]} />
           <Text style={styles.description}>
             {currentMode === 'business' 
-              ? 'Post quests, manage tasks, and find skilled adventurers' 
+              ? translations[5] 
               : currentMode === 'everyday'
-              ? 'Accept quests, complete tasks, and earn XP & rewards'
-              : 'Professional tradesman with verified skills, certifications, and portfolio'}
+              ? translations[6]
+              : translations[7]}
           </Text>
         </View>
         
@@ -257,7 +265,7 @@ export default function ModeSwitcher({ currentMode, modesUnlocked, onModeChange 
           <View style={styles.unlockHint}>
             <Sparkles size={14} color={premiumColors.neonAmber} />
             <Text style={styles.unlockText}>
-              Unlock more modes as you level up and complete quests!
+              {translations[8]}
             </Text>
           </View>
         )}
