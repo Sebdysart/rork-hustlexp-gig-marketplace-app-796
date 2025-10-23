@@ -15,6 +15,7 @@ import { AIProfileProvider } from "@/contexts/AIProfileContext";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -56,6 +57,7 @@ function RootLayoutNav() {
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
+      <TranslationLoadingOverlay />
     </>
   );
 }
