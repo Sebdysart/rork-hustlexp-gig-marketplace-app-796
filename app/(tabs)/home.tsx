@@ -48,45 +48,45 @@ export default function HomeScreen() {
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
 
   const t = useTranslatedTexts([
-    'Morning', // 0
-    'Afternoon', // 1
-    'Evening', // 2
-    'nearby gig', // 3
-    'nearby gigs', // 4
-    'hiring now', // 5
-    'Your quests are live', // 6
-    'Ready to hustle?', // 7
-    'What do you need done today?', // 8
-    "Tell me or type your task, and I'll create it for you", // 9
-    'Type your task here...', // 10
-    'Inspire me with trending tasks', // 11
-    'Quest Command Center', // 12
-    'Manage your missions & find adventurers', // 13
-    'Active', // 14
-    'In Progress', // 15
-    'Completed', // 16
-    'AI Task Creator', // 17
-    'Tell me what you need', // 18
-    'Manual Post', // 19
-    'Your Active Quests', // 20
-    'View All', // 21
-    'No Active Quests', // 22
-    'Create your first quest using AI or manual posting', // 23
-    'Open', // 24
-    'Quests', // 25
-    'Rating', // 26
-    'Streak', // 27
-    'Quick Access', // 28
-    'Watchlist', // 29
-    'Seasons', // 30
-    'Squad Quests', // 31
-    'Streak Savers', // 32
-    'AI Coach', // 33
-    'Get personalized insights & recommendations', // 34
-    'Availability Status', // 35
-    "You're visible to posters nearby", // 36
-    "You're offline", // 37
-    "You're all set! Check Messages for task offers 💬", // 38
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'nearby gig',
+    'nearby gigs',
+    'hiring now',
+    'Your quests are live',
+    'Ready to hustle?',
+    'What do you need done today?',
+    "Tell me or type your task, and I'll create it for you",
+    'Type your task here...',
+    'Inspire me with trending tasks',
+    'Quest Command Center',
+    'Manage your missions & find adventurers',
+    'Active',
+    'In Progress',
+    'Completed',
+    'AI Task Creator',
+    'Tell me what you need',
+    'Manual Post',
+    'Your Active Quests',
+    'View All',
+    'No Active Quests',
+    'Create your first quest using AI or manual posting',
+    'Open',
+    'Quests',
+    'Rating',
+    'Streak',
+    'Quick Access',
+    'Watchlist',
+    'Seasons',
+    'Squad Quests',
+    'Streak Savers',
+    'AI Coach',
+    'Get personalized insights & recommendations',
+    'Availability Status',
+    "You're visible to posters nearby",
+    "You're offline",
+    "HustleAI is watching for tasks near you",
   ]);
 
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -623,7 +623,7 @@ export default function HomeScreen() {
                     }),
                   }]}>
                     <Brain size={20} color={premiumColors.neonViolet} />
-                    <Text style={styles.hustleAIText}>{t[38]}</Text>
+                    <Text style={styles.hustleAIText}>{t[37]}</Text>
                   </Animated.View>
                 )}
               </LinearGradient>
@@ -649,21 +649,21 @@ export default function HomeScreen() {
                   <GlassCard variant="dark" style={styles.statCard}>
                     <TrendingUp size={24} color={premiumColors.neonCyan} />
                     <Text style={styles.statValue}>{currentUser.tasksCompleted}</Text>
-                    <Text style={styles.statLabel}>{t[24]}</Text>
+                    <Text style={styles.statLabel}>{t[25]}</Text>
                   </GlassCard>
                 </View>
                 <View accessible accessibilityLabel={`${currentUser.reputationScore.toFixed(1)} star rating`}>
                   <GlassCard variant="dark" style={styles.statCard}>
                     <Text style={styles.statIcon}>⭐</Text>
                     <Text style={styles.statValue}>{currentUser.reputationScore.toFixed(1)}</Text>
-                    <Text style={styles.statLabel}>{t[25]}</Text>
+                    <Text style={styles.statLabel}>{t[26]}</Text>
                   </GlassCard>
                 </View>
                 <View accessible accessibilityLabel={`${currentUser.streaks.current} day streak`}>
                   <GlassCard variant="dark" style={styles.statCard}>
                     <Text style={styles.statIcon}>🔥</Text>
                     <Text style={styles.statValue}>{currentUser.streaks.current}</Text>
-                    <Text style={styles.statLabel}>{t[26]}</Text>
+                    <Text style={styles.statLabel}>{t[27]}</Text>
                   </GlassCard>
                 </View>
               </>
@@ -671,7 +671,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.quickAccessSection}>
-            <Text style={styles.quickAccessTitle}>{t[27]}</Text>
+            <Text style={styles.quickAccessTitle}>{t[28]}</Text>
             <View style={styles.quickAccessGrid}>
               <TouchableOpacity
                 style={styles.quickAccessCard}
@@ -687,7 +687,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonAmber + '20' }]}>
                   <Bookmark size={20} color={premiumColors.neonAmber} />
                 </View>
-                <Text style={styles.quickAccessLabel}>{t[28]}</Text>
+                <Text style={styles.quickAccessLabel}>{t[29]}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -704,7 +704,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonViolet + '20' }]}>
                   <Trophy size={20} color={premiumColors.neonViolet} />
                 </View>
-                <Text style={styles.quickAccessLabel}>{t[29]}</Text>
+                <Text style={styles.quickAccessLabel}>{t[30]}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -721,7 +721,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonCyan + '20' }]}>
                   <Users size={20} color={premiumColors.neonCyan} />
                 </View>
-                <Text style={styles.quickAccessLabel}>{t[30]}</Text>
+                <Text style={styles.quickAccessLabel}>{t[31]}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -738,7 +738,7 @@ export default function HomeScreen() {
                 <View style={[styles.quickAccessIcon, { backgroundColor: premiumColors.neonGreen + '20' }]}>
                   <Flame size={20} color={premiumColors.neonGreen} />
                 </View>
-                <Text style={styles.quickAccessLabel}>{t[31]}</Text>
+                <Text style={styles.quickAccessLabel}>{t[32]}</Text>
               </TouchableOpacity>
             </View>
           </View>
