@@ -104,12 +104,15 @@ class AITranslationService {
       try {
         console.log(`[AI Translation] Translating ${toTranslate.length} texts to ${targetLanguage}`);
         
-        const response = await hustleAI.translate({
-          text: toTranslate.map(t => t.text),
-          targetLanguage,
-          sourceLanguage,
-          context: 'HustleXP mobile app - gig economy platform',
-        });
+        const response = await hustleAI.translate(
+          {
+            text: toTranslate.map(t => t.text),
+            targetLanguage,
+            sourceLanguage,
+            context: 'HustleXP mobile app - gig economy platform',
+          },
+          3
+        );
 
         for (let i = 0; i < toTranslate.length; i++) {
           const { text: originalText, index } = toTranslate[i];
@@ -120,8 +123,17 @@ class AITranslationService {
         }
 
         await this.saveCache();
-      } catch (error) {
-        console.error('[AI Translation] Translation failed:', error);
+        console.log(`[AI Translation] Successfully translated ${toTranslate.length} texts`);
+      } catch (error: any) {
+        const errorMessage = error?.message || String(error);
+        console.error('[AI Translation] Translation failed:', errorMessage);
+        
+        if (errorMessage.includes('Rate limit')) {
+          const match = errorMessage.match(/(\d+)\s*second/i);
+          if (match) {
+            console.log(`[AI Translation] Rate limited, please wait ${match[1]} seconds`);
+          }
+        }
       }
     }
 

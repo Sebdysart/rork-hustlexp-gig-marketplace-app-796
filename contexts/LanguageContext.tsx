@@ -22,6 +22,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   const [translationProgress, setTranslationProgress] = useState(0);
   const [useAITranslation, setUseAITranslation] = useState(true);
   const [aiTranslationCache, setAITranslationCache] = useState<Record<string, string>>({});
+  const [translationError, setTranslationError] = useState<string | null>(null);
   const batchQueueRef = useRef<Map<string, string>>(new Map());
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPreloadingRef = useRef(false);
@@ -230,6 +231,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     try {
       setIsLoading(true);
       setTranslationProgress(0);
+      setTranslationError(null);
       console.log('[Language] Changing language to:', lang);
       
       setCurrentLanguage(lang);
@@ -248,8 +250,10 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         setIsLoading(false);
         setTranslationProgress(100);
       }
-    } catch (error) {
-      console.error('[Language] Error changing language:', error);
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error);
+      console.error('[Language] Error changing language:', errorMessage);
+      setTranslationError(errorMessage);
       setIsLoading(false);
       setTranslationProgress(0);
     }
@@ -288,6 +292,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     translateText,
     isLoading,
     translationProgress,
+    translationError,
     useAITranslation,
     toggleAITranslation,
     aiTranslationCache,
@@ -305,5 +310,5 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       { code: 'ko', name: '한국어', flag: '🇰🇷' },
       { code: 'it', name: 'Italiano', flag: '🇮🇹' },
     ] as const,
-  }), [currentLanguage, changeLanguage, t, translateText, isLoading, translationProgress, useAITranslation, toggleAITranslation, aiTranslationCache]);
+  }), [currentLanguage, changeLanguage, t, translateText, isLoading, translationProgress, translationError, useAITranslation, toggleAITranslation, aiTranslationCache]);
 });
