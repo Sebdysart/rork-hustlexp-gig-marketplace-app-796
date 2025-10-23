@@ -6,6 +6,7 @@ import { Zap, MapPin, Star, Clock, CheckCircle, TrendingUp, Award, Shield } from
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { User, Task } from '@/types';
 import Confetti from '@/components/Confetti';
 import GlassCard from '@/components/GlassCard';
@@ -53,6 +54,22 @@ export default function InstantMatchScreen() {
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13] = useTranslatedTexts([
+    'Instant Match',
+    'Task not found',
+    'Time Left',
+    '⚡ AI-Powered Instant Match',
+    'Top hustlers ranked by skills, distance & reputation',
+    'No workers available right now',
+    'Try again in a few minutes',
+    'Worker',
+    'Workers',
+    'Available',
+    'TOP MATCH',
+    'Hiring...',
+    'Instant Hire'
+  ]);
 
   const task = tasks.find(t => t.id === id);
 
@@ -125,14 +142,14 @@ export default function InstantMatchScreen() {
       <View style={styles.container}>
         <Stack.Screen
           options={{
-            title: 'Instant Match',
+            title: t1,
             headerStyle: { backgroundColor: Colors.surface },
             headerTintColor: Colors.text,
             headerShadowVisible: false,
           }}
         />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Task not found</Text>
+          <Text style={styles.errorText}>{t2}</Text>
         </View>
       </View>
     );
@@ -198,12 +215,12 @@ export default function InstantMatchScreen() {
               >
                 <Zap size={32} color={premiumColors.neonCyan} />
                 <Text style={styles.countdownText}>{formatTime(countdown)}</Text>
-                <Text style={styles.countdownLabel}>Time Left</Text>
+                <Text style={styles.countdownLabel}>{t3}</Text>
               </LinearGradient>
             </Animated.View>
-            <Text style={styles.headerTitle}>⚡ AI-Powered Instant Match</Text>
+            <Text style={styles.headerTitle}>{t4}</Text>
             <Text style={styles.headerSubtitle}>
-              Top hustlers ranked by skills, distance & reputation
+              {t5}
             </Text>
           </View>
 
@@ -229,13 +246,13 @@ export default function InstantMatchScreen() {
 
           {rankedWorkers.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No workers available right now</Text>
-              <Text style={styles.emptySubtext}>Try again in a few minutes</Text>
+              <Text style={styles.emptyText}>{t6}</Text>
+              <Text style={styles.emptySubtext}>{t7}</Text>
             </View>
           ) : (
             <>
               <Text style={styles.sectionTitle}>
-                {rankedWorkers.length} Worker{rankedWorkers.length > 1 ? 's' : ''} Available
+                {rankedWorkers.length} {rankedWorkers.length > 1 ? t9 : t8} {t10}
               </Text>
               {rankedWorkers.map(({ worker, distance, matchScore }, index) => (
                 <TouchableOpacity
@@ -251,7 +268,7 @@ export default function InstantMatchScreen() {
                     {index === 0 && (
                       <View style={styles.topMatchBadge}>
                         <Award size={14} color={premiumColors.neonAmber} />
-                        <Text style={styles.topMatchText}>TOP MATCH</Text>
+                        <Text style={styles.topMatchText}>{t11}</Text>
                       </View>
                     )}
                     <View style={styles.rankBadge}>
@@ -332,7 +349,7 @@ export default function InstantMatchScreen() {
                 >
                   <Zap size={24} color={Colors.text} />
                   <Text style={styles.hireButtonText}>
-                    {isHiring ? 'Hiring...' : 'Instant Hire'}
+                    {isHiring ? t12 : t13}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>

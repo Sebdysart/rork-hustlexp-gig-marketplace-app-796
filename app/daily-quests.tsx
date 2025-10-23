@@ -6,10 +6,28 @@ import { Target, CheckCircle, Clock, Zap, TrendingUp } from 'lucide-react-native
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { DailyQuest } from '@/types';
 
 export default function DailyQuestsScreen() {
   const { currentUser, myAcceptedTasks, availableTasks } = useApp();
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14] = useTranslatedTexts([
+    'Daily Quests',
+    'Complete quests to earn bonus XP',
+    'Completed',
+    'Earned Today',
+    'Daily Progress',
+    'remaining',
+    "Today's Quests",
+    'Early Bird',
+    'Apply to 2 tasks before noon',
+    'Hustle Hard',
+    'Complete 1 task today',
+    'Explorer',
+    'Browse 10 available tasks',
+    'Streak Master'
+  ]);
 
   const dailyQuests = useMemo((): DailyQuest[] => {
     if (!currentUser) return [];
@@ -31,8 +49,8 @@ export default function DailyQuestsScreen() {
     return [
       {
         id: 'quest-1',
-        title: 'Early Bird',
-        description: 'Apply to 2 tasks before noon',
+        title: t8,
+        description: t9,
         xpReward: 25,
         progress: Math.min(todayApplications, 2),
         target: 2,
@@ -41,8 +59,8 @@ export default function DailyQuestsScreen() {
       },
       {
         id: 'quest-2',
-        title: 'Hustle Hard',
-        description: 'Complete 1 task today',
+        title: t10,
+        description: t11,
         xpReward: 50,
         progress: Math.min(todayCompletions, 1),
         target: 1,
@@ -51,8 +69,8 @@ export default function DailyQuestsScreen() {
       },
       {
         id: 'quest-3',
-        title: 'Explorer',
-        description: 'Browse 10 available tasks',
+        title: t12,
+        description: t13,
         xpReward: 15,
         progress: Math.min(availableTasks.length, 10),
         target: 10,
@@ -61,7 +79,7 @@ export default function DailyQuestsScreen() {
       },
       {
         id: 'quest-4',
-        title: 'Streak Master',
+        title: t14,
         description: 'Maintain your daily streak',
         xpReward: 30,
         progress: currentUser.streaks.current >= 1 ? 1 : 0,
@@ -94,7 +112,7 @@ export default function DailyQuestsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Daily Quests',
+          title: t1,
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
@@ -104,9 +122,9 @@ export default function DailyQuestsScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Target size={32} color={Colors.accent} />
-            <Text style={styles.headerTitle}>Daily Quests</Text>
+            <Text style={styles.headerTitle}>{t1}</Text>
             <Text style={styles.headerSubtitle}>
-              Complete quests to earn bonus XP
+              {t2}
             </Text>
           </View>
 
@@ -119,12 +137,12 @@ export default function DailyQuestsScreen() {
             >
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{completedCount}/{dailyQuests.length}</Text>
-                <Text style={styles.statLabel}>Completed</Text>
+                <Text style={styles.statLabel}>{t3}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{totalXP} XP</Text>
-                <Text style={styles.statLabel}>Earned Today</Text>
+                <Text style={styles.statLabel}>{t4}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -136,7 +154,7 @@ export default function DailyQuestsScreen() {
 
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>Daily Progress</Text>
+              <Text style={styles.progressTitle}>{t5}</Text>
               <Text style={styles.progressPercentage}>
                 {Math.round((totalXP / potentialXP) * 100)}%
               </Text>
@@ -150,11 +168,11 @@ export default function DailyQuestsScreen() {
               />
             </View>
             <Text style={styles.progressSubtext}>
-              {potentialXP - totalXP} XP remaining
+              {potentialXP - totalXP} XP {t6}
             </Text>
           </View>
 
-          <Text style={styles.sectionTitle}>Today&apos;s Quests</Text>
+          <Text style={styles.sectionTitle}>{t7}</Text>
 
           {dailyQuests.map((quest) => (
             <TouchableOpacity

@@ -7,6 +7,7 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { Task } from '@/types';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -28,6 +29,21 @@ export default function AdventureMapScreen() {
   const { currentUser, availableTasks, users } = useApp();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'nearby' | 'high-pay'>('all');
   const insets = useSafeAreaInsets();
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12] = useTranslatedTexts([
+    'Adventure Map',
+    'Quest Map',
+    'quests available near you',
+    'All Quests',
+    'Nearby',
+    'High Pay',
+    'Map view available on mobile',
+    '📍 Blue marker = Your location',
+    '🔴 Red markers = Available quests',
+    'Available Quests',
+    'by',
+    'away'
+  ]);
 
   const tasksWithDistance = useMemo(() => {
     if (!currentUser) return [];
@@ -92,7 +108,7 @@ export default function AdventureMapScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Adventure Map',
+          title: t1,
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.text,
         }}
@@ -101,9 +117,9 @@ export default function AdventureMapScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.header}>
             <Navigation size={32} color={Colors.accent} />
-            <Text style={styles.headerTitle}>Quest Map</Text>
+            <Text style={styles.headerTitle}>{t2}</Text>
             <Text style={styles.headerSubtitle}>
-              {filteredTasks.length} quests available near you
+              {filteredTasks.length} {t3}
             </Text>
           </View>
 
@@ -113,7 +129,7 @@ export default function AdventureMapScreen() {
               onPress={() => handleFilterPress('all')}
             >
               <Text style={[styles.filterButtonText, selectedFilter === 'all' && styles.filterButtonTextActive]}>
-                All Quests
+                {t4}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -121,7 +137,7 @@ export default function AdventureMapScreen() {
               onPress={() => handleFilterPress('nearby')}
             >
               <Text style={[styles.filterButtonText, selectedFilter === 'nearby' && styles.filterButtonTextActive]}>
-                Nearby
+                {t5}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -129,7 +145,7 @@ export default function AdventureMapScreen() {
               onPress={() => handleFilterPress('high-pay')}
             >
               <Text style={[styles.filterButtonText, selectedFilter === 'high-pay' && styles.filterButtonTextActive]}>
-                High Pay
+                {t6}
               </Text>
             </TouchableOpacity>
           </View>
@@ -138,20 +154,20 @@ export default function AdventureMapScreen() {
             <View style={styles.mapPlaceholder}>
               <MapPin size={48} color={Colors.textSecondary} />
               <Text style={styles.mapPlaceholderText}>
-                Map view available on mobile
+                {t7}
               </Text>
             </View>
           ) : (
             <View style={styles.mapContainer}>
               <View style={styles.mapImageContainer}>
-                <Text style={styles.mapNote}>📍 Blue marker = Your location</Text>
-                <Text style={styles.mapNote}>🔴 Red markers = Available quests</Text>
+                <Text style={styles.mapNote}>{t8}</Text>
+                <Text style={styles.mapNote}>{t9}</Text>
               </View>
             </View>
           )}
 
           <View style={styles.questsList}>
-            <Text style={styles.questsListTitle}>Available Quests</Text>
+            <Text style={styles.questsListTitle}>{t10}</Text>
             {filteredTasks.map((task, index) => {
               const poster = users.find(u => u.id === task.posterId);
               const label = String.fromCharCode(65 + index);
@@ -175,7 +191,7 @@ export default function AdventureMapScreen() {
                           {task.title}
                         </Text>
                         <Text style={styles.questPoster} numberOfLines={1}>
-                          by {poster?.name || 'Unknown'}
+                          {t11} {poster?.name || 'Unknown'}
                         </Text>
                       </View>
                     </View>
@@ -185,8 +201,8 @@ export default function AdventureMapScreen() {
                         <MapPin size={16} color={Colors.textSecondary} />
                         <Text style={styles.questDetailText}>
                           {task.distance < 1 
-                            ? `${(task.distance * 1000).toFixed(0)}m away`
-                            : `${task.distance.toFixed(1)}km away`
+                            ? `${(task.distance * 1000).toFixed(0)}m ${t12}`
+                            : `${task.distance.toFixed(1)}km ${t12}`
                           }
                         </Text>
                       </View>

@@ -6,6 +6,7 @@ import { Camera, Upload, CheckCircle, X, Tag, Share2, Image as ImageIcon } from 
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { ProofLink, TaskCategory } from '@/types';
 
 const CATEGORIES: { value: TaskCategory; label: string; emoji: string }[] = [
@@ -27,6 +28,24 @@ export default function ProofLinkScreen() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<TaskCategory | 'all'>('all');
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15] = useTranslatedTexts([
+    'ProofLink Portfolio',
+    'Your Portfolio',
+    'of',
+    'verified',
+    'Total Proofs',
+    'Verified',
+    'Quality',
+    'All',
+    'No ProofLinks Yet',
+    'Upload photos and videos of your completed work to build your portfolio',
+    'Upload First Proof',
+    '💡 ProofLink Tips',
+    'Upload ProofLink',
+    'Tap to take photo or select from gallery',
+    'Category'
+  ]);
 
   const mockProofLinks: ProofLink[] = useMemo(() => {
     if (!currentUser) return [];
@@ -131,7 +150,7 @@ export default function ProofLinkScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'ProofLink Portfolio',
+          title: t1,
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
@@ -141,9 +160,9 @@ export default function ProofLinkScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Your Portfolio</Text>
+              <Text style={styles.headerTitle}>{t2}</Text>
               <Text style={styles.headerSubtitle}>
-                {verifiedCount} of {totalCount} verified
+                {verifiedCount} {t3} {totalCount} {t4}
               </Text>
             </View>
             <TouchableOpacity
@@ -166,17 +185,17 @@ export default function ProofLinkScreen() {
             >
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{totalCount}</Text>
-                <Text style={styles.statLabel}>Total Proofs</Text>
+                <Text style={styles.statLabel}>{t5}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{verifiedCount}</Text>
-                <Text style={styles.statLabel}>Verified</Text>
+                <Text style={styles.statLabel}>{t6}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{Math.round((verifiedCount / totalCount) * 100)}%</Text>
-                <Text style={styles.statLabel}>Quality</Text>
+                <Text style={styles.statLabel}>{t7}</Text>
               </View>
             </LinearGradient>
           </View>
@@ -203,7 +222,7 @@ export default function ProofLinkScreen() {
                   filterCategory === 'all' && styles.categoryChipTextActive,
                 ]}
               >
-                All
+                {t8}
               </Text>
             </TouchableOpacity>
             {CATEGORIES.map((cat) => (
@@ -234,16 +253,16 @@ export default function ProofLinkScreen() {
           {filteredProofs.length === 0 ? (
             <View style={styles.emptyState}>
               <ImageIcon size={48} color={Colors.textSecondary} />
-              <Text style={styles.emptyTitle}>No ProofLinks Yet</Text>
+              <Text style={styles.emptyTitle}>{t9}</Text>
               <Text style={styles.emptyText}>
-                Upload photos and videos of your completed work to build your portfolio
+                {t10}
               </Text>
               <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => setShowUploadModal(true)}
               >
                 <Upload size={20} color={Colors.text} />
-                <Text style={styles.emptyButtonText}>Upload First Proof</Text>
+                <Text style={styles.emptyButtonText}>{t11}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -291,7 +310,7 @@ export default function ProofLinkScreen() {
           )}
 
           <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>💡 ProofLink Tips</Text>
+            <Text style={styles.infoTitle}>{t12}</Text>
             <View style={styles.infoList}>
               <Text style={styles.infoItem}>• Upload before/after photos for better verification</Text>
               <Text style={styles.infoItem}>• Add relevant tags to showcase your skills</Text>
@@ -311,7 +330,7 @@ export default function ProofLinkScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Upload ProofLink</Text>
+              <Text style={styles.modalTitle}>{t13}</Text>
               <TouchableOpacity onPress={() => setShowUploadModal(false)}>
                 <X size={24} color={Colors.text} />
               </TouchableOpacity>
@@ -319,11 +338,11 @@ export default function ProofLinkScreen() {
 
             <TouchableOpacity style={styles.uploadArea}>
               <Camera size={48} color={Colors.textSecondary} />
-              <Text style={styles.uploadText}>Tap to take photo or select from gallery</Text>
+              <Text style={styles.uploadText}>{t14}</Text>
             </TouchableOpacity>
 
             <View style={styles.formSection}>
-              <Text style={styles.formLabel}>Category</Text>
+              <Text style={styles.formLabel}>{t15}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -406,7 +425,7 @@ export default function ProofLinkScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Upload size={20} color={Colors.text} />
-                <Text style={styles.uploadSubmitText}>Upload ProofLink</Text>
+                <Text style={styles.uploadSubmitText}>{t13}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

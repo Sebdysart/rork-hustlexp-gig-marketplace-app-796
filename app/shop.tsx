@@ -9,6 +9,7 @@ import { useApp } from '@/contexts/AppContext';
 import { POWER_UPS } from '@/constants/powerUps';
 import { PowerUp } from '@/types';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import GlassCard from '@/components/GlassCard';
 import NeonButton from '@/components/NeonButton';
 import { premiumColors } from '@/constants/designTokens';
@@ -21,6 +22,27 @@ export default function ShopScreen() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
   const insets = useSafeAreaInsets();
   const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18] = useTranslatedTexts([
+    'Power-Up Shop',
+    'Unlock your full potential',
+    'Secure payments via Stripe • Instant activation',
+    'All',
+    'Boosts',
+    'Protection',
+    'Premium',
+    'Active',
+    'Premium',
+    'left',
+    'Processing...',
+    'Activated',
+    '💳 Test Mode Active',
+    'Running in Stripe test mode. No real charges will be made.',
+    'Confirm Purchase',
+    'Purchase',
+    'for',
+    'Cancel'
+  ]);
 
   useEffect(() => {
     Animated.loop(
@@ -42,11 +64,11 @@ export default function ShopScreen() {
     triggerHaptic('medium');
     
     Alert.alert(
-      'Confirm Purchase',
-      `Purchase ${powerUp.name} for $${powerUp.price.toFixed(2)}?`,
+      t15,
+      `${t16} ${powerUp.name} ${t17} ${powerUp.price.toFixed(2)}?`,
       [
         {
-          text: 'Cancel',
+          text: t18,
           style: 'cancel',
         },
         {
@@ -135,10 +157,10 @@ export default function ShopScreen() {
     : POWER_UPS.filter(p => getPowerUpCategory(p) === selectedCategory);
 
   const categories: { id: Category; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'boosts', label: 'Boosts' },
-    { id: 'protection', label: 'Protection' },
-    { id: 'premium', label: 'Premium' },
+    { id: 'all', label: t4 },
+    { id: 'boosts', label: t5 },
+    { id: 'protection', label: t6 },
+    { id: 'premium', label: t7 },
   ];
 
   return (
@@ -175,13 +197,13 @@ export default function ShopScreen() {
             >
               <Sparkles size={48} color={premiumColors.neonCyan} />
             </Animated.View>
-            <Text style={styles.headerTitle}>Power-Up Shop</Text>
-            <Text style={styles.headerSubtitle}>Unlock your full potential</Text>
+            <Text style={styles.headerTitle}>{t1}</Text>
+            <Text style={styles.headerSubtitle}>{t2}</Text>
           </View>
 
           <GlassCard variant="dark" style={styles.infoCard}>
             <Zap size={20} color={premiumColors.neonAmber} />
-            <Text style={styles.infoText}>Secure payments via Stripe • Instant activation</Text>
+            <Text style={styles.infoText}>{t3}</Text>
           </GlassCard>
 
           <ScrollView
@@ -242,14 +264,14 @@ export default function ShopScreen() {
                     {active && (
                       <View style={styles.activeBadge}>
                         <CheckCircle size={14} color={premiumColors.neonGreen} />
-                        <Text style={styles.activeBadgeText}>Active</Text>
+                        <Text style={styles.activeBadgeText}>{t8}</Text>
                       </View>
                     )}
 
                     {isPremium && !active && (
                       <View style={styles.premiumBadge}>
                         <Sparkles size={12} color={premiumColors.neonAmber} />
-                        <Text style={styles.premiumBadgeText}>Premium</Text>
+                        <Text style={styles.premiumBadgeText}>{t9}</Text>
                       </View>
                     )}
 
@@ -284,19 +306,19 @@ export default function ShopScreen() {
 
                     {active && timeRemaining && (
                       <GlassCard variant="dark" style={styles.timeRemainingBadge}>
-                        <Text style={styles.timeRemainingText}>⏱️ {timeRemaining} left</Text>
+                        <Text style={styles.timeRemainingText}>⏱️ {timeRemaining} {t10}</Text>
                       </GlassCard>
                     )}
 
                     {isPurchasing ? (
                       <View style={styles.loadingButton}>
                         <ActivityIndicator size="small" color={premiumColors.neonCyan} />
-                        <Text style={styles.loadingText}>Processing...</Text>
+                        <Text style={styles.loadingText}>{t11}</Text>
                       </View>
                     ) : active ? (
                       <View style={styles.activeButton}>
                         <CheckCircle size={18} color={premiumColors.neonGreen} />
-                        <Text style={styles.activeButtonText}>Activated</Text>
+                        <Text style={styles.activeButtonText}>{t12}</Text>
                       </View>
                     ) : (
                       <NeonButton
@@ -314,9 +336,9 @@ export default function ShopScreen() {
           </View>
 
           <GlassCard variant="dark" style={styles.disclaimerCard}>
-            <Text style={styles.disclaimerTitle}>💳 Test Mode Active</Text>
+            <Text style={styles.disclaimerTitle}>{t13}</Text>
             <Text style={styles.disclaimerText}>
-              Running in Stripe test mode. No real charges will be made.
+              {t14}
             </Text>
           </GlassCard>
         </ScrollView>

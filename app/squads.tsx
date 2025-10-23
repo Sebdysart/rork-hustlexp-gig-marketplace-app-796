@@ -6,6 +6,7 @@ import { Users, Plus, TrendingUp, Zap, Crown, X, Search } from 'lucide-react-nat
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { Squad } from '@/types';
 
 export default function SquadsScreen() {
@@ -13,6 +14,27 @@ export default function SquadsScreen() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [squadName, setSquadName] = useState<string>('');
   const [squadDescription, setSquadDescription] = useState<string>('');
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18] = useTranslatedTexts([
+    'Squads',
+    'Team up and earn together',
+    'members',
+    'Total Earnings',
+    'Total XP',
+    'View Squad',
+    'Create Your Squad',
+    'Search squads...',
+    'Discover Squads',
+    'Member',
+    'Request to Join',
+    '💡 Squad Benefits',
+    'Create Squad',
+    'Squad Name *',
+    'Enter squad name...',
+    'Description',
+    'Describe your squad...',
+    'Missing Name'
+  ]);
 
   const mockSquads = useMemo((): Squad[] => {
     if (!currentUser) return [];
@@ -91,7 +113,7 @@ export default function SquadsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Squads',
+          title: t1,
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.text,
           headerShadowVisible: false,
@@ -101,9 +123,9 @@ export default function SquadsScreen() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Users size={32} color={Colors.accent} />
-            <Text style={styles.headerTitle}>Squads</Text>
+            <Text style={styles.headerTitle}>{t1}</Text>
             <Text style={styles.headerSubtitle}>
-              Team up and earn together
+              {t2}
             </Text>
           </View>
 
@@ -120,7 +142,7 @@ export default function SquadsScreen() {
                   <View style={styles.mySquadInfo}>
                     <Text style={styles.mySquadName}>{mySquad.name}</Text>
                     <Text style={styles.mySquadMembers}>
-                      {mySquad.memberIds.length} members
+                      {mySquad.memberIds.length} {t3}
                     </Text>
                   </View>
                   <Crown size={24} color={Colors.accent} />
@@ -128,11 +150,11 @@ export default function SquadsScreen() {
                 <View style={styles.mySquadStats}>
                   <View style={styles.mySquadStat}>
                     <Text style={styles.mySquadStatValue}>${mySquad.totalEarnings}</Text>
-                    <Text style={styles.mySquadStatLabel}>Total Earnings</Text>
+                    <Text style={styles.mySquadStatLabel}>{t4}</Text>
                   </View>
                   <View style={styles.mySquadStat}>
                     <Text style={styles.mySquadStatValue}>{mySquad.totalXP}</Text>
-                    <Text style={styles.mySquadStatLabel}>Total XP</Text>
+                    <Text style={styles.mySquadStatLabel}>{t5}</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -142,7 +164,7 @@ export default function SquadsScreen() {
                     console.log('View squad:', mySquad.id);
                   }}
                 >
-                  <Text style={styles.viewSquadButtonText}>View Squad</Text>
+                  <Text style={styles.viewSquadButtonText}>{t6}</Text>
                 </TouchableOpacity>
               </LinearGradient>
             </View>
@@ -161,7 +183,7 @@ export default function SquadsScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Plus size={32} color={Colors.text} />
-                <Text style={styles.createSquadText}>Create Your Squad</Text>
+                <Text style={styles.createSquadText}>{t7}</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
@@ -170,12 +192,12 @@ export default function SquadsScreen() {
             <Search size={20} color={Colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search squads..."
+              placeholder={t8}
               placeholderTextColor={Colors.textSecondary}
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Discover Squads</Text>
+          <Text style={styles.sectionTitle}>{t9}</Text>
 
           {mockSquads.map((squad) => {
             const members = users.filter(u => squad.memberIds.includes(u.id));
@@ -196,7 +218,7 @@ export default function SquadsScreen() {
                     <Text style={styles.squadName}>{squad.name}</Text>
                     {isMember && (
                       <View style={styles.memberBadge}>
-                        <Text style={styles.memberBadgeText}>Member</Text>
+                        <Text style={styles.memberBadgeText}>{t10}</Text>
                       </View>
                     )}
                   </View>
@@ -207,7 +229,7 @@ export default function SquadsScreen() {
                     <View style={styles.squadStat}>
                       <Users size={14} color={Colors.textSecondary} />
                       <Text style={styles.squadStatText}>
-                        {squad.memberIds.length} members
+                        {squad.memberIds.length} {t3}
                       </Text>
                     </View>
                     <View style={styles.squadStat}>
@@ -247,7 +269,7 @@ export default function SquadsScreen() {
                         handleJoinSquad(squad);
                       }}
                     >
-                      <Text style={styles.joinButtonText}>Request to Join</Text>
+                      <Text style={styles.joinButtonText}>{t11}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -256,7 +278,7 @@ export default function SquadsScreen() {
           })}
 
           <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>💡 Squad Benefits</Text>
+            <Text style={styles.infoTitle}>{t12}</Text>
             <View style={styles.infoList}>
               <Text style={styles.infoItem}>• Earn bonus XP on squad quests</Text>
               <Text style={styles.infoItem}>• Share tips and strategies</Text>
@@ -276,30 +298,30 @@ export default function SquadsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create Squad</Text>
+              <Text style={styles.modalTitle}>{t13}</Text>
               <TouchableOpacity onPress={() => setShowCreateModal(false)}>
                 <X size={24} color={Colors.text} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.formSection}>
-              <Text style={styles.formLabel}>Squad Name *</Text>
+              <Text style={styles.formLabel}>{t14}</Text>
               <TextInput
                 style={styles.input}
                 value={squadName}
                 onChangeText={setSquadName}
-                placeholder="Enter squad name..."
+                placeholder={t15}
                 placeholderTextColor={Colors.textSecondary}
               />
             </View>
 
             <View style={styles.formSection}>
-              <Text style={styles.formLabel}>Description</Text>
+              <Text style={styles.formLabel}>{t16}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={squadDescription}
                 onChangeText={setSquadDescription}
-                placeholder="Describe your squad..."
+                placeholder={t17}
                 placeholderTextColor={Colors.textSecondary}
                 multiline
                 numberOfLines={3}
@@ -314,7 +336,7 @@ export default function SquadsScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Plus size={20} color={Colors.text} />
-                <Text style={styles.createButtonText}>Create Squad</Text>
+                <Text style={styles.createButtonText}>{t13}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

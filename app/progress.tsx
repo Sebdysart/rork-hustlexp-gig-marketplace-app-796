@@ -13,6 +13,7 @@ import { ArrowLeft, TrendingUp, Target, Zap, Award } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { getRankForLevel, getNextRank, getProgressToNextRank } from '@/constants/ranks';
 import { getXPForNextLevel, getXPProgress } from '@/utils/gamification';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -20,6 +21,22 @@ const { width } = Dimensions.get('window');
 export default function ProgressScreen() {
   const router = useRouter();
   const { currentUser } = useApp();
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13] = useTranslatedTexts([
+    'Progress Dashboard',
+    'Next:',
+    'XP Progress',
+    'to Level',
+    'Current Level',
+    'Next Level',
+    'XP needed',
+    'Current Streak',
+    'Best:',
+    'Tasks Done',
+    'earned',
+    '📈 30-Day Forecast',
+    '🎁 Current Rank Perks'
+  ]);
 
   const currentRank = useMemo(() => {
     return getRankForLevel(currentUser?.level || 1);
@@ -64,27 +81,27 @@ export default function ProgressScreen() {
     return [
       {
         icon: <TrendingUp size={24} color="#8B5CF6" />,
-        label: 'Current Level',
+        label: t5,
         value: currentUser.level.toString(),
         subtext: `${currentUser.xp} XP`,
       },
       {
         icon: <Target size={24} color="#10B981" />,
-        label: 'Next Level',
+        label: t6,
         value: `${daysToNextLevel}d`,
-        subtext: `${nextLevelXP - currentUser.xp} XP needed`,
+        subtext: `${nextLevelXP - currentUser.xp} ${t7}`,
       },
       {
         icon: <Zap size={24} color="#F59E0B" />,
-        label: 'Current Streak',
+        label: t8,
         value: `${currentUser.streaks.current}d`,
-        subtext: `Best: ${currentUser.streaks.longest}d`,
+        subtext: `${t9} ${currentUser.streaks.longest}d`,
       },
       {
         icon: <Award size={24} color="#EC4899" />,
-        label: 'Tasks Done',
+        label: t10,
         value: currentUser.tasksCompleted.toString(),
-        subtext: `$${currentUser.earnings.toFixed(0)} earned`,
+        subtext: `${currentUser.earnings.toFixed(0)} ${t11}`,
       },
     ];
   }, [currentUser, daysToNextLevel, nextLevelXP]);
@@ -102,7 +119,7 @@ export default function ProgressScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Progress Dashboard',
+          title: t1,
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color="#1F2937" />
@@ -129,7 +146,7 @@ export default function ProgressScreen() {
           {nextRank && (
             <View style={styles.nextRankContainer}>
               <Text style={styles.nextRankText}>
-                Next: {nextRank.name} (Lv. {nextRank.minLevel})
+                {t2} {nextRank.name} (Lv. {nextRank.minLevel})
               </Text>
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
@@ -150,7 +167,7 @@ export default function ProgressScreen() {
 
         <View style={styles.xpCard}>
           <View style={styles.xpHeader}>
-            <Text style={styles.xpTitle}>XP Progress</Text>
+            <Text style={styles.xpTitle}>{t3}</Text>
             <Text style={styles.xpValue}>
               {currentUser.xp} / {nextLevelXP}
             </Text>
@@ -166,7 +183,7 @@ export default function ProgressScreen() {
             </View>
           </View>
           <Text style={styles.xpSubtext}>
-            {Math.round(xpProgress * 100)}% to Level {currentUser.level + 1}
+            {Math.round(xpProgress * 100)}% {t4} {currentUser.level + 1}
           </Text>
         </View>
 
@@ -182,7 +199,7 @@ export default function ProgressScreen() {
         </View>
 
         <View style={styles.forecastCard}>
-          <Text style={styles.forecastTitle}>📈 30-Day Forecast</Text>
+          <Text style={styles.forecastTitle}>{t12}</Text>
           <Text style={styles.forecastText}>
             At your current pace, you&apos;ll reach{' '}
             <Text style={styles.forecastHighlight}>Level {projectedLevel}</Text> in 30
@@ -194,7 +211,7 @@ export default function ProgressScreen() {
         </View>
 
         <View style={styles.perksCard}>
-          <Text style={styles.perksTitle}>🎁 Current Rank Perks</Text>
+          <Text style={styles.perksTitle}>{t13}</Text>
           {currentRank.perks.map((perk, index) => (
             <View key={index} style={styles.perkRow}>
               <Text style={styles.perkBullet}>•</Text>
