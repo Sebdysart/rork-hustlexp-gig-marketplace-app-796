@@ -242,7 +242,9 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       if (useAITranslation && lang !== 'en') {
         console.log('[Language] Preloading all translations for:', lang);
         await preloadAllAppTranslations(lang);
+        setIsLoading(false);
       } else {
+        console.log('[Language] Switched to', lang, '(no AI translation needed)');
         setIsLoading(false);
         setTranslationProgress(100);
       }

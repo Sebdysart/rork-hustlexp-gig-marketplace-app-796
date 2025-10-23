@@ -46,17 +46,23 @@ export function useTranslatedTexts(texts: string[]): string[] {
   const [translatedTexts, setTranslatedTexts] = useState<string[]>(texts);
   const prevTextsRef = useRef<string>('');
   const prevLangRef = useRef<string>('');
+  const prevCacheRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
     if (!useAITranslation || currentLanguage === 'en') {
-      if (JSON.stringify(translatedTexts) !== JSON.stringify(texts)) {
+      const textsKey = JSON.stringify(texts);
+      if (prevTextsRef.current !== textsKey) {
+        prevTextsRef.current = textsKey;
         setTranslatedTexts(texts);
       }
       return;
     }
 
     const textsKey = JSON.stringify(texts);
-    const hasChanged = prevTextsRef.current !== textsKey || prevLangRef.current !== currentLanguage;
+    const cacheKey = JSON.stringify(aiTranslationCache);
+    const hasChanged = prevTextsRef.current !== textsKey || 
+                       prevLangRef.current !== currentLanguage ||
+                       prevCacheRef.current !== aiTranslationCache;
     
     if (!hasChanged) {
       return;
@@ -64,16 +70,15 @@ export function useTranslatedTexts(texts: string[]): string[] {
     
     prevTextsRef.current = textsKey;
     prevLangRef.current = currentLanguage;
+    prevCacheRef.current = aiTranslationCache;
 
     const translated = texts.map(text => {
       const key = `${currentLanguage}:${text}`;
       return (aiTranslationCache as Record<string, string>)[key] || text;
     });
 
-    if (JSON.stringify(translatedTexts) !== JSON.stringify(translated)) {
-      setTranslatedTexts(translated);
-    }
-  }, [texts, currentLanguage, useAITranslation, aiTranslationCache, translatedTexts]);
+    setTranslatedTexts(translated);
+  }, [texts, currentLanguage, useAITranslation, aiTranslationCache]);
 
   return translatedTexts;
 }
