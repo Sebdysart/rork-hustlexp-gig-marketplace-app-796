@@ -8,9 +8,31 @@ import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
 import { SQUAD_QUESTS, getSquadQuestDifficulty, calculateSquadQuestRewards } from '@/constants/squadQuests';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 export default function SquadQuestsScreen() {
   const { currentUser } = useApp();
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18] = useTranslatedTexts([
+    'Squad Quests',
+    'Team up with your squad for bigger rewards and bonus XP!',
+    'Available',
+    'XP Bonus',
+    'Higher Pay',
+    'Available Squad Quests',
+    'Squad Members',
+    'spot',
+    'spots',
+    'left',
+    'per member',
+    'bonus XP',
+    'Starts',
+    'at',
+    'Join Squad Quest',
+    '💡 Squad Quest Benefits',
+    'Higher Pay:',
+    'Earn more per hour than solo quests'
+  ]);
 
   if (!currentUser) return null;
 
@@ -41,7 +63,7 @@ export default function SquadQuestsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Squad Quests',
+          title: t1,
           headerStyle: {
             backgroundColor: premiumColors.deepBlack,
           },
@@ -69,22 +91,22 @@ export default function SquadQuestsScreen() {
               <View style={styles.headerIcon}>
                 <Users size={32} color={premiumColors.neonViolet} />
               </View>
-              <Text style={styles.headerTitle}>Squad Quests</Text>
+              <Text style={styles.headerTitle}>{t1}</Text>
               <Text style={styles.headerSubtitle}>
-                Team up with your squad for bigger rewards and bonus XP!
+                {t2}
               </Text>
               <View style={styles.headerStats}>
                 <View style={styles.headerStat}>
                   <Text style={styles.headerStatValue}>{SQUAD_QUESTS.length}</Text>
-                  <Text style={styles.headerStatLabel}>Available</Text>
+                  <Text style={styles.headerStatLabel}>{t3}</Text>
                 </View>
                 <View style={styles.headerStat}>
                   <Text style={styles.headerStatValue}>2x</Text>
-                  <Text style={styles.headerStatLabel}>XP Bonus</Text>
+                  <Text style={styles.headerStatLabel}>{t4}</Text>
                 </View>
                 <View style={styles.headerStat}>
                   <Text style={styles.headerStatValue}>$$$</Text>
-                  <Text style={styles.headerStatLabel}>Higher Pay</Text>
+                  <Text style={styles.headerStatLabel}>{t5}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -93,7 +115,7 @@ export default function SquadQuestsScreen() {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
               <Zap size={20} color={premiumColors.neonAmber} />
-              <Text style={styles.sectionTitle}>Available Squad Quests</Text>
+              <Text style={styles.sectionTitle}>{t6}</Text>
             </View>
           </View>
 
@@ -159,11 +181,11 @@ export default function SquadQuestsScreen() {
                       <View style={styles.squadProgressLeft}>
                         <Users size={16} color={premiumColors.neonViolet} />
                         <Text style={styles.squadProgressText}>
-                          {quest.filledSlots}/{quest.totalSlots} Squad Members
+                          {quest.filledSlots}/{quest.totalSlots} {t7}
                         </Text>
                       </View>
                       <Text style={styles.spotsLeftText}>
-                        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
+                        {spotsLeft} {spotsLeft === 1 ? t8 : t9} {t10}
                       </Text>
                     </View>
                     <View style={styles.progressBar}>
@@ -181,7 +203,7 @@ export default function SquadQuestsScreen() {
                       <TrendingUp size={16} color={premiumColors.neonGreen} />
                       <View>
                         <Text style={styles.rewardValue}>${rewards.payPerMember}</Text>
-                        <Text style={styles.rewardLabel}>per member</Text>
+                        <Text style={styles.rewardLabel}>{t11}</Text>
                       </View>
                     </View>
                     <View style={styles.rewardDivider} />
@@ -191,7 +213,7 @@ export default function SquadQuestsScreen() {
                         <Text style={styles.rewardValue}>
                           {Math.round(rewards.xpPerMember)} XP
                         </Text>
-                        <Text style={styles.rewardLabel}>per member</Text>
+                        <Text style={styles.rewardLabel}>{t11}</Text>
                       </View>
                     </View>
                     <View style={styles.rewardDivider} />
@@ -199,7 +221,7 @@ export default function SquadQuestsScreen() {
                       <Award size={16} color={premiumColors.neonAmber} />
                       <View>
                         <Text style={styles.rewardValue}>+{quest.bonusXP}</Text>
-                        <Text style={styles.rewardLabel}>bonus XP</Text>
+                        <Text style={styles.rewardLabel}>{t12}</Text>
                       </View>
                     </View>
                   </View>
@@ -208,7 +230,7 @@ export default function SquadQuestsScreen() {
                     <View style={styles.startTimeContainer}>
                       <AlertCircle size={14} color={premiumColors.neonAmber} />
                       <Text style={styles.startTimeText}>
-                        Starts {new Date(quest.startTime).toLocaleDateString()} at{' '}
+                        {t13} {new Date(quest.startTime).toLocaleDateString()} {t14}{' '}
                         {new Date(quest.startTime).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -231,7 +253,7 @@ export default function SquadQuestsScreen() {
                       style={styles.joinButtonGradient}
                     >
                       <Users size={18} color={Colors.text} />
-                      <Text style={styles.joinButtonText}>Join Squad Quest</Text>
+                      <Text style={styles.joinButtonText}>{t15}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </GlassCard>
@@ -240,10 +262,10 @@ export default function SquadQuestsScreen() {
           })}
 
           <GlassCard variant="dark" style={styles.infoCard}>
-            <Text style={styles.infoTitle}>💡 Squad Quest Benefits</Text>
+            <Text style={styles.infoTitle}>{t16}</Text>
             <View style={styles.infoList}>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>Higher Pay:</Text> Earn more per hour than solo quests
+                • <Text style={styles.infoBold}>{t17}</Text> {t18}
               </Text>
               <Text style={styles.infoItem}>
                 • <Text style={styles.infoBold}>Bonus XP:</Text> Get extra XP when completing as a squad

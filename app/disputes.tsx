@@ -11,10 +11,24 @@ import { triggerHaptic } from '@/utils/haptics';
 import { DISPUTE_CATEGORIES, getDisputeStatusColor, getDisputeStatusLabel, type DisputeCategory } from '@/constants/disputes';
 import { analyzeDispute, type DisputeAnalysis } from '@/utils/aiDisputeAssistant';
 import type { Dispute } from '@/constants/disputes';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 export default function DisputesScreen() {
   const { currentUser, tasks } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<DisputeCategory | null>(null);
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10] = useTranslatedTexts([
+    'Disputes',
+    'Need Information',
+    'Please select a category and provide a description first.',
+    '💡 AI Resolution Suggestion',
+    'Recommended Action:',
+    'Fairness Score:',
+    'Confidence:',
+    'Got it',
+    'AI Error',
+    'Could not generate suggestion. Please try again.'
+  ]);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');

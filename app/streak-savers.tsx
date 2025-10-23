@@ -8,6 +8,7 @@ import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
 import GritCoin from '@/components/GritCoin';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 interface StreakSaver {
   id: string;
@@ -86,6 +87,25 @@ const STREAK_SAVERS: StreakSaver[] = [
 export default function StreakSaversScreen() {
   const { currentUser } = useApp();
 
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16] = useTranslatedTexts([
+    'Streak Savers',
+    'Protect your streak and boost your progress with power-ups!',
+    'Day Streak',
+    'Grit Coins',
+    'Streak Protection',
+    'XP Boosters',
+    'Activate',
+    'Purchase',
+    '💡 How Streak Savers Work',
+    'Streak Freeze:',
+    'Prevents your streak from breaking for the specified duration',
+    'Grace Period:',
+    'Extends your daily deadline by 6 hours',
+    'Streak Shield:',
+    'Automatically activates when needed (one-time use)',
+    'XP Boosters:'
+  ]);
+
   if (!currentUser) return null;
 
   const handlePurchase = (saver: StreakSaver) => {
@@ -134,7 +154,7 @@ export default function StreakSaversScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Streak Savers',
+          title: t1,
           headerStyle: {
             backgroundColor: premiumColors.deepBlack,
           },
@@ -162,21 +182,21 @@ export default function StreakSaversScreen() {
               <View style={styles.headerIcon}>
                 <Flame size={32} color={premiumColors.neonAmber} />
               </View>
-              <Text style={styles.headerTitle}>Streak Savers</Text>
+              <Text style={styles.headerTitle}>{t1}</Text>
               <Text style={styles.headerSubtitle}>
-                Protect your streak and boost your progress with power-ups!
+                {t2}
               </Text>
 
               <View style={styles.streakInfo}>
                 <View style={styles.streakBadge}>
                   <Flame size={24} color={premiumColors.neonAmber} />
                   <Text style={styles.streakValue}>{currentUser.streaks.current}</Text>
-                  <Text style={styles.streakLabel}>Day Streak</Text>
+                  <Text style={styles.streakLabel}>{t3}</Text>
                 </View>
                 <View style={styles.coinsBadge}>
                   <GritCoin size={24} />
                   <Text style={styles.coinsValue}>{currentUser.coins || 0}</Text>
-                  <Text style={styles.coinsLabel}>Grit Coins</Text>
+                  <Text style={styles.coinsLabel}>{t4}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -185,7 +205,7 @@ export default function StreakSaversScreen() {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
               <Shield size={20} color={premiumColors.neonCyan} />
-              <Text style={styles.sectionTitle}>Streak Protection</Text>
+              <Text style={styles.sectionTitle}>{t5}</Text>
             </View>
           </View>
 
@@ -240,12 +260,12 @@ export default function StreakSaversScreen() {
                     {saver.owned > 0 ? (
                       <>
                         <CheckCircle2 size={16} color={Colors.text} />
-                        <Text style={styles.actionButtonText}>Activate</Text>
+                        <Text style={styles.actionButtonText}>{t7}</Text>
                       </>
                     ) : (
                       <>
                         <Zap size={16} color={Colors.text} />
-                        <Text style={styles.actionButtonText}>Purchase</Text>
+                        <Text style={styles.actionButtonText}>{t8}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -257,7 +277,7 @@ export default function StreakSaversScreen() {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
               <Zap size={20} color={premiumColors.neonGreen} />
-              <Text style={styles.sectionTitle}>XP Boosters</Text>
+              <Text style={styles.sectionTitle}>{t6}</Text>
             </View>
           </View>
 
@@ -312,12 +332,12 @@ export default function StreakSaversScreen() {
                     {saver.owned > 0 ? (
                       <>
                         <CheckCircle2 size={16} color={Colors.text} />
-                        <Text style={styles.actionButtonText}>Activate</Text>
+                        <Text style={styles.actionButtonText}>{t7}</Text>
                       </>
                     ) : (
                       <>
                         <Zap size={16} color={Colors.text} />
-                        <Text style={styles.actionButtonText}>Purchase</Text>
+                        <Text style={styles.actionButtonText}>{t8}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -327,19 +347,19 @@ export default function StreakSaversScreen() {
           ))}
 
           <GlassCard variant="dark" style={styles.infoCard}>
-            <Text style={styles.infoTitle}>💡 How Streak Savers Work</Text>
+            <Text style={styles.infoTitle}>{t9}</Text>
             <View style={styles.infoList}>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>Streak Freeze:</Text> Prevents your streak from breaking for the specified duration
+                • <Text style={styles.infoBold}>{t10}</Text> {t11}
               </Text>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>Grace Period:</Text> Extends your daily deadline by 6 hours
+                • <Text style={styles.infoBold}>{t12}</Text> {t13}
               </Text>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>Streak Shield:</Text> Automatically activates when needed (one-time use)
+                • <Text style={styles.infoBold}>{t14}</Text> {t15}
               </Text>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>XP Boosters:</Text> Multiply your XP earnings for limited time
+                • <Text style={styles.infoBold}>{t16}</Text> Multiply your XP earnings for limited time
               </Text>
             </View>
           </GlassCard>

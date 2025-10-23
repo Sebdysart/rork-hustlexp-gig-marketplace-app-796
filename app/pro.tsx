@@ -9,10 +9,23 @@ import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
 import { SUBSCRIPTION_PLANS, getAnnualPrice, calculateSavings, type SubscriptionTier } from '@/constants/subscriptions';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 export default function ProScreen() {
   const { currentUser } = useApp();
   const [isAnnual, setIsAnnual] = useState<boolean>(false);
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9] = useTranslatedTexts([
+    'HustleXP Pro',
+    'Unlock Your Full Potential',
+    'Get more tasks, earn more money, and level up faster with HustleXP Pro',
+    'XP Boost',
+    'Lower Fees',
+    'Tasks',
+    'Monthly',
+    'Annual',
+    'Save 20%'
+  ]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionTier>('pro');
 
   if (!currentUser) return null;
@@ -57,7 +70,7 @@ export default function ProScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'HustleXP Pro',
+          title: t1,
           headerStyle: {
             backgroundColor: premiumColors.deepBlack,
           },
@@ -85,26 +98,26 @@ export default function ProScreen() {
               <View style={styles.heroIcon}>
                 <Crown size={48} color={premiumColors.neonAmber} />
               </View>
-              <Text style={styles.heroTitle}>Unlock Your Full Potential</Text>
+              <Text style={styles.heroTitle}>{t2}</Text>
               <Text style={styles.heroSubtitle}>
-                Get more tasks, earn more money, and level up faster with HustleXP Pro
+                {t3}
               </Text>
 
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
                   <Zap size={24} color={premiumColors.neonCyan} />
                   <Text style={styles.statValue}>+50%</Text>
-                  <Text style={styles.statLabel}>XP Boost</Text>
+                  <Text style={styles.statLabel}>{t4}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <TrendingUp size={24} color={premiumColors.neonGreen} />
                   <Text style={styles.statValue}>60%</Text>
-                  <Text style={styles.statLabel}>Lower Fees</Text>
+                  <Text style={styles.statLabel}>{t5}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Award size={24} color={premiumColors.neonAmber} />
                   <Text style={styles.statValue}>∞</Text>
-                  <Text style={styles.statLabel}>Tasks</Text>
+                  <Text style={styles.statLabel}>{t6}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -112,7 +125,7 @@ export default function ProScreen() {
 
           <View style={styles.billingToggle}>
             <Text style={[styles.billingLabel, !isAnnual && styles.billingLabelActive]}>
-              Monthly
+              {t7}
             </Text>
             <Switch
               value={isAnnual}
@@ -126,10 +139,10 @@ export default function ProScreen() {
             />
             <View style={styles.annualLabelContainer}>
               <Text style={[styles.billingLabel, isAnnual && styles.billingLabelActive]}>
-                Annual
+                {t8}
               </Text>
               <View style={styles.savingsBadge}>
-                <Text style={styles.savingsText}>Save 20%</Text>
+                <Text style={styles.savingsText}>{t9}</Text>
               </View>
             </View>
           </View>

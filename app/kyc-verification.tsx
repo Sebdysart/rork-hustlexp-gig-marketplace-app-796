@@ -8,9 +8,31 @@ import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 import { triggerHaptic } from '@/utils/haptics';
 import { KYC_TIERS, getUserKYCTier, getNextKYCTier, getKYCProgress } from '@/constants/kycTiers';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 
 export default function KYCVerificationScreen() {
   const { currentUser } = useApp();
+
+  const [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18] = useTranslatedTexts([
+    'KYC Verification',
+    'Current Tier',
+    'Progress to',
+    'Current Benefits',
+    'Next:',
+    'Requirements',
+    'REQUIRED',
+    'Unlock These Benefits',
+    'All Verification Tiers',
+    'CURRENT',
+    'Max Task Value',
+    'Unlimited',
+    'Trust Bonus',
+    '🔒 Why Verify?',
+    'Build Trust:',
+    'Verified users get more tasks and higher ratings',
+    'Unlock Features:',
+    'Access higher-value tasks and premium benefits'
+  ]);
 
   if (!currentUser) return null;
 
@@ -56,7 +78,7 @@ export default function KYCVerificationScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'KYC Verification',
+          title: t1,
           headerStyle: {
             backgroundColor: premiumColors.deepBlack,
           },
@@ -86,7 +108,7 @@ export default function KYCVerificationScreen() {
                   <Text style={styles.tierEmojiLarge}>{currentTier.icon}</Text>
                 </View>
                 <View style={styles.currentTierInfo}>
-                  <Text style={styles.currentTierLabel}>Current Tier</Text>
+                  <Text style={styles.currentTierLabel}>{t2}</Text>
                   <Text style={[styles.currentTierName, { color: currentTier.color }]}>
                     {currentTier.name}
                   </Text>
@@ -97,7 +119,7 @@ export default function KYCVerificationScreen() {
               {nextTier && (
                 <View style={styles.progressSection}>
                   <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>Progress to {nextTier.name}</Text>
+                    <Text style={styles.progressLabel}>{t3} {nextTier.name}</Text>
                     <Text style={styles.progressPercent}>{Math.round(progress)}%</Text>
                   </View>
                   <View style={styles.progressBar}>
@@ -112,7 +134,7 @@ export default function KYCVerificationScreen() {
               )}
 
               <View style={styles.benefitsSection}>
-                <Text style={styles.benefitsTitle}>Current Benefits</Text>
+                <Text style={styles.benefitsTitle}>{t4}</Text>
                 <View style={styles.benefitsList}>
                   {currentTier.benefits.slice(0, 3).map((benefit, index) => (
                     <View key={index} style={styles.benefitItem}>
@@ -130,7 +152,7 @@ export default function KYCVerificationScreen() {
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleContainer}>
                   <TrendingUp size={20} color={premiumColors.neonAmber} />
-                  <Text style={styles.sectionTitle}>Next: {nextTier.name}</Text>
+                  <Text style={styles.sectionTitle}>{t5} {nextTier.name}</Text>
                 </View>
               </View>
 
@@ -148,7 +170,7 @@ export default function KYCVerificationScreen() {
                 </View>
 
                 <View style={styles.requirementsSection}>
-                  <Text style={styles.requirementsTitle}>Requirements</Text>
+                  <Text style={styles.requirementsTitle}>{t6}</Text>
                   {nextTier.requirements.map((req) => {
                     const isCompleted = userVerifications.includes(req.id);
                     return (
@@ -179,7 +201,7 @@ export default function KYCVerificationScreen() {
                               <Text style={styles.requirementName}>{req.name}</Text>
                               {req.required && (
                                 <View style={styles.requiredBadge}>
-                                  <Text style={styles.requiredText}>REQUIRED</Text>
+                                  <Text style={styles.requiredText}>{t7}</Text>
                                 </View>
                               )}
                             </View>
@@ -195,7 +217,7 @@ export default function KYCVerificationScreen() {
                 </View>
 
                 <View style={styles.nextBenefitsSection}>
-                  <Text style={styles.nextBenefitsTitle}>Unlock These Benefits</Text>
+                  <Text style={styles.nextBenefitsTitle}>{t8}</Text>
                   <View style={styles.nextBenefitsList}>
                     {nextTier.benefits.slice(0, 4).map((benefit, index) => (
                       <View key={index} style={styles.nextBenefitItem}>
@@ -212,7 +234,7 @@ export default function KYCVerificationScreen() {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
               <Award size={20} color={premiumColors.neonViolet} />
-              <Text style={styles.sectionTitle}>All Verification Tiers</Text>
+              <Text style={styles.sectionTitle}>{t9}</Text>
             </View>
           </View>
 
@@ -248,7 +270,7 @@ export default function KYCVerificationScreen() {
                         </Text>
                         {isCurrent && (
                           <View style={[styles.currentBadge, { backgroundColor: tier.color }]}>
-                            <Text style={styles.currentBadgeText}>CURRENT</Text>
+                            <Text style={styles.currentBadgeText}>{t10}</Text>
                           </View>
                         )}
                       </View>
@@ -258,13 +280,13 @@ export default function KYCVerificationScreen() {
 
                   <View style={styles.tierCardStats}>
                     <View style={styles.tierCardStat}>
-                      <Text style={styles.tierCardStatLabel}>Max Task Value</Text>
+                      <Text style={styles.tierCardStatLabel}>{t11}</Text>
                       <Text style={[styles.tierCardStatValue, { color: tier.color }]}>
-                        {tier.maxTaskValue === Infinity ? 'Unlimited' : `$${tier.maxTaskValue}`}
+                        {tier.maxTaskValue === Infinity ? t12 : `${tier.maxTaskValue}`}
                       </Text>
                     </View>
                     <View style={styles.tierCardStat}>
-                      <Text style={styles.tierCardStatLabel}>Trust Bonus</Text>
+                      <Text style={styles.tierCardStatLabel}>{t13}</Text>
                       <Text style={[styles.tierCardStatValue, { color: tier.color }]}>
                         +{tier.trustScoreBonus}
                       </Text>
@@ -276,13 +298,13 @@ export default function KYCVerificationScreen() {
           })}
 
           <GlassCard variant="dark" style={styles.infoCard}>
-            <Text style={styles.infoTitle}>🔒 Why Verify?</Text>
+            <Text style={styles.infoTitle}>{t14}</Text>
             <View style={styles.infoList}>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>Build Trust:</Text> Verified users get more tasks and higher ratings
+                • <Text style={styles.infoBold}>{t15}</Text> {t16}
               </Text>
               <Text style={styles.infoItem}>
-                • <Text style={styles.infoBold}>Unlock Features:</Text> Access higher-value tasks and premium benefits
+                • <Text style={styles.infoBold}>{t17}</Text> {t18}
               </Text>
               <Text style={styles.infoItem}>
                 • <Text style={styles.infoBold}>Lower Fees:</Text> Higher tiers pay lower platform fees
