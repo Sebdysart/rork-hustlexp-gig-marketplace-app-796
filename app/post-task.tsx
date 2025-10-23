@@ -9,22 +9,37 @@ import { TaskCategory, PayType } from '@/types';
 import { TASK_TEMPLATES } from '@/constants/taskTemplates';
 import { triggerHaptic } from '@/utils/haptics';
 import Confetti from '@/components/Confetti';
+import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { generateTaskSuggestion, enhanceTaskDescription, suggestTaskExtras, estimateTaskPay, generateTaskTitle } from '@/utils/aiTaskSuggestions';
 import { premiumColors } from '@/constants/designTokens';
 import GlassCard from '@/components/GlassCard';
 
-const CATEGORIES: { value: TaskCategory; label: string; emoji: string }[] = [
-  { value: 'cleaning', label: 'Cleaning', emoji: '🧹' },
-  { value: 'errands', label: 'Errands', emoji: '🏃' },
-  { value: 'delivery', label: 'Delivery', emoji: '📦' },
-  { value: 'moving', label: 'Moving', emoji: '🚚' },
-  { value: 'handyman', label: 'Handyman', emoji: '🔧' },
-  { value: 'tech', label: 'Tech', emoji: '💻' },
-  { value: 'creative', label: 'Creative', emoji: '🎨' },
-  { value: 'other', label: 'Other', emoji: '✨' },
+const getCATEGORIES = (translations: string[]): { value: TaskCategory; label: string; emoji: string }[] => [
+  { value: 'cleaning', label: translations[0] || 'Cleaning', emoji: '🧹' },
+  { value: 'errands', label: translations[1] || 'Errands', emoji: '🏃' },
+  { value: 'delivery', label: translations[2] || 'Delivery', emoji: '📦' },
+  { value: 'moving', label: translations[3] || 'Moving', emoji: '🚚' },
+  { value: 'handyman', label: translations[4] || 'Handyman', emoji: '🔧' },
+  { value: 'tech', label: translations[5] || 'Tech', emoji: '💻' },
+  { value: 'creative', label: translations[6] || 'Creative', emoji: '🎨' },
+  { value: 'other', label: translations[7] || 'Other', emoji: '✨' },
 ];
 
 export default function PostTaskScreen() {
+  const translationKeys = [
+    'Cleaning', 'Errands', 'Delivery', 'Moving', 'Handyman', 'Tech', 'Creative', 'Other',
+    'Post Quest', 'Create Your Quest', 'Find the perfect hero for your task',
+    'AI Generating...', '✨ AI Generate Full Task', 'AI Tips', 'Dismiss',
+    'Category *', 'Quest Title *', 'AI Generate', 'e.g., Epic Clean Quest',
+    'Description *', 'AI Enhance', 'Describe your quest in detail...',
+    'Location *', 'Use My Location', 'Pay Type *', 'Fixed', 'Hourly', 'Amount ($) *',
+    'AI Estimate', 'Extras (Optional)', 'AI Suggest', 'e.g., Tools provided',
+    'Posting Quest...', 'Post Quest', 'Missing Fields', 'Please fill in all required fields',
+    'Need Input', 'error1', 'error2', 'error3', 'error4', 'error5', 'AI Error'
+  ];
+  const translations = useTranslatedTexts(translationKeys);
+  const CATEGORIES = getCATEGORIES(translations);
+  
   const { currentUser, createTask } = useApp();
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
