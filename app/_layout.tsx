@@ -20,6 +20,10 @@ import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
+import { installGlobalTextNodeFix } from '@/utils/globalTextNodeFix';
+
+// Install global text node validation
+installGlobalTextNodeFix();
 
 SplashScreen.preventAutoHideAsync();
 
