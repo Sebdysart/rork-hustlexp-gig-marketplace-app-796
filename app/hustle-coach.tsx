@@ -10,11 +10,13 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Send, Bot, Zap, TrendingUp, Award, Target } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import { ArrowLeft, Send, Bot, Zap, TrendingUp, Award, Target, Sparkles } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -22,6 +24,8 @@ import { generateText } from '@rork/toolkit-sdk';
 import { getRankForLevel } from '@/constants/ranks';
 import { premiumColors, neonGlow, borderRadius, typography, spacing } from '@/constants/designTokens';
 import { triggerHaptic } from '@/utils/haptics';
+
+const { width } = Dimensions.get('window');
 
 interface Message {
   id: string;
@@ -39,7 +43,7 @@ export default function HustleCoach() {
     {
       id: '1',
       role: 'assistant',
-      content: `Hey ${currentUser?.name || 'Hustler'}! 👋 I'm your AI Hustle Coach. I'm here to help you level up faster, earn more, and dominate the leaderboards!\n\nAsk me anything about:\n• Best tasks to take based on your skills\n• Tips to increase your XP and earnings\n• How to improve your trust score\n• Strategies to maintain streaks\n• Power-ups recommendations`,
+      content: `Hey! 👋 Welcome to HustleXP! I'm your AI coach here to help you get started.\n\nTell me - are you looking to find work, hire someone, or both? Feel free to type in any language!`,
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -206,20 +210,26 @@ User Question: ${userMessage}
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: premiumColors.deepBlack }}>
+    <View style={{ flex: 1 }}>
       <LinearGradient
-        colors={[premiumColors.deepBlack, premiumColors.richBlack, '#0A1128']}
+        colors={['#0A0A0F', '#1A1028', '#0D1128']}
         style={{ flex: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <SafeAreaView style={styles.container} edges={['bottom']}>
           <Stack.Screen
             options={{
               headerShown: true,
-              title: 'AI Hustle Coach',
+              title: 'HustleXP AI Coach',
               headerStyle: {
                 backgroundColor: 'transparent',
               },
               headerTintColor: premiumColors.softWhite,
+              headerTitleStyle: {
+                fontWeight: '700',
+                fontSize: 18,
+              },
               headerLeft: () => (
                 <TouchableOpacity 
                   onPress={() => router.back()} 
@@ -231,14 +241,10 @@ User Question: ${userMessage}
                 </TouchableOpacity>
               ),
               headerRight: () => (
-                <TouchableOpacity 
-                  onPress={handleOptOut} 
-                  style={styles.optOutHeaderButton}
-                  accessible={true}
-                  accessibilityLabel="Wellbeing Settings"
-                >
-                  <Text style={styles.optOutHeaderText}>Settings</Text>
-                </TouchableOpacity>
+                <View style={styles.headerRightContainer}>
+                  <View style={styles.aiStatusDot} />
+                  <Sparkles size={20} color={premiumColors.neonViolet} />
+                </View>
               ),
             }}
           />
@@ -248,23 +254,6 @@ User Question: ${userMessage}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
           >
-            {messages.length === 1 && (
-              <View style={styles.personalizedTipContainer}>
-                <LinearGradient
-                  colors={['rgba(155, 94, 255, 0.2)', 'rgba(0, 255, 255, 0.2)']}
-                  style={styles.personalizedTipGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Zap size={20} color={premiumColors.neonCyan} />
-                  <Text style={styles.personalizedTipText}>
-                    {currentUser?.streaks.current && currentUser.streaks.current >= 3
-                      ? `${currentUser.name}, your ${currentUser.streaks.current}-day streak is 🔥! Aim for 7 for a badge!`
-                      : `${currentUser?.name}, complete 3 tasks today to start your streak! +50 XP bonus`}
-                  </Text>
-                </LinearGradient>
-              </View>
-            )}
 
             <ScrollView
               ref={scrollViewRef}
@@ -273,20 +262,17 @@ User Question: ${userMessage}
               showsVerticalScrollIndicator={false}
             >
               {messages.map((message, index) => (
-                <Animated.View
+                <View
                   key={message.id}
                   style={[
-                    styles.messageBubble,
-                    message.role === 'user' ? styles.userBubble : styles.assistantBubble,
-                    !settings.reducedMotion && index === messages.length - 1 && {
-                      opacity: 1,
-                    },
+                    styles.messageRow,
+                    message.role === 'user' ? styles.messageRowUser : styles.messageRowAssistant,
                   ]}
                 >
                   {message.role === 'assistant' && (
                     <Animated.View 
                       style={[
-                        styles.coachIcon,
+                        styles.avatarContainer,
                         !settings.reducedMotion && {
                           transform: [{ scale: pulseAnim }],
                         },
@@ -294,49 +280,80 @@ User Question: ${userMessage}
                     >
                       <LinearGradient
                         colors={[premiumColors.neonViolet, premiumColors.neonMagenta]}
-                        style={styles.coachIconGradient}
+                        style={styles.avatarGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                       >
-                        <Bot size={20} color="#FFFFFF" />
+                        <Bot size={18} color="#FFFFFF" strokeWidth={2.5} />
                       </LinearGradient>
                     </Animated.View>
                   )}
-                  <Text
-                    style={[
-                      styles.messageText,
-                      message.role === 'user' ? styles.userText : styles.assistantText,
-                      { fontSize: settings.fontSize },
-                    ]}
-                    accessible={true}
-                    accessibilityLabel={`${message.role === 'user' ? 'You' : 'Coach'}: ${message.content}`}
-                  >
-                    {message.content}
-                  </Text>
-                </Animated.View>
+                  
+                  <View style={[
+                    styles.messageBubble,
+                    message.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                  ]}>
+                    {message.role === 'assistant' && (
+                      <LinearGradient
+                        colors={['rgba(155, 94, 255, 0.15)', 'rgba(0, 255, 255, 0.05)']}
+                        style={StyleSheet.absoluteFill}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      />
+                    )}
+                    <Text
+                      style={[
+                        styles.messageText,
+                        message.role === 'user' ? styles.userText : styles.assistantText,
+                        { fontSize: settings.fontSize },
+                      ]}
+                      accessible={true}
+                      accessibilityLabel={`${message.role === 'user' ? 'You' : 'Coach'}: ${message.content}`}
+                    >
+                      {message.content}
+                    </Text>
+                    <Text style={[
+                      styles.messageTime,
+                      message.role === 'user' ? styles.messageTimeUser : styles.messageTimeAssistant,
+                    ]}>
+                      {new Date(message.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                </View>
               ))}
 
               {isLoading && (
-                <View style={[styles.messageBubble, styles.assistantBubble]}>
-                  <View style={styles.coachIcon}>
+                <View style={[styles.messageRow, styles.messageRowAssistant]}>
+                  <View style={styles.avatarContainer}>
                     <LinearGradient
                       colors={[premiumColors.neonViolet, premiumColors.neonMagenta]}
-                      style={styles.coachIconGradient}
+                      style={styles.avatarGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                     >
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <Bot size={18} color="#FFFFFF" strokeWidth={2.5} />
                     </LinearGradient>
                   </View>
-                  <Text style={[styles.loadingText, { fontSize: settings.fontSize }]}>Thinking...</Text>
+                  <View style={[styles.messageBubble, styles.assistantBubble, styles.loadingBubble]}>
+                    <LinearGradient
+                      colors={['rgba(155, 94, 255, 0.15)', 'rgba(0, 255, 255, 0.05)']}
+                      style={StyleSheet.absoluteFill}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    />
+                    <View style={styles.typingIndicator}>
+                      <Animated.View style={[styles.typingDot, { opacity: glowAnim }]} />
+                      <Animated.View style={[styles.typingDot, { opacity: glowAnim }]} />
+                      <Animated.View style={[styles.typingDot, { opacity: glowAnim }]} />
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {messages.length === 1 && (
+              {messages.length === 1 && !isLoading && (
                 <View style={styles.quickPromptsContainer}>
-                  <Text style={[styles.quickPromptsTitle, { fontSize: settings.fontSize }]}>Quick Questions:</Text>
-                  <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.quickPromptsScroll}
-                    contentContainerStyle={styles.quickPromptsScrollContent}
-                  >
+                  <Text style={[styles.quickPromptsTitle, { fontSize: settings.fontSize - 1 }]}>Suggested questions:</Text>
+                  <View style={styles.quickPromptsGrid}>
                     {quickPrompts.map((prompt, index) => {
                       const IconComponent = prompt.icon;
                       return (
@@ -344,78 +361,144 @@ User Question: ${userMessage}
                           key={index}
                           style={styles.quickPromptButton}
                           onPress={() => handleQuickPrompt(prompt.text)}
+                          activeOpacity={0.8}
                           accessible={true}
                           accessibilityLabel={`Quick question: ${prompt.text}`}
                         >
                           <LinearGradient
                             colors={[
-                              'rgba(255, 255, 255, 0.05)',
-                              'rgba(255, 255, 255, 0.02)',
+                              'rgba(155, 94, 255, 0.15)',
+                              'rgba(0, 255, 255, 0.05)',
                             ]}
                             style={styles.quickPromptGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                           >
-                            <IconComponent size={18} color={premiumColors.neonCyan} />
-                            <Text style={[styles.quickPromptText, { fontSize: settings.fontSize - 1 }]}>
+                            <View style={styles.quickPromptIconContainer}>
+                              <IconComponent size={16} color={premiumColors.neonCyan} strokeWidth={2.5} />
+                            </View>
+                            <Text style={[styles.quickPromptText, { fontSize: settings.fontSize - 2 }]}>
                               {prompt.text}
                             </Text>
                           </LinearGradient>
                         </TouchableOpacity>
                       );
                     })}
-                  </ScrollView>
+                  </View>
                 </View>
               )}
             </ScrollView>
 
-            <View style={styles.inputContainer}>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  isInputFocused && styles.inputWrapperFocused,
-                  settings.highContrast && styles.inputWrapperHighContrast,
-                ]}
-              >
-                <TextInput
-                  style={[
-                    styles.input,
-                    { fontSize: settings.fontSize },
-                    settings.highContrast && styles.inputHighContrast,
-                  ]}
-                  value={input}
-                  onChangeText={setInput}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setIsInputFocused(false)}
-                  placeholder="Ask your coach anything..."
-                  placeholderTextColor={settings.highContrast ? '#AAAAAA' : '#6B7280'}
-                  multiline
-                  maxLength={500}
-                  editable={!isLoading}
-                  accessible={true}
-                  accessibilityLabel="Message input field"
-                  accessibilityHint="Type your question for the AI coach"
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.sendButton,
-                    (!input.trim() || isLoading) && styles.sendButtonDisabled,
-                  ]}
-                  onPress={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  accessible={true}
-                  accessibilityLabel="Send message"
-                >
-                  <LinearGradient
-                    colors={
-                      input.trim() && !isLoading
-                        ? [premiumColors.neonViolet, premiumColors.neonMagenta]
-                        : ['#374151', '#1F2937']
-                    }
-                    style={styles.sendButtonGradient}
+            <View style={styles.inputContainerOuter}>
+              {Platform.OS === 'ios' ? (
+                <BlurView intensity={80} tint="dark" style={styles.inputContainer}>
+                  <View
+                    style={[
+                      styles.inputWrapper,
+                      isInputFocused && styles.inputWrapperFocused,
+                      settings.highContrast && styles.inputWrapperHighContrast,
+                    ]}
                   >
-                    <Send size={20} color="#FFFFFF" />
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { fontSize: settings.fontSize },
+                        settings.highContrast && styles.inputHighContrast,
+                      ]}
+                      value={input}
+                      onChangeText={setInput}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
+                      placeholder="Type your message..."
+                      placeholderTextColor={settings.highContrast ? '#AAAAAA' : '#8B8B8B'}
+                      multiline
+                      maxLength={500}
+                      editable={!isLoading}
+                      accessible={true}
+                      accessibilityLabel="Message input field"
+                      accessibilityHint="Type your question for the AI coach"
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.sendButton,
+                        (!input.trim() || isLoading) && styles.sendButtonDisabled,
+                      ]}
+                      onPress={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      activeOpacity={0.8}
+                      accessible={true}
+                      accessibilityLabel="Send message"
+                    >
+                      <LinearGradient
+                        colors={
+                          input.trim() && !isLoading
+                            ? [premiumColors.neonViolet, premiumColors.neonMagenta]
+                            : ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']
+                        }
+                        style={styles.sendButtonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Send size={18} color="#FFFFFF" strokeWidth={2.5} />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                </BlurView>
+              ) : (
+                <View style={[styles.inputContainer, styles.inputContainerAndroid]}>
+                  <View
+                    style={[
+                      styles.inputWrapper,
+                      isInputFocused && styles.inputWrapperFocused,
+                      settings.highContrast && styles.inputWrapperHighContrast,
+                    ]}
+                  >
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { fontSize: settings.fontSize },
+                        settings.highContrast && styles.inputHighContrast,
+                      ]}
+                      value={input}
+                      onChangeText={setInput}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
+                      placeholder="Type your message..."
+                      placeholderTextColor={settings.highContrast ? '#AAAAAA' : '#8B8B8B'}
+                      multiline
+                      maxLength={500}
+                      editable={!isLoading}
+                      accessible={true}
+                      accessibilityLabel="Message input field"
+                      accessibilityHint="Type your question for the AI coach"
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.sendButton,
+                        (!input.trim() || isLoading) && styles.sendButtonDisabled,
+                      ]}
+                      onPress={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      activeOpacity={0.8}
+                      accessible={true}
+                      accessibilityLabel="Send message"
+                    >
+                      <LinearGradient
+                        colors={
+                          input.trim() && !isLoading
+                            ? [premiumColors.neonViolet, premiumColors.neonMagenta]
+                            : ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']
+                        }
+                        style={styles.sendButtonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      >
+                        <Send size={18} color="#FFFFFF" strokeWidth={2.5} />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -431,6 +514,20 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginRight: spacing.md,
+  },
+  aiStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: premiumColors.neonGreen,
+    ...neonGlow.green,
   },
   optOutHeaderButton: {
     padding: spacing.sm,
@@ -500,112 +597,164 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xl,
   },
-  messageBubble: {
-    maxWidth: '85%',
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
+  messageRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.lg,
+    alignItems: 'flex-end',
+    gap: spacing.sm,
   },
-  userBubble: {
-    alignSelf: 'flex-end',
-    backgroundColor: premiumColors.neonViolet,
+  messageRowUser: {
+    justifyContent: 'flex-end',
+  },
+  messageRowAssistant: {
+    justifyContent: 'flex-start',
+  },
+  avatarContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden',
     ...neonGlow.violet,
   },
-  assistantBubble: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  coachIcon: {
-    marginRight: spacing.sm,
-    marginTop: 2,
-  },
-  coachIconGradient: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
+  avatarGradient: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  messageBubble: {
+    maxWidth: width * 0.75,
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.sm + 4,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  userBubble: {
+    backgroundColor: premiumColors.neonViolet,
+    borderBottomRightRadius: 6,
+  },
+  assistantBubble: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(155, 94, 255, 0.2)',
+    borderBottomLeftRadius: 6,
+  },
   messageText: {
     fontSize: typography.sizes.base,
-    lineHeight: 22,
-    flex: 1,
+    lineHeight: 20,
+    letterSpacing: 0.2,
   },
   userText: {
     color: '#FFFFFF',
+    fontWeight: '500',
   },
   assistantText: {
     color: premiumColors.softWhite,
+    fontWeight: '400',
   },
-  loadingText: {
-    fontSize: typography.sizes.base,
-    color: premiumColors.softWhite,
+  messageTime: {
+    fontSize: 10,
+    marginTop: spacing.xs,
+    fontWeight: '500',
     opacity: 0.6,
-    marginLeft: spacing.sm,
+  },
+  messageTimeUser: {
+    color: '#FFFFFF',
+    textAlign: 'right',
+  },
+  messageTimeAssistant: {
+    color: premiumColors.softWhite,
+  },
+  loadingBubble: {
+    paddingVertical: spacing.md,
+  },
+  typingIndicator: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: spacing.xs,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: premiumColors.neonCyan,
   },
   quickPromptsContainer: {
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
   quickPromptsTitle: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: premiumColors.softWhite,
-    opacity: 0.7,
+    opacity: 0.5,
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  quickPromptsScroll: {
-    flexGrow: 0,
-  },
-  quickPromptsScrollContent: {
-    paddingHorizontal: spacing.lg,
+  quickPromptsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   quickPromptButton: {
-    marginRight: spacing.sm,
+    flex: 1,
+    minWidth: '47%',
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
   },
   quickPromptGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 255, 0.3)',
+    borderColor: 'rgba(155, 94, 255, 0.3)',
     gap: spacing.sm,
-    minWidth: 180,
+    minHeight: 70,
+  },
+  quickPromptIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   quickPromptText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: premiumColors.softWhite,
-    flex: 1,
+    lineHeight: 16,
+    fontWeight: typography.weights.medium,
+  },
+  inputContainerOuter: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(155, 94, 255, 0.1)',
   },
   inputContainer: {
-    padding: spacing.lg,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  inputContainerAndroid: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: borderRadius.xl,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     paddingLeft: spacing.lg,
-    paddingVertical: spacing.sm,
-    paddingRight: spacing.sm,
+    paddingVertical: spacing.xs + 2,
+    paddingRight: spacing.xs + 2,
+    minHeight: 48,
   },
   inputWrapperFocused: {
-    borderColor: premiumColors.neonCyan,
-    ...neonGlow.cyan,
+    borderColor: premiumColors.neonViolet,
+    backgroundColor: 'rgba(155, 94, 255, 0.12)',
   },
   inputWrapperHighContrast: {
     backgroundColor: '#000000',
@@ -618,15 +767,16 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     marginRight: spacing.sm,
     color: premiumColors.softWhite,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.sm + 2,
+    lineHeight: 20,
   },
   inputHighContrast: {
     color: '#FFFFFF',
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     overflow: 'hidden',
   },
   sendButtonGradient: {
@@ -636,6 +786,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
 });
