@@ -86,7 +86,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Globe size={20} color={Colors.accent} />
-              <Text style={styles.sectionTitle}>{t('settings.language')} & Region</Text>
+              <Text style={styles.sectionTitle}>{t('settings.language')}{' & Region'}</Text>
             </View>
 
             <TouchableOpacity
@@ -226,7 +226,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Bell size={20} color={Colors.accent} />
-              <Text style={styles.sectionTitle}>{t('settings.notifications')} & Feedback</Text>
+              <Text style={styles.sectionTitle}>{t('settings.notifications')}{' & Feedback'}</Text>
             </View>
 
             <TouchableOpacity
