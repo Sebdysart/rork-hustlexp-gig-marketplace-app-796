@@ -29,20 +29,20 @@ export default function SocialProofBanner({ compact = false }: SocialProofBanner
   const [fadeAnim] = useState(new Animated.Value(1));
 
   const getSocialProofItems = (): SocialProofItem[] => [
-    { id: '1', type: 'signup', message: `${MOCK_NAMES[0]} ${translations[0]}`, timestamp: Date.now() - 30000 },
-    { id: '2', type: 'task_completed', message: `${MOCK_NAMES[1]} ${translations[1]}`, timestamp: Date.now() - 60000 },
-    { id: '3', type: 'level_up', message: `${MOCK_NAMES[2]} ${translations[2]} 10`, timestamp: Date.now() - 120000 },
-    { id: '4', type: 'earning', message: `${MOCK_NAMES[3]} ${translations[3]} $50`, timestamp: Date.now() - 180000 },
-    { id: '5', type: 'signup', message: `${MOCK_NAMES[4]} ${translations[0]}`, timestamp: Date.now() - 240000 },
+    { id: '1', type: 'signup', message: `${MOCK_NAMES[0]} ${translations[0] || 'just joined'}`, timestamp: Date.now() - 30000 },
+    { id: '2', type: 'task_completed', message: `${MOCK_NAMES[1]} ${translations[1] || 'completed a task'}`, timestamp: Date.now() - 60000 },
+    { id: '3', type: 'level_up', message: `${MOCK_NAMES[2]} ${translations[2] || 'reached Level'} 10`, timestamp: Date.now() - 120000 },
+    { id: '4', type: 'earning', message: `${MOCK_NAMES[3]} ${translations[3] || 'earned'} $50`, timestamp: Date.now() - 180000 },
+    { id: '5', type: 'signup', message: `${MOCK_NAMES[4]} ${translations[0] || 'just joined'}`, timestamp: Date.now() - 240000 },
   ];
 
   const getTimeAgo = (timestamp: number): string => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     
-    if (seconds < 60) return translations[4];
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}${translations[5]}`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}${translations[6]}`;
-    return `${Math.floor(seconds / 86400)}${translations[7]}`;
+    if (seconds < 60) return translations[4] || 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}${translations[5] || 'm ago'}`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}${translations[6] || 'h ago'}`;
+    return `${Math.floor(seconds / 86400)}${translations[7] || 'd ago'}`;
   };
 
   useEffect(() => {
@@ -78,6 +78,8 @@ export default function SocialProofBanner({ compact = false }: SocialProofBanner
         return <TrendingUp size={16} color={premiumColors.neonViolet} />;
       case 'earning':
         return <Text style={styles.earningIcon}>💰</Text>;
+      default:
+        return <Users size={16} color={premiumColors.neonGreen} />;
     }
   };
 

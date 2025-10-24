@@ -217,16 +217,19 @@ export default function HomeScreen() {
 
   const getMissionCopy = () => {
     const hour = new Date().getHours();
-    const greetingKey = hour < 12 ? t[0] : hour < 18 ? t[1] : t[2];
+    const greetingKey = (hour < 12 ? t[0] : hour < 18 ? t[1] : t[2]) || 'Hello';
     
     if (isWorker && nearbyGigs.length > 0) {
-      const gigText = nearbyGigs.length > 1 ? t[4] : t[3];
-      return `${greetingKey}, ${currentUser.name}. ${nearbyGigs.length} ${gigText} ${t[5]}.`;
+      const gigText = (nearbyGigs.length > 1 ? t[4] : t[3]) || 'gigs';
+      const hiringText = t[5] || 'hiring now';
+      return `${greetingKey}, ${currentUser.name}. ${nearbyGigs.length} ${gigText} ${hiringText}.`;
     }
     if (isPoster && myTasks.filter(task => task.status === 'open').length > 0) {
-      return `${greetingKey}, ${currentUser.name}. ${t[6]}.`;
+      const questLiveText = t[6] || 'Your quests are live';
+      return `${greetingKey}, ${currentUser.name}. ${questLiveText}.`;
     }
-    return `${greetingKey}, ${currentUser.name}. ${t[7]}`;
+    const readyText = t[7] || 'Ready to hustle?';
+    return `${greetingKey}, ${currentUser.name}. ${readyText}`;
   };
 
   const getBackgroundGradient = (): [string, string, ...string[]] => {
