@@ -310,7 +310,7 @@ export default function SignInScreen() {
                 >
                   {!isLoading && <Zap size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={2.5} />}
                   <Text style={[styles.buttonText, (!email.trim() || !password.trim() || isLoading) && styles.buttonTextDisabled]}>
-                    {isLoading ? 'Loading...' : 'Start Your Hustle'}
+                    {isLoading ? 'Loading...' : 'Sign In'}
                   </Text>
                   {!isLoading && email.trim() && password.trim() && <Sparkles size={20} color={premiumColors.deepBlack} strokeWidth={2.5} />}
                 </LinearGradient>
@@ -320,22 +320,28 @@ export default function SignInScreen() {
             <View style={styles.footer}>
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>New Hustler?</Text>
+                <Text style={styles.dividerText}>New to HustleXP?</Text>
                 <View style={styles.dividerLine} />
               </View>
 
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={() => {
-                  triggerHaptic('light');
+                  triggerHaptic('success');
                   router.push('/ai-onboarding');
                 }}
                 activeOpacity={0.85}
               >
-                <BlurView intensity={30} tint="dark" style={styles.secondaryButtonBlur}>
-                  <Sparkles size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
-                  <Text style={styles.secondaryButtonText}>Begin Your Journey</Text>
-                </BlurView>
+                <LinearGradient
+                  colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.secondaryButtonGradient}
+                >
+                  <Sparkles size={22} color={premiumColors.deepBlack} strokeWidth={2.5} />
+                  <Text style={styles.secondaryButtonText}>Start Your Hustle</Text>
+                  <Zap size={22} color={premiumColors.deepBlack} strokeWidth={2.5} fill={premiumColors.deepBlack} />
+                </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -593,23 +599,23 @@ const styles = StyleSheet.create({
   secondaryButton: {
     borderRadius: borderRadius.full,
     overflow: 'hidden',
+    ...neonGlow.cyan,
+    shadowRadius: 30,
+    shadowOpacity: 0.8,
   },
-  secondaryButtonBlur: {
+  secondaryButtonGradient: {
     flexDirection: 'row',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xxxl,
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.md,
-    borderRadius: borderRadius.full,
-    borderWidth: 2,
-    borderColor: premiumColors.glassWhiteStrong,
   },
   secondaryButtonText: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: Colors.text,
-    letterSpacing: 0.3,
+    fontSize: 20,
+    fontWeight: '900' as const,
+    color: premiumColors.deepBlack,
+    letterSpacing: 0.5,
   },
   forgotPassword: {
     alignSelf: 'center',
