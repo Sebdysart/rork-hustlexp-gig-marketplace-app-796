@@ -60,11 +60,12 @@ export default function SocialProofBanner({ compact = false }: SocialProofBanner
         }),
       ]).start();
 
-      setCurrentIndex((prev) => (prev + 1) % getSocialProofItems().length);
+      const items = getSocialProofItems();
+      setCurrentIndex((prev) => (prev + 1) % items.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [fadeAnim, getSocialProofItems]);
+  }, [fadeAnim, translations]);
 
   const currentItem = getSocialProofItems()[currentIndex];
 
