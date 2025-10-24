@@ -50,10 +50,11 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       keys.forEach((key, index) => {
         // CRITICAL: Never cache empty strings, spaces, or dots
         const translatedValue = translations[index] || textsToTranslate[index] || '';
-        if (translatedValue.trim() && translatedValue.trim() !== '.') {
+        const trimmed = translatedValue.trim();
+        if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
           newCache[key] = translatedValue;
         } else {
-          newCache[key] = textsToTranslate[index] || '';
+          newCache[key] = textsToTranslate[index] || ' ';
         }
       });
 
@@ -103,13 +104,16 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       
       if (aiTranslationCache[cacheKey]) {
         const cachedValue = aiTranslationCache[cacheKey];
-        // CRITICAL: Never return empty or dot-only strings
-        if (cachedValue && typeof cachedValue === 'string' && cachedValue.trim() && cachedValue.trim() !== '.' && cachedValue.trim() !== '...' && cachedValue.trim() !== '…') {
-          return cachedValue;
+        // CRITICAL: Never return empty or problematic strings
+        if (cachedValue && typeof cachedValue === 'string') {
+          const trimmed = cachedValue.trim();
+          if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
+            return cachedValue;
+          }
         }
         // Return fallback
-        const fallback = (englishText && typeof englishText === 'string' && englishText.trim()) ? englishText : (key || 'Loading');
-        return fallback;
+        const englishTrimmed = (typeof englishText === 'string' && englishText.trim());
+        return englishTrimmed ? englishText : (key || ' ');
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
@@ -117,14 +121,18 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         scheduleBatch();
       }
       
-      const fallback = (englishText && typeof englishText === 'string' && englishText.trim()) ? englishText : (key || 'Loading');
-      return fallback;
+      const englishTrimmed = (typeof englishText === 'string' && englishText.trim());
+      return englishTrimmed ? englishText : (key || ' ');
     }
     
     const result = i18n.t(key, { ...options, locale: currentLanguage });
     // CRITICAL: Never return empty string, dots, or problematic values
-    if (!result || typeof result !== 'string' || !result.trim() || result.trim() === '.' || result.trim() === '...' || result.trim() === '…') {
-      return key || 'Loading';
+    if (!result || typeof result !== 'string') {
+      return key || ' ';
+    }
+    const trimmed = result.trim();
+    if (!trimmed || /^[\.\s,;:!?]*$/.test(trimmed)) {
+      return key || ' ';
     }
     return result;
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);
@@ -166,10 +174,11 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
             const cacheKey = `${lang}:${text}`;
             // CRITICAL: Never cache empty strings, spaces, or dots
             const translatedValue = translated[idx] || text || '';
-            if (translatedValue.trim() && translatedValue.trim() !== '.') {
+            const trimmed = translatedValue.trim();
+            if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
               newCache[cacheKey] = translatedValue;
             } else {
-              newCache[cacheKey] = text || '';
+              newCache[cacheKey] = text || ' ';
             }
           });
           
@@ -308,11 +317,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       const translated = result[0] || text || '';
       
       // CRITICAL: Never cache empty strings, spaces, or dots
-      if (translated.trim() && translated.trim() !== '.') {
+      const trimmed = translated.trim();
+      if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
         setAITranslationCache(prev => ({ ...prev, [cacheKey]: translated }));
         return translated;
       } else {
-        return text || '';
+        return text || ' ';
       }
     } catch (error) {
       console.error('[Language] Translation failed:', error);

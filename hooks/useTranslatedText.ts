@@ -43,14 +43,29 @@ export function useTranslatedText(text: string): string {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, currentLanguage, useAITranslation, aiTranslationCache]);
 
-  // CRITICAL: Always return a valid string, never undefined or special characters
-  const result = translatedText || text || 'Loading';
-  const trimmed = result.trim();
-  // Prevent rendering problematic values that cause 'Unexpected text node' errors
-  // Check for dots, ellipsis, empty strings, and other problematic characters
-  if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '\u2026' || /^[\.\s]*$/.test(trimmed)) {
-    return text || 'Loading'; // Return fallback text (safe in Text components)
+  // CRITICAL: Always return a valid non-empty string that's safe to render
+  const result = translatedText || text || '';
+  
+  if (!result || typeof result !== 'string') {
+    return text || ' ';
   }
+  
+  const trimmed = result.trim();
+  
+  // Prevent rendering problematic values that cause 'Unexpected text node' errors
+  // Check for: empty, dots, ellipsis, spaces only, or other problematic characters
+  if (
+    !trimmed || 
+    trimmed === '.' || 
+    trimmed === '..' || 
+    trimmed === '...' || 
+    trimmed === '\u2026' || 
+    /^[\.\s,;:!?]*$/.test(trimmed)
+  ) {
+    // Return the original text if it's valid, otherwise return a space
+    return (text && text.trim()) ? text : ' ';
+  }
+  
   return result;
 }
 
@@ -96,14 +111,27 @@ export function useTranslatedTexts(texts: string[]): string[] {
       if (translation && translation !== text) {
         console.log(`[useTranslatedTexts] ✅ "${text.substring(0, 30)}..." → "${translation.substring(0, 30)}..."`);
       }
-      // CRITICAL: Always return a valid string, never undefined or special characters
-      const result = translation || text || 'Loading';
-      const trimmed = result.trim();
-      // Prevent rendering problematic values that cause 'Unexpected text node' errors
-      // Check for dots, ellipsis, empty strings, and other problematic characters
-      if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '\u2026' || /^[\.\s]*$/.test(trimmed)) {
-        return text || 'Loading'; // Return fallback text (safe in Text components)
+      // CRITICAL: Always return a valid non-empty string that's safe to render
+      const result = translation || text || '';
+      
+      if (!result || typeof result !== 'string') {
+        return text || ' ';
       }
+      
+      const trimmed = result.trim();
+      
+      // Prevent rendering problematic values that cause 'Unexpected text node' errors
+      if (
+        !trimmed || 
+        trimmed === '.' || 
+        trimmed === '..' || 
+        trimmed === '...' || 
+        trimmed === '\u2026' || 
+        /^[\.\s,;:!?]*$/.test(trimmed)
+      ) {
+        return (text && text.trim()) ? text : ' ';
+      }
+      
       return result;
     });
 
