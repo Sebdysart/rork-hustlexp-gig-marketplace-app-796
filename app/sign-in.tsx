@@ -76,9 +76,9 @@ export default function SignInScreen() {
     });
   }, [fadeAnim, slideAnim, glowAnim, particleAnims]);
 
-  const handleSignIn = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError('Please enter both email and password');
+  const handleStartHustle = async () => {
+    if (!email.trim()) {
+      setError('Please enter your email address');
       triggerHaptic('error');
       return;
     }
@@ -87,35 +87,39 @@ export default function SignInScreen() {
     setError('');
     triggerHaptic('medium');
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+    const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
 
-    if (!user) {
-      setError('No account found with this email');
-      setIsLoading(false);
-      triggerHaptic('error');
-      return;
+    if (existingUser) {
+      if (!password.trim()) {
+        setError('Password required for existing account');
+        setIsLoading(false);
+        triggerHaptic('error');
+        return;
+      }
+
+      if (existingUser.password !== password) {
+        setError('Incorrect password');
+        setIsLoading(false);
+        triggerHaptic('error');
+        return;
+      }
+
+      triggerHaptic('success');
+      
+      const updatedUser = {
+        ...existingUser,
+        isOnline: true,
+        lastSeen: new Date().toISOString(),
+      };
+      
+      await updateUser(updatedUser);
+      router.replace('/(tabs)/home');
+    } else {
+      triggerHaptic('success');
+      router.push(`/ai-onboarding?email=${encodeURIComponent(email.trim())}`);
     }
-
-    if (user.password !== password) {
-      setError('Incorrect password');
-      setIsLoading(false);
-      triggerHaptic('error');
-      return;
-    }
-
-    triggerHaptic('success');
-    
-    const updatedUser = {
-      ...user,
-      isOnline: true,
-      lastSeen: new Date().toISOString(),
-    };
-    
-    await updateUser(updatedUser);
-    
-    router.replace('/(tabs)/home');
   };
 
   const glowOpacity = glowAnim.interpolate({
@@ -245,43 +249,45 @@ export default function SignInScreen() {
                 </BlurView>
               </View>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <BlurView intensity={30} tint="dark" style={styles.inputBlur}>
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIconContainer}>
-                      <Lock size={18} color={premiumColors.neonCyan} strokeWidth={2} />
+              {email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Password</Text>
+                  <BlurView intensity={30} tint="dark" style={styles.inputBlur}>
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.inputIconContainer}>
+                        <Lock size={18} color={premiumColors.neonCyan} strokeWidth={2} />
+                      </View>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter your password"
+                        placeholderTextColor={premiumColors.glassWhiteStrong}
+                        value={password}
+                        onChangeText={(text) => {
+                          setPassword(text);
+                          setError('');
+                        }}
+                        secureTextEntry={!showPassword}
+                        returnKeyType="go"
+                        onSubmitEditing={handleStartHustle}
+                        autoComplete="password"
+                      />
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowPassword(!showPassword);
+                          triggerHaptic('light');
+                        }}
+                        style={styles.eyeIcon}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={18} color={premiumColors.glassWhiteStrong} strokeWidth={2} />
+                        ) : (
+                          <Eye size={18} color={premiumColors.glassWhiteStrong} strokeWidth={2} />
+                        )}
+                      </TouchableOpacity>
                     </View>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your password"
-                      placeholderTextColor={premiumColors.glassWhiteStrong}
-                      value={password}
-                      onChangeText={(text) => {
-                        setPassword(text);
-                        setError('');
-                      }}
-                      secureTextEntry={!showPassword}
-                      returnKeyType="go"
-                      onSubmitEditing={handleSignIn}
-                      autoComplete="password"
-                    />
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowPassword(!showPassword);
-                        triggerHaptic('light');
-                      }}
-                      style={styles.eyeIcon}
-                    >
-                      {showPassword ? (
-                        <EyeOff size={18} color={premiumColors.glassWhiteStrong} strokeWidth={2} />
-                      ) : (
-                        <Eye size={18} color={premiumColors.glassWhiteStrong} strokeWidth={2} />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </BlurView>
-              </View>
+                  </BlurView>
+                </View>
+              )}
 
               {error ? (
                 <Animated.View style={styles.errorContainer}>
@@ -297,22 +303,22 @@ export default function SignInScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.button, (!email.trim() || !password.trim() || isLoading) && styles.buttonDisabled]}
-                onPress={handleSignIn}
-                disabled={!email.trim() || !password.trim() || isLoading}
+                style={[styles.button, (!email.trim() || isLoading) && styles.buttonDisabled]}
+                onPress={handleStartHustle}
+                disabled={!email.trim() || isLoading}
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={email.trim() && password.trim() && !isLoading ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : ['#2D2D2D', '#1A1A1A']}
+                  colors={email.trim() && !isLoading ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : ['#2D2D2D', '#1A1A1A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.buttonGradient}
                 >
-                  {!isLoading && <Zap size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={2.5} />}
-                  <Text style={[styles.buttonText, (!email.trim() || !password.trim() || isLoading) && styles.buttonTextDisabled]}>
-                    {isLoading ? 'Loading...' : 'Sign In'}
+                  {!isLoading && <Sparkles size={22} color={email.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={2.5} />}
+                  <Text style={[styles.buttonText, (!email.trim() || isLoading) && styles.buttonTextDisabled]}>
+                    {isLoading ? 'Loading...' : 'Start Your Hustle'}
                   </Text>
-                  {!isLoading && email.trim() && password.trim() && <Sparkles size={20} color={premiumColors.deepBlack} strokeWidth={2.5} />}
+                  {!isLoading && email.trim() && <Zap size={22} color={premiumColors.deepBlack} strokeWidth={2.5} fill={premiumColors.deepBlack} />}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -320,38 +326,21 @@ export default function SignInScreen() {
             <View style={styles.footer}>
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>New to HustleXP?</Text>
+                <Text style={styles.dividerText}>How it works</Text>
                 <View style={styles.dividerLine} />
               </View>
+              <Text style={styles.infoText}>Enter your email to get started. We&apos;ll sign you in if you have an account, or guide you through creating one!</Text>
 
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => {
-                  triggerHaptic('success');
-                  router.push('/ai-onboarding');
-                }}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.secondaryButtonGradient}
+              {email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) && (
+                <TouchableOpacity
+                  style={styles.forgotPassword}
+                  onPress={() => {
+                    triggerHaptic('light');
+                  }}
                 >
-                  <Sparkles size={22} color={premiumColors.deepBlack} strokeWidth={2.5} />
-                  <Text style={styles.secondaryButtonText}>Start Your Hustle</Text>
-                  <Zap size={22} color={premiumColors.deepBlack} strokeWidth={2.5} fill={premiumColors.deepBlack} />
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.forgotPassword}
-                onPress={() => {
-                  triggerHaptic('light');
-                }}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-              </TouchableOpacity>
+                  <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </Animated.View>
       </KeyboardAvoidingView>
@@ -626,5 +615,13 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.semibold,
     color: premiumColors.neonCyan,
     textDecorationLine: 'underline' as const,
+  },
+  infoText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+    color: premiumColors.glassWhiteStrong,
+    textAlign: 'center',
+    lineHeight: typography.sizes.sm * 1.5,
+    paddingHorizontal: spacing.lg,
   },
 });
