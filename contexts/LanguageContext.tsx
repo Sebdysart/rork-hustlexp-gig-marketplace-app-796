@@ -98,43 +98,39 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   }, [processBatch]);
 
   const t = useCallback((key: string, options?: any): string => {
+    // Helper to validate and sanitize translation results
+    const validateTranslation = (text: any, fallback: string): string => {
+      if (!text || typeof text !== 'string') {
+        return fallback;
+      }
+      const trimmed = text.trim();
+      // Block ONLY whitespace and punctuation-only strings
+      if (!trimmed || /^[\.\s,;:!?…]+$/.test(trimmed)) {
+        console.warn('[Language.t] Blocked problematic translation:', JSON.stringify(text), 'for key:', key);
+        return fallback;
+      }
+      return text;
+    };
+
     if (useAITranslation && currentLanguage !== 'en') {
       const englishText = i18n.t(key, { ...options, locale: 'en' });
-      const cacheKey = `${currentLanguage}:${englishText}`;
+      const safeEnglish = validateTranslation(englishText, key);
+      const cacheKey = `${currentLanguage}:${safeEnglish}`;
       
       if (aiTranslationCache[cacheKey]) {
-        const cachedValue = aiTranslationCache[cacheKey];
-        // CRITICAL: Never return empty or problematic strings
-        if (cachedValue && typeof cachedValue === 'string') {
-          const trimmed = cachedValue.trim();
-          if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
-            return cachedValue;
-          }
-        }
-        // Return fallback
-        const englishTrimmed = (typeof englishText === 'string' && englishText.trim());
-        return englishTrimmed ? englishText : (key || ' ');
+        return validateTranslation(aiTranslationCache[cacheKey], safeEnglish);
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
-        batchQueueRef.current.set(cacheKey, englishText);
+        batchQueueRef.current.set(cacheKey, safeEnglish);
         scheduleBatch();
       }
       
-      const englishTrimmed = (typeof englishText === 'string' && englishText.trim());
-      return englishTrimmed ? englishText : (key || ' ');
+      return safeEnglish;
     }
     
     const result = i18n.t(key, { ...options, locale: currentLanguage });
-    // CRITICAL: Never return empty string, dots, or problematic values
-    if (!result || typeof result !== 'string') {
-      return key || ' ';
-    }
-    const trimmed = result.trim();
-    if (!trimmed || /^[\.\s,;:!?]*$/.test(trimmed)) {
-      return key || ' ';
-    }
-    return result;
+    return validateTranslation(result, key);
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);
 
   const preloadAllAppTranslations = useCallback(async (lang: LanguageCodeType) => {

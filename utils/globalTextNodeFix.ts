@@ -51,19 +51,43 @@ export function installGlobalTextNodeFix() {
     const originalCreateElement = React.createElement;
     
     React.createElement = function(type: any, props: any, ...children: any[]) {
-      // Only filter for View components
-      if (type && (type === 'View' || (type.displayName && type.displayName.includes('View')))) {
-        const filteredChildren = children.map(child => {
+      // Filter problematic text nodes from ALL View-like components
+      const isViewComponent = type && (
+        type === 'View' || 
+        (typeof type === 'string' && type === 'View') ||
+        (type.displayName && type.displayName.includes('View')) ||
+        (type.name && type.name.includes('View')) ||
+        type === 'Animated.View'
+      );
+
+      if (isViewComponent) {
+        // Process all children and filter problematic values
+        const processChild = (child: any): any => {
+          if (child === null || child === undefined) {
+            return null;
+          }
+          
           if (typeof child === 'string') {
             const trimmed = child.trim();
-            // Filter out problematic single character strings
-            if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '…' || /^[\.\s]+$/.test(trimmed)) {
-              console.warn('[GlobalTextNodeFix] Prevented problematic text node from rendering:', JSON.stringify(child));
+            // Filter out problematic strings
+            if (!trimmed || /^[\.\s,;:!?…]+$/.test(trimmed)) {
+              console.warn('[GlobalTextNodeFix] 🚫 Blocked problematic text:', JSON.stringify(child));
               return null;
             }
           }
+          
+          // Recursively process arrays
+          if (Array.isArray(child)) {
+            return child.map(processChild).filter(c => c !== null);
+          }
+          
           return child;
-        }).filter(child => child !== null);
+        };
+        
+        const filteredChildren = children
+          .map(processChild)
+          .flat()
+          .filter(child => child !== null && child !== undefined);
         
         return originalCreateElement.call(this, type, props, ...filteredChildren);
       }
