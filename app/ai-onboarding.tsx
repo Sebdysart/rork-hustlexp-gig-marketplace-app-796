@@ -431,12 +431,12 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
             <Sparkles size={24} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
-            <Text style={[styles.headerTitle, { marginLeft: spacing.sm }]}>HustleXP AI Coach</Text>
+            <Text style={styles.headerTitle}>HustleXP AI Coach</Text>
           </View>
           {detectedLanguage !== 'en' && (
             <View style={styles.languageBadge}>
               <Globe size={14} color={premiumColors.neonGreen} />
-              <Text style={[styles.languageText, { marginLeft: spacing.xs }]}>{detectedLanguage.toUpperCase()}</Text>
+              <Text style={styles.languageText}>{detectedLanguage.toUpperCase()}</Text>
             </View>
           )}
         </View>
@@ -463,7 +463,7 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
             <View style={styles.typingContainer}>
               <View style={styles.typingBubble}>
                 <Loader size={16} color={premiumColors.neonCyan} />
-                <Text style={[styles.typingText, { marginLeft: spacing.sm }]}>AI is thinking...</Text>
+                <Text style={styles.typingText}>AI is thinking...</Text>
               </View>
             </View>
           )}
@@ -475,7 +475,7 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
             <View style={styles.inputWrapper}>
               <MessageCircle size={20} color={premiumColors.glassWhiteStrong} />
               <TextInput
-                style={[styles.input, { marginHorizontal: spacing.sm }]}
+                style={styles.input}
                 placeholder="Type your message..."
                 placeholderTextColor={premiumColors.glassWhiteStrong}
                 value={input}
@@ -535,6 +535,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800' as const,
     color: Colors.text,
+    marginLeft: spacing.sm,
   },
   languageBadge: {
     flexDirection: 'row',
@@ -550,6 +551,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700' as const,
     color: premiumColors.neonGreen,
+    marginLeft: spacing.xs,
   },
   content: {
     flex: 1,
@@ -633,6 +635,7 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
     fontStyle: 'italic' as const,
+    marginLeft: spacing.sm,
   },
   inputContainer: {
     paddingHorizontal: spacing.lg,
@@ -660,6 +663,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
     maxHeight: 100,
     paddingVertical: spacing.xs,
+    marginHorizontal: spacing.sm,
   },
   sendButton: {
     width: 40,
