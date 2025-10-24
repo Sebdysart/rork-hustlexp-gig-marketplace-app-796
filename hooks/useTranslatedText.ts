@@ -3,14 +3,14 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export function useTranslatedText(text: string): string {
   const { translateText, currentLanguage, useAITranslation, aiTranslationCache } = useLanguage() as any;
-  const [translatedText, setTranslatedText] = useState<string>(text);
-  const lastTextRef = useRef<string>(text);
+  const [translatedText, setTranslatedText] = useState<string>(text || '');
+  const lastTextRef = useRef<string>(text || '');
   const lastLangRef = useRef<string>(currentLanguage);
 
   useEffect(() => {
     if (!useAITranslation || currentLanguage === 'en') {
       if (translatedText !== text) {
-        setTranslatedText(text);
+        setTranslatedText(text || '');
       }
       return;
     }
@@ -19,7 +19,7 @@ export function useTranslatedText(text: string): string {
     const cached = (aiTranslationCache as Record<string, string>)[cacheKey];
     
     if (cached) {
-      setTranslatedText(cached);
+      setTranslatedText(cached || text || '');
       lastTextRef.current = text;
       lastLangRef.current = currentLanguage;
     } else if (lastTextRef.current !== text || lastLangRef.current !== currentLanguage) {
@@ -28,7 +28,12 @@ export function useTranslatedText(text: string): string {
       let cancelled = false;
       translateText(text).then((result: string) => {
         if (!cancelled) {
-          setTranslatedText(result);
+          const finalResult = result || text || '';
+          if (finalResult.trim() === '.' || finalResult.trim() === '') {
+            setTranslatedText(text);
+          } else {
+            setTranslatedText(finalResult);
+          }
         }
       });
       return () => {
@@ -38,7 +43,7 @@ export function useTranslatedText(text: string): string {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, currentLanguage, useAITranslation, aiTranslationCache]);
 
-  return translatedText;
+  return translatedText || text || '';
 }
 
 export function useTranslatedTexts(texts: string[]): string[] {
@@ -83,7 +88,11 @@ export function useTranslatedTexts(texts: string[]): string[] {
       if (translation && translation !== text) {
         console.log(`[useTranslatedTexts] ✅ "${text.substring(0, 30)}..." → "${translation.substring(0, 30)}..."`);
       }
-      return translation || text;
+      const result = translation || text || '';
+      if (result.trim() === '.' || result.trim() === '') {
+        return text;
+      }
+      return result;
     });
 
     setTranslatedTexts(translated);

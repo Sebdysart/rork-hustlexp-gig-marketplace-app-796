@@ -96,7 +96,11 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       const cacheKey = `${currentLanguage}:${englishText}`;
       
       if (aiTranslationCache[cacheKey]) {
-        return aiTranslationCache[cacheKey];
+        const cachedValue = aiTranslationCache[cacheKey];
+        if (cachedValue && cachedValue.trim() !== '.' && cachedValue.trim() !== '') {
+          return cachedValue;
+        }
+        return englishText;
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
