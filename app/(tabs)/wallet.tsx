@@ -568,6 +568,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingTop: 24,
     paddingBottom: 40,
   },
   balanceCard: {

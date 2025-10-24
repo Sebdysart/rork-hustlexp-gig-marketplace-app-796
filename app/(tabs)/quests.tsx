@@ -390,6 +390,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    paddingTop: 24,
     paddingBottom: 100,
   },
   headerGradient: {

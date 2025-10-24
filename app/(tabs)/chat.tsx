@@ -247,7 +247,7 @@ export default function ChatScreen() {
           colors={[premiumColors.deepBlack, '#0A0A0F', premiumColors.deepBlack]} 
           style={styles.gradient}
         >
-          <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 40 }]}>
+          <View style={styles.header}>
             <Text style={styles.headerTitle}>{translations[0]}</Text>
             <Text style={styles.headerSubtitle}>{translations[1]}</Text>
           </View>
@@ -295,6 +295,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
+    paddingTop: 24,
     paddingBottom: 24,
     paddingHorizontal: 16,
     gap: 8,

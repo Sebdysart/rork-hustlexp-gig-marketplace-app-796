@@ -254,7 +254,7 @@ export default function HomeScreen() {
           
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={[styles.scrollContent, { paddingTop: Platform.select({ ios: 120, android: 90, default: 90 }) }]}
+            contentContainerStyle={styles.scrollContent}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />
             }
@@ -525,7 +525,7 @@ export default function HomeScreen() {
         
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingTop: Platform.select({ ios: 120, android: 90, default: 90 }) }]}
+          contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />
           }
@@ -792,6 +792,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingTop: 24,
     paddingBottom: 100,
   },
   header: {
