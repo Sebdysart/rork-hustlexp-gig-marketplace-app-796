@@ -21,9 +21,11 @@ import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
 import { installGlobalTextNodeFix } from '@/utils/globalTextNodeFix';
+import { enableTextNodeDetection } from '@/utils/textNodeDetector';
 
 // Install global text node validation
 installGlobalTextNodeFix();
+enableTextNodeDetection();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -75,6 +77,7 @@ function RootLayoutNav() {
         <Stack.Screen name="offers/index" options={{ title: 'My Offers' }} />
         <Stack.Screen name="offers/new" options={{ presentation: 'modal', title: 'Create Offer' }} />
         <Stack.Screen name="analytics-dashboard" options={{ title: 'Analytics' }} />
+        <Stack.Screen name="error-finder" options={{ title: 'Error Finder' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
