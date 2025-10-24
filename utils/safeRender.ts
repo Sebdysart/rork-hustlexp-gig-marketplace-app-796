@@ -94,8 +94,9 @@ export function validateChildren(children: any, componentName: string = 'Compone
       }
 
       if (React.isValidElement(child)) {
-        if (child.props && child.props.children) {
-          check(child.props.children, `${path}>${child.type}`);
+        const element = child as React.ReactElement<{ children?: any }>;
+        if (element.props && element.props.children) {
+          check(element.props.children, `${path}>${element.type}`);
         }
       }
     };
