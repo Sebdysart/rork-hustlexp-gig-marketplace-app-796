@@ -89,7 +89,7 @@ export function TranslationLoadingOverlay() {
 
           <View style={styles.progressContainer}>
             <View style={styles.progressBarBg}>
-              <Animated.View 
+              <View 
                 style={[
                   styles.progressBarFill,
                   { 
@@ -103,7 +103,7 @@ export function TranslationLoadingOverlay() {
                   end={{ x: 1, y: 0 }}
                   style={StyleSheet.absoluteFill}
                 />
-              </Animated.View>
+              </View>
             </View>
             <Text style={styles.progressText}>{translationProgress}%</Text>
           </View>
