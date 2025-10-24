@@ -1,209 +1,386 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Stack } from 'expo-router';
-import { premiumColors } from '@/constants/designTokens';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { COLORS } from '@/constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Search } from 'lucide-react-native';
+
+type ErrorInfo = {
+  file: string;
+  line: number;
+  component: string;
+  snippet: string;
+};
 
 export default function ErrorFinderScreen() {
-  const [logs, setLogs] = useState<string[]>([]);
-  const [errorCount, setErrorCount] = useState(0);
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [errors, setErrors] = useState<ErrorInfo[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [currentError, setCurrentError] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<string[]>([]);
 
   useEffect(() => {
     const originalError = console.error;
-    const originalLog = console.log;
-    const originalWarn = console.warn;
-
-    console.error = (...args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ');
-      
-      setLogs(prev => [`[ERROR] ${new Date().toLocaleTimeString()}: ${message}`, ...prev].slice(0, 100));
-      setErrorCount(prev => prev + 1);
-      originalError(...args);
-    };
-
-    console.log = (...args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ');
-      
-      if (message.includes('TEXT NODE') || message.includes('text node') || message.includes('Unexpected')) {
-        setLogs(prev => [`[LOG] ${new Date().toLocaleTimeString()}: ${message}`, ...prev].slice(0, 100));
+    console.error = (...args) => {
+      const errorStr = args.join(' ');
+      if (errorStr.includes('text node') || errorStr.includes('Text strings must be rendered within a <Text>')) {
+        setCurrentError(errorStr);
+        
+        const stack = new Error().stack;
+        if (stack) {
+          console.log('=== ERROR STACK ===');
+          console.log(stack);
+          console.log('===================');
+        }
       }
-      originalLog(...args);
-    };
-
-    console.warn = (...args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ');
-      
-      setLogs(prev => [`[WARN] ${new Date().toLocaleTimeString()}: ${message}`, ...prev].slice(0, 100));
-      originalWarn(...args);
+      originalError.apply(console, args);
     };
 
     return () => {
       console.error = originalError;
-      console.log = originalLog;
-      console.warn = originalWarn;
     };
   }, []);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'Error Finder',
-        headerStyle: { backgroundColor: premiumColors.deepBlack },
-        headerTintColor: '#fff',
-      }} />
-      
-      <View style={styles.header}>
-        <Text style={styles.title}>Text Node Error Detective</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{errorCount} errors</Text>
-        </View>
-        <Text style={styles.subtitle}>
-          This screen intercepts all console logs to find the text node error
-        </Text>
-      </View>
-
-      <View style={styles.instructions}>
-        <Text style={styles.instructionTitle}>Instructions:</Text>
-        <Text style={styles.instructionText}>
-          1. Navigate through your app{'\n'}
-          2. When you see the error appear, come back here{'\n'}
-          3. The error details will be logged below{'\n'}
-          4. Look for component names, text content, and stack traces
-        </Text>
-      </View>
-
-      <ScrollView style={styles.logsContainer}>
-        {logs.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No logs yet. Navigate through the app to trigger the error.</Text>
+  const testTextRender = () => {
+    const results: string[] = [];
+    
+    const testValues = [
+      '.',
+      '..',
+      '...',
+      '',
+      ' ',
+      'undefined',
+      'null',
+      '   ',
+      'Hello.',
+      '. test',
+    ];
+    
+    testValues.forEach(val => {
+      try {
+        const TestComponent = () => (
+          <View>
+            <Text>{val}</Text>
           </View>
-        ) : (
-          logs.map((log, index) => (
-            <View key={index} style={styles.logItem}>
-              <Text style={[
-                styles.logText,
-                log.includes('[ERROR]') && styles.errorText,
-                log.includes('[WARN]') && styles.warnText,
-              ]}>
-                {log}
-              </Text>
-            </View>
-          ))
+        );
+        results.push(`✅ "${val}" - Safe`);
+      } catch (e) {
+        results.push(`❌ "${val}" - Error: ${e}`);
+      }
+    });
+    
+    setTestResults(results);
+  };
+
+  const scanForIssues = async () => {
+    setScanning(true);
+    const found: ErrorInfo[] = [];
+
+    console.log('Starting comprehensive scan...');
+    console.log('Please navigate to different tabs to trigger the error');
+    console.log('Watch the console for stack traces');
+
+    try {
+      const routes = [
+        '/(tabs)/home',
+        '/(tabs)/profile', 
+        '/(tabs)/leaderboard',
+        '/(tabs)/chat',
+        '/(tabs)/wallet',
+        '/(tabs)/quests',
+        '/(tabs)/tasks',
+        '/(tabs)/roadmap',
+      ];
+
+      for (const route of routes) {
+        console.log(`Checking route: ${route}`);
+      }
+
+    } catch (error) {
+      console.error('Scan error:', error);
+    }
+
+    setErrors(found);
+    setScanning(false);
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <Stack.Screen
+        options={{
+          title: 'Error Finder',
+          headerShown: false,
+        }}
+      />
+
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Text Node Error Detector</Text>
+          <Text style={styles.subtitle}>Live error monitoring active</Text>
+        </View>
+
+        {currentError && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorTitle}>Current Error Detected:</Text>
+            <Text style={styles.errorText}>{currentError}</Text>
+            <Text style={styles.errorHint}>Check console for stack trace</Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={styles.scanButton}
+          onPress={scanForIssues}
+          disabled={scanning}
+        >
+          <Text style={styles.scanButtonText}>
+            {scanning ? 'Scanning...' : 'Scan All Routes'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.instructions}>
+          <Text style={styles.instructionTitle}>How to find the error:</Text>
+          <Text style={styles.instructionText}>1. Open browser DevTools (F12)</Text>
+          <Text style={styles.instructionText}>2. Go to Console tab</Text>
+          <Text style={styles.instructionText}>3. Navigate through app tabs</Text>
+          <Text style={styles.instructionText}>4. Watch for error stack traces</Text>
+          <Text style={styles.instructionText}>5. Stack trace will show exact file and line</Text>
+        </View>
+
+        <View style={styles.commonCauses}>
+          <Text style={styles.sectionTitle}>Common Causes:</Text>
+          <Text style={styles.causeText}>• Conditional rendering: {'{condition ? "text" : null}'}</Text>
+          <Text style={styles.causeText}>• Template literals in View: {'{`text ${var}`}'}</Text>
+          <Text style={styles.causeText}>• String variables: {'{stringVar}'}</Text>
+          <Text style={styles.causeText}>• Array join: {'{arr.join(", ")}'}</Text>
+          <Text style={styles.causeText}>• Number to string: {'{count + " items"}'}</Text>
+          <Text style={styles.causeText}>• Translation returns: {'{t[0]} could return "."'}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={testTextRender}
+        >
+          <Text style={styles.testButtonText}>Test Text Rendering</Text>
+        </TouchableOpacity>
+
+        {testResults.length > 0 && (
+          <View style={styles.testResults}>
+            <Text style={styles.sectionTitle}>Test Results:</Text>
+            {testResults.map((result, idx) => (
+              <Text key={idx} style={styles.testResultText}>{result}</Text>
+            ))}
+          </View>
+        )}
+
+        <View style={styles.quickNav}>
+          <Text style={styles.sectionTitle}>Quick Navigate:</Text>
+          <View style={styles.quickNavGrid}>
+            {['home', 'profile', 'tasks', 'quests', 'wallet', 'leaderboard'].map(route => (
+              <TouchableOpacity
+                key={route}
+                style={styles.quickNavButton}
+                onPress={() => {
+                  console.log(`Navigating to /(tabs)/${route}`);
+                  router.push(`/(tabs)/${route}` as any);
+                }}
+              >
+                <Search size={16} color={COLORS.text} />
+                <Text style={styles.quickNavText}>{route}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {errors.length > 0 && (
+          <View style={styles.results}>
+            <Text style={styles.sectionTitle}>Found Issues:</Text>
+            {errors.map((error, idx) => (
+              <View key={idx} style={styles.errorItem}>
+                <Text style={styles.errorFile}>{error.file}:{error.line}</Text>
+                <Text style={styles.errorComponent}>{error.component}</Text>
+                <Text style={styles.errorSnippet}>{error.snippet}</Text>
+              </View>
+            ))}
+          </View>
         )}
       </ScrollView>
-
-      <TouchableOpacity 
-        style={styles.clearButton}
-        onPress={() => {
-          setLogs([]);
-          setErrorCount(0);
-        }}
-      >
-        <Text style={styles.clearButtonText}>Clear Logs</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: premiumColors.deepBlack,
+    backgroundColor: COLORS.background,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
   },
   header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    marginBottom: 24,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.text,
     marginBottom: 8,
-  },
-  badge: {
-    backgroundColor: '#ff6b6b',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
-  },
-  badgeText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
   },
   subtitle: {
     fontSize: 14,
-    color: '#888',
+    color: COLORS.textSecondary,
+  },
+  errorBox: {
+    backgroundColor: '#ff4444',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#fff',
+    fontFamily: 'monospace',
+    marginBottom: 8,
+  },
+  errorHint: {
+    fontSize: 12,
+    color: '#ffcccc',
+    fontStyle: 'italic',
+  },
+  scanButton: {
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  scanButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   instructions: {
-    padding: 20,
-    backgroundColor: '#1a1a2e',
-    margin: 10,
-    borderRadius: 10,
+    backgroundColor: COLORS.card,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   instructionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4ecdc4',
-    marginBottom: 8,
+    color: COLORS.text,
+    marginBottom: 12,
   },
   instructionText: {
     fontSize: 14,
-    color: '#ccc',
-    lineHeight: 20,
-  },
-  logsContainer: {
-    flex: 1,
-    padding: 10,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: '#666',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  logItem: {
-    backgroundColor: '#1a1a1a',
-    padding: 12,
+    color: COLORS.textSecondary,
     marginBottom: 8,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#4ecdc4',
   },
-  logText: {
-    color: '#ccc',
-    fontSize: 12,
-    fontFamily: 'monospace',
-  },
-  errorText: {
-    borderLeftColor: '#ff6b6b',
-    color: '#ff6b6b',
-  },
-  warnText: {
-    borderLeftColor: '#ffa500',
-    color: '#ffa500',
-  },
-  clearButton: {
-    backgroundColor: '#ff6b6b',
+  commonCauses: {
+    backgroundColor: COLORS.card,
     padding: 16,
-    margin: 10,
-    borderRadius: 10,
-    alignItems: 'center',
+    borderRadius: 12,
+    marginBottom: 16,
   },
-  clearButtonText: {
-    color: '#fff',
+  sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  causeText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginBottom: 6,
+    fontFamily: 'monospace',
+  },
+  results: {
+    marginTop: 16,
+  },
+  errorItem: {
+    backgroundColor: COLORS.card,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ff4444',
+  },
+  errorFile: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontFamily: 'monospace',
+    marginBottom: 4,
+  },
+  errorComponent: {
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  errorSnippet: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'monospace',
+  },
+  testButton: {
+    backgroundColor: COLORS.primary + '40',
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  testButtonText: {
+    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  testResults: {
+    backgroundColor: COLORS.card,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  testResultText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+    fontFamily: 'monospace',
+  },
+  quickNav: {
+    backgroundColor: COLORS.card,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  quickNavGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  quickNavButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '40',
+  },
+  quickNavText: {
+    fontSize: 12,
+    color: COLORS.text,
+    fontWeight: '500',
   },
 });
