@@ -55,7 +55,7 @@ export default function AIOnboardingScreen() {
     {
       id: '1',
       role: 'assistant',
-      content: "Hey! 👋 I'm your HustleXP coach. Tell me about yourself - what brings you here today? Feel free to type in any language you're comfortable with!",
+      content: "Hey! 👋 Welcome to HustleXP! I'm your AI coach here to help you get started. Tell me - are you looking to find work, hire someone, or both? Feel free to type in any language!",
       timestamp: new Date(),
     },
   ]);
