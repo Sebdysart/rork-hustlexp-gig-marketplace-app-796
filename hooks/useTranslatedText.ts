@@ -47,7 +47,7 @@ export function useTranslatedText(text: string): string {
   const result = translatedText || text || '';
   
   if (!result || typeof result !== 'string') {
-    return text || '';
+    return text || ' ';
   }
   
   const trimmed = result.trim();
@@ -62,8 +62,8 @@ export function useTranslatedText(text: string): string {
     trimmed === '\u2026' || 
     /^[\.\s,;:!?]*$/.test(trimmed)
   ) {
-    // Return the original text if it's valid, otherwise return empty string (safer than space)
-    return (text && text.trim()) ? text : '';
+    // Return the original text if it's valid, otherwise return single space (safest for React Native)
+    return (text && text.trim()) ? text : ' ';
   }
   
   return result;
@@ -115,7 +115,7 @@ export function useTranslatedTexts(texts: string[]): string[] {
       const result = translation || text || '';
       
       if (!result || typeof result !== 'string') {
-        return text || '';
+        return text || ' ';
       }
       
       const trimmed = result.trim();
@@ -129,7 +129,7 @@ export function useTranslatedTexts(texts: string[]): string[] {
         trimmed === '\u2026' || 
         /^[\.\s,;:!?]*$/.test(trimmed)
       ) {
-        return (text && text.trim()) ? text : '';
+        return (text && text.trim()) ? text : ' ';
       }
       
       return result;
