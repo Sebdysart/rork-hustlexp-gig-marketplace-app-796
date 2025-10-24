@@ -165,8 +165,7 @@ export default function LiveActivityFeed() {
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityText} numberOfLines={2}>
-                  <Text style={styles.activityUserName}>{activity.userName}</Text>
-                  {' '}
+                  <Text style={styles.activityUserName}>{activity.userName} </Text>
                   <Text style={styles.activityDetail}>{activity.detail}</Text>
                 </Text>
                 <View style={styles.activityFooter}>
