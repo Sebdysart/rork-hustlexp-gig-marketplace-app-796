@@ -8,7 +8,7 @@ interface TProps extends Omit<TextProps, 'children'> {
 export function T({ children, ...props }: TProps) {
   const translated = useTranslatedText(children);
   // Safety check: never render empty strings or single dots
-  const safeText = translated && translated.trim() !== '.' && translated.trim() !== '' ? translated : (children || '\u00A0');
+  const safeText = translated && translated.trim() !== '.' && translated.trim() !== '' ? translated : (children || '');
   return <Text {...props}>{safeText}</Text>;
 }
 

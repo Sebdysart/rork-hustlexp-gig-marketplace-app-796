@@ -45,7 +45,7 @@ export function useTranslatedText(text: string): string {
 
   const result = translatedText || text || '';
   // Prevent rendering empty strings or single dots that cause 'Unexpected text node' errors
-  return result.trim() === '.' || result.trim() === '' ? text || '\u00A0' : result;
+  return result.trim() === '.' || result.trim() === '' ? (text || '') : result;
 }
 
 export function useTranslatedTexts(texts: string[]): string[] {
@@ -93,7 +93,7 @@ export function useTranslatedTexts(texts: string[]): string[] {
       const result = translation || text || '';
       // Prevent rendering empty strings or single dots that cause 'Unexpected text node' errors
       if (result.trim() === '.' || result.trim() === '') {
-        return text || '\u00A0';
+        return text || '';
       }
       return result;
     });
