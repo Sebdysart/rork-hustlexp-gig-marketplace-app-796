@@ -244,16 +244,16 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
       ? `categories like ${data.categories.join(', ')}`
       : 'various tasks';
 
-    let message = `Perfect, ${name}! 🎯 Let me confirm what I understood:\n\n`;
-    message += `✓ You want to ${intentText}\n`;
-    message += `✓ Interested in ${skillsText}\n`;
+    let message = `Perfect, ${name}! 🎯 Let me confirm what I understood: `;
+    message += `✓ You want to ${intentText}. `;
+    message += `✓ Interested in ${skillsText}. `;
     if (data.mode) {
       const modeText = data.mode === 'tradesmen' ? '⚡ Tradesman Pro' : 
                        data.mode === 'business' ? '🏢 Business Poster' : 
                        '💪 Everyday Hustler';
-      message += `✓ Starting as ${modeText}\n`;
+      message += `✓ Starting as ${modeText}. `;
     }
-    message += `\nType "yes" to get started, or tell me what to change!`;
+    message += ` Type "yes" to get started, or tell me what to change!`;
 
     if (detectedLanguage !== 'en') {
       message = await translateText(message, detectedLanguage);
