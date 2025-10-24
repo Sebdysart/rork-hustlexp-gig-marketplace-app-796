@@ -71,7 +71,8 @@ export function useTranslatedText(text: string): string {
 
 export function useTranslatedTexts(texts: string[]): string[] {
   const { currentLanguage, useAITranslation, aiTranslationCache } = useLanguage() as any;
-  const [translatedTexts, setTranslatedTexts] = useState<string[]>(texts);
+  // Initialize with safe default values - use original texts to prevent undefined
+  const [translatedTexts, setTranslatedTexts] = useState<string[]>(texts.map(t => t || ' '));
   const prevTextsRef = useRef<string>('');
   const prevLangRef = useRef<string>('');
   const cacheRef = useRef<Record<string, string>>({});
@@ -138,5 +139,13 @@ export function useTranslatedTexts(texts: string[]): string[] {
     setTranslatedTexts(translated);
   }, [texts, currentLanguage, useAITranslation, aiTranslationCache]);
 
-  return translatedTexts;
+  // Final safety check: ensure all returned values are safe
+  return translatedTexts.map((t, i) => {
+    if (!t || typeof t !== 'string') return texts[i] || ' ';
+    const trimmed = t.trim();
+    if (!trimmed || /^[\.\s,;:!?]*$/.test(trimmed)) {
+      return (texts[i] && texts[i].trim()) ? texts[i] : ' ';
+    }
+    return t;
+  });
 }
