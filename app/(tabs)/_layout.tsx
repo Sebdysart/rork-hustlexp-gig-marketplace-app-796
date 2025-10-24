@@ -85,7 +85,7 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: premiumColors.neonCyan,
           tabBarInactiveTintColor: Colors.textSecondary,
-          headerShown: true,
+          headerShown: false,
           tabBarStyle: {
             backgroundColor: premiumColors.richBlack,
             borderTopColor: premiumColors.glassWhite,
@@ -192,7 +192,7 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: premiumColors.neonCyan,
           tabBarInactiveTintColor: Colors.textSecondary,
-          headerShown: true,
+          headerShown: false,
           tabBarStyle: {
             backgroundColor: premiumColors.richBlack,
             borderTopColor: premiumColors.glassWhite,
@@ -299,7 +299,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: premiumColors.neonCyan,
         tabBarInactiveTintColor: Colors.textSecondary,
-        headerShown: true,
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: premiumColors.richBlack,
           borderTopColor: premiumColors.glassWhite,

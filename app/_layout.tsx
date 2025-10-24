@@ -16,6 +16,8 @@ import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
+import { premiumColors } from "@/constants/designTokens";
+import Colors from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,8 +26,21 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   return (
     <>
-      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+      <Stack screenOptions={{
+        headerBackTitle: "Back",
+        headerStyle: {
+          backgroundColor: premiumColors.deepBlack,
+        },
+        headerTintColor: Colors.text,
+        headerShadowVisible: false,
+        contentStyle: {
+          backgroundColor: premiumColors.deepBlack,
+        },
+      }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="ai-onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="post-task" options={{ presentation: 'modal', title: 'Post Quest' }} />
         <Stack.Screen name="adventure-map" options={{ presentation: 'modal', title: 'Adventure Map' }} />
