@@ -191,7 +191,7 @@ export default function SignInScreen() {
               </Animated.View>
               
               <View style={styles.titleContainer}>
-                <Text style={styles.title}>Welcome Back, Legend</Text>
+                <Text style={styles.title}>Welcome Back, Hustler</Text>
                 <Text style={styles.subtitle}>Your journey starts here</Text>
               </View>
               
@@ -334,7 +334,7 @@ export default function SignInScreen() {
               >
                 <BlurView intensity={30} tint="dark" style={styles.secondaryButtonBlur}>
                   <Sparkles size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
-                  <Text style={styles.secondaryButtonText}>Start Your Hustle</Text>
+                  <Text style={styles.secondaryButtonText}>Begin Your Journey</Text>
                 </BlurView>
               </TouchableOpacity>
 
