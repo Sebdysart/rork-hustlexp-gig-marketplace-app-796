@@ -44,11 +44,11 @@ export function useTranslatedText(text: string): string {
   }, [text, currentLanguage, useAITranslation, aiTranslationCache]);
 
   // CRITICAL: Always return a valid string, never undefined or special characters
-  const result = translatedText || text || ' ';
+  const result = translatedText || text || '';
   const trimmed = result.trim();
   // Prevent rendering problematic values that cause 'Unexpected text node' errors
   if (trimmed === '.' || trimmed === '' || !trimmed) {
-    return text || ' '; // Return space if completely empty
+    return text || ''; // Return empty string (safe in Text components)
   }
   return result;
 }
@@ -96,11 +96,11 @@ export function useTranslatedTexts(texts: string[]): string[] {
         console.log(`[useTranslatedTexts] ✅ "${text.substring(0, 30)}..." → "${translation.substring(0, 30)}..."`);
       }
       // CRITICAL: Always return a valid string, never undefined or special characters
-      const result = translation || text || ' ';
+      const result = translation || text || '';
       const trimmed = result.trim();
       // Prevent rendering problematic values that cause 'Unexpected text node' errors
       if (trimmed === '.' || trimmed === '' || !trimmed) {
-        return text || ' '; // Return space if completely empty
+        return text || ''; // Return empty string (safe in Text components)
       }
       return result;
     });

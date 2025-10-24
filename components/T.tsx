@@ -10,7 +10,7 @@ export function T({ children, ...props }: TProps) {
   // CRITICAL: Always ensure we have a renderable string value
   const safeText = translated && translated.trim() && translated.trim() !== '.' 
     ? translated 
-    : (children || ' ');
+    : (children || '');
   return <Text {...props}>{safeText}</Text>;
 }
 

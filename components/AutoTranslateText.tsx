@@ -18,7 +18,7 @@ export function AutoTranslateText({ children, disabled, ...props }: AutoTranslat
   // CRITICAL: Always ensure we have a renderable string value
   const safeText = translated && translated.trim() && translated.trim() !== '.' 
     ? translated 
-    : (textContent || ' ');
+    : (textContent || '');
   return <Text {...props}>{safeText}</Text>;
 }
 

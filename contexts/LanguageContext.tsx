@@ -48,12 +48,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
 
       const newCache: Record<string, string> = {};
       keys.forEach((key, index) => {
-        // CRITICAL: Never cache empty strings or dots
-        const translatedValue = translations[index] || textsToTranslate[index] || ' ';
+        // CRITICAL: Never cache empty strings, spaces, or dots
+        const translatedValue = translations[index] || textsToTranslate[index] || '';
         if (translatedValue.trim() && translatedValue.trim() !== '.') {
           newCache[key] = translatedValue;
         } else {
-          newCache[key] = textsToTranslate[index] || ' ';
+          newCache[key] = textsToTranslate[index] || '';
         }
       });
 
@@ -107,7 +107,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         if (cachedValue && cachedValue.trim() && cachedValue.trim() !== '.') {
           return cachedValue;
         }
-        return englishText || ' ';
+        return englishText || key || '';
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
@@ -115,12 +115,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         scheduleBatch();
       }
       
-      return englishText || ' ';
+      return englishText || key || '';
     }
     
     const result = i18n.t(key, { ...options, locale: currentLanguage });
-    // CRITICAL: Never return empty strings
-    return result || ' ';
+    // CRITICAL: Return the key itself if result is empty (better than space for navigation titles)
+    return result && result.trim() ? result : (key || '');
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);
 
   const preloadAllAppTranslations = useCallback(async (lang: LanguageCodeType) => {
@@ -158,12 +158,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
           const newCache: Record<string, string> = {};
           batch.forEach((text, idx) => {
             const cacheKey = `${lang}:${text}`;
-            // CRITICAL: Never cache empty strings or dots
-            const translatedValue = translated[idx] || text || ' ';
+            // CRITICAL: Never cache empty strings, spaces, or dots
+            const translatedValue = translated[idx] || text || '';
             if (translatedValue.trim() && translatedValue.trim() !== '.') {
               newCache[cacheKey] = translatedValue;
             } else {
-              newCache[cacheKey] = text || ' ';
+              newCache[cacheKey] = text || '';
             }
           });
           
@@ -299,18 +299,18 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     
     try {
       const result = await aiTranslationService.translate([text], lang, 'en');
-      const translated = result[0] || text || ' ';
+      const translated = result[0] || text || '';
       
-      // CRITICAL: Never cache empty strings or dots
+      // CRITICAL: Never cache empty strings, spaces, or dots
       if (translated.trim() && translated.trim() !== '.') {
         setAITranslationCache(prev => ({ ...prev, [cacheKey]: translated }));
         return translated;
       } else {
-        return text || ' ';
+        return text || '';
       }
     } catch (error) {
       console.error('[Language] Translation failed:', error);
-      return text || ' ';
+      return text || '';
     }
   }, [currentLanguage, useAITranslation, aiTranslationCache]);
 

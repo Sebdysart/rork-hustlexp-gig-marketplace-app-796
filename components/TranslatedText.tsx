@@ -10,7 +10,7 @@ export default function TranslatedText({ children, ...props }: TranslatedTextPro
   // CRITICAL: Always ensure we have a renderable string value
   const safeText = translatedText && translatedText.trim() && translatedText.trim() !== '.' 
     ? translatedText 
-    : (children || ' ');
+    : (children || '');
   
   return <Text {...props}>{safeText}</Text>;
 }
