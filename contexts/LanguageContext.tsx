@@ -107,7 +107,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         if (cachedValue && cachedValue.trim() && cachedValue.trim() !== '.') {
           return cachedValue;
         }
-        return englishText || key || '';
+        return englishText || key || 'Translation';
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
@@ -115,12 +115,15 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         scheduleBatch();
       }
       
-      return englishText || key || '';
+      return englishText || key || 'Translation';
     }
     
     const result = i18n.t(key, { ...options, locale: currentLanguage });
-    // CRITICAL: Return the key itself if result is empty (better than space for navigation titles)
-    return result && result.trim() ? result : (key || '');
+    // CRITICAL: Never return empty string - always return a valid text value
+    if (!result || !result.trim() || result.trim() === '.') {
+      return key || 'Translation';
+    }
+    return result;
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);
 
   const preloadAllAppTranslations = useCallback(async (lang: LanguageCodeType) => {

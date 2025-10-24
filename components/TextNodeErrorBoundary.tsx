@@ -50,10 +50,18 @@ export class TextNodeErrorBoundary extends Component<Props, State> {
       console.error('🚨 TEXT NODE ERROR CAUGHT BY BOUNDARY');
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.error('Error:', error.message);
+      console.error('Full Error:', JSON.stringify(error, null, 2));
       console.error('Component Stack:', errorInfo.componentStack);
+      console.error('Full Error Stack:', error.stack);
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.error('\nDetected Errors from Runtime Scan:');
       console.error(TextNodeErrorDetector.getErrorReport());
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('\n🔍 DEBUGGING TIPS:');
+      console.error('1. Check the Component Stack above for the exact component');
+      console.error('2. Look for any {variable} without <Text> wrapper');
+      console.error('3. Check for {condition && "text"} patterns');
+      console.error('4. Ensure all t() calls are inside <Text> or use title prop correctly');
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     } else {
       console.error('Error caught by boundary:', error);
