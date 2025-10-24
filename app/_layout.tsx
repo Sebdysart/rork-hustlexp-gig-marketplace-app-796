@@ -22,6 +22,7 @@ import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
 import { installGlobalTextNodeFix } from '@/utils/globalTextNodeFix';
 import { enableTextNodeDetection } from '@/utils/textNodeDetector';
+import '@/utils/globalTextFix'; // New comprehensive fix
 
 // Install global text node validation
 installGlobalTextNodeFix();
