@@ -331,7 +331,7 @@ export default function SignInScreen() {
               </View>
               <Text style={styles.infoText}>Enter your email to get started. We will sign you in if you have an account, or guide you through creating one!</Text>
 
-              {email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) && (
+              {(email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim())) ? (
                 <TouchableOpacity
                   style={styles.forgotPassword}
                   onPress={() => {
@@ -340,7 +340,7 @@ export default function SignInScreen() {
                 >
                   <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
                 </TouchableOpacity>
-              )}
+              ) : null}
             </View>
           </Animated.View>
       </KeyboardAvoidingView>
