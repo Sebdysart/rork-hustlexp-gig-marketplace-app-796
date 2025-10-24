@@ -293,9 +293,7 @@ export default function SignInScreen() {
 
               <View style={styles.securityNote}>
                 <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2} />
-                <Text style={styles.securityText}>256-bit encrypted</Text>
-                <Text style={styles.securityDot}>•</Text>
-                <Text style={styles.securityText}>Your data is secure</Text>
+                <Text style={styles.securityText}>256-bit encrypted • Your data is secure</Text>
               </View>
 
               <TouchableOpacity
@@ -312,7 +310,7 @@ export default function SignInScreen() {
                 >
                   {!isLoading && <Zap size={22} color={email.trim() && password.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={2.5} />}
                   <Text style={[styles.buttonText, (!email.trim() || !password.trim() || isLoading) && styles.buttonTextDisabled]}>
-                    {isLoading ? 'Entering the Arena...' : 'Start Your Hustle'}
+                    {isLoading ? 'Loading...' : 'Start Your Hustle'}
                   </Text>
                   {!isLoading && email.trim() && password.trim() && <Sparkles size={20} color={premiumColors.deepBlack} strokeWidth={2.5} />}
                 </LinearGradient>
