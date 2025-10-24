@@ -21,9 +21,15 @@ import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
 import { applyTextNodeFix } from '@/utils/textNodeFixer';
+import { enableTextNodeScanning } from '@/utils/textNodeScanner';
 
 // Install comprehensive text node fix
 applyTextNodeFix();
+
+// Enable runtime text node scanning in development
+if (__DEV__) {
+  enableTextNodeScanning();
+}
 
 SplashScreen.preventAutoHideAsync();
 
