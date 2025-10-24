@@ -293,7 +293,9 @@ export default function SignInScreen() {
 
               <View style={styles.securityNote}>
                 <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2} />
-                <Text style={styles.securityText}>256-bit encrypted • Your data is secure</Text>
+                <Text style={styles.securityText}>256-bit encrypted</Text>
+                <Text style={styles.securityDot}>•</Text>
+                <Text style={styles.securityText}>Your data is secure</Text>
               </View>
 
               <TouchableOpacity
@@ -536,6 +538,12 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.medium,
     color: premiumColors.glassWhiteStrong,
+  },
+  securityDot: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+    color: premiumColors.glassWhiteStrong,
+    marginHorizontal: spacing.xs / 2,
   },
   button: {
     borderRadius: borderRadius.full,
