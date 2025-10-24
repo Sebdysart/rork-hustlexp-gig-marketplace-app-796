@@ -47,7 +47,8 @@ export function useTranslatedText(text: string): string {
   const result = translatedText || text || 'Loading';
   const trimmed = result.trim();
   // Prevent rendering problematic values that cause 'Unexpected text node' errors
-  if (trimmed === '.' || trimmed === '' || !trimmed) {
+  // Check for dots, ellipsis, empty strings, and other problematic characters
+  if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '\u2026' || /^[\.\s]*$/.test(trimmed)) {
     return text || 'Loading'; // Return fallback text (safe in Text components)
   }
   return result;
@@ -99,7 +100,8 @@ export function useTranslatedTexts(texts: string[]): string[] {
       const result = translation || text || 'Loading';
       const trimmed = result.trim();
       // Prevent rendering problematic values that cause 'Unexpected text node' errors
-      if (trimmed === '.' || trimmed === '' || !trimmed) {
+      // Check for dots, ellipsis, empty strings, and other problematic characters
+      if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '\u2026' || /^[\.\s]*$/.test(trimmed)) {
         return text || 'Loading'; // Return fallback text (safe in Text components)
       }
       return result;

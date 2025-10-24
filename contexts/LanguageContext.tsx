@@ -96,7 +96,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     }, 500);
   }, [processBatch]);
 
-  const t = useCallback((key: string, options?: any) => {
+  const t = useCallback((key: string, options?: any): string => {
     if (useAITranslation && currentLanguage !== 'en') {
       const englishText = i18n.t(key, { ...options, locale: 'en' });
       const cacheKey = `${currentLanguage}:${englishText}`;
@@ -104,10 +104,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       if (aiTranslationCache[cacheKey]) {
         const cachedValue = aiTranslationCache[cacheKey];
         // CRITICAL: Never return empty or dot-only strings
-        if (cachedValue && cachedValue.trim() && cachedValue.trim() !== '.') {
+        if (cachedValue && typeof cachedValue === 'string' && cachedValue.trim() && cachedValue.trim() !== '.' && cachedValue.trim() !== '...' && cachedValue.trim() !== '…') {
           return cachedValue;
         }
-        return englishText || key || 'Translation';
+        // Return fallback
+        const fallback = (englishText && typeof englishText === 'string' && englishText.trim()) ? englishText : (key || 'Loading');
+        return fallback;
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
@@ -115,13 +117,14 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         scheduleBatch();
       }
       
-      return englishText || key || 'Translation';
+      const fallback = (englishText && typeof englishText === 'string' && englishText.trim()) ? englishText : (key || 'Loading');
+      return fallback;
     }
     
     const result = i18n.t(key, { ...options, locale: currentLanguage });
-    // CRITICAL: Never return empty string - always return a valid text value
-    if (!result || !result.trim() || result.trim() === '.') {
-      return key || 'Translation';
+    // CRITICAL: Never return empty string, dots, or problematic values
+    if (!result || typeof result !== 'string' || !result.trim() || result.trim() === '.' || result.trim() === '...' || result.trim() === '…') {
+      return key || 'Loading';
     }
     return result;
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);

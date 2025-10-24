@@ -116,7 +116,16 @@ class AITranslationService {
 
         for (let i = 0; i < toTranslate.length; i++) {
           const { text: originalText, index } = toTranslate[i];
-          const translated = response.translations[i] || originalText;
+          let translated = response.translations[i] || originalText;
+          
+          // CRITICAL: Validate translated text - never allow dots, ellipsis, or empty strings
+          if (!translated || typeof translated !== 'string') {
+            translated = originalText;
+          }
+          const trimmed = translated.trim();
+          if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '\u2026' || /^[\.\s]*$/.test(trimmed)) {
+            translated = originalText; // Fallback to original if problematic
+          }
           
           results[index] = translated;
           this.cache.translations[targetLanguage][originalText] = translated;
