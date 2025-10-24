@@ -18,6 +18,7 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
+import '@/utils/errorDebugger';
 
 SplashScreen.preventAutoHideAsync();
 
