@@ -16,6 +16,7 @@ import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
+import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
@@ -92,31 +93,33 @@ function SplashScreenManager() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <LanguageProvider>
-          <ThemeProvider>
-          <SettingsProvider>
-            <NotificationProvider>
-              <AnalyticsProvider>
-                <AppProvider>
-                  <AIProfileProvider>
-                    <TaskLifecycleProvider>
-                      <SquadContext>
-                        <OfferContext>
-                          <SplashScreenManager />
-                          <RootLayoutNav />
-                        </OfferContext>
-                      </SquadContext>
-                    </TaskLifecycleProvider>
-                  </AIProfileProvider>
-                </AppProvider>
-              </AnalyticsProvider>
-            </NotificationProvider>
-          </SettingsProvider>
-          </ThemeProvider>
-        </LanguageProvider>
-      </GestureHandlerRootView>
-    </QueryClientProvider>
+    <TextNodeErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <LanguageProvider>
+            <ThemeProvider>
+            <SettingsProvider>
+              <NotificationProvider>
+                <AnalyticsProvider>
+                  <AppProvider>
+                    <AIProfileProvider>
+                      <TaskLifecycleProvider>
+                        <SquadContext>
+                          <OfferContext>
+                            <SplashScreenManager />
+                            <RootLayoutNav />
+                          </OfferContext>
+                        </SquadContext>
+                      </TaskLifecycleProvider>
+                    </AIProfileProvider>
+                  </AppProvider>
+                </AnalyticsProvider>
+              </NotificationProvider>
+            </SettingsProvider>
+            </ThemeProvider>
+          </LanguageProvider>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
+    </TextNodeErrorBoundary>
   );
 }
