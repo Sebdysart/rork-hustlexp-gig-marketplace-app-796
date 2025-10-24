@@ -1,3 +1,4 @@
+import React from "react";
 /**
  * Global Text Node Error Prevention
  * 
@@ -5,7 +6,7 @@
  * wrap any text children in Text components, preventing "Unexpected text node" errors.
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 let isPatched = false;
 
@@ -20,7 +21,8 @@ function sanitizeTextContent(content: any): any {
   if (typeof content === 'string') {
     const trimmed = content.trim();
     // Filter out problematic values
-    if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '…' || trimmed === '...') {
+    if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '…' || trimmed === '...' || /^[\.\s]+$/.test(trimmed)) {
+      console.warn('[GlobalTextNodeFix] Filtered problematic text value:', JSON.stringify(content));
       return null;
     }
   }
@@ -41,10 +43,38 @@ export function installGlobalTextNodeFix() {
   }
 
   console.log('[GlobalTextNodeFix] Installing runtime text validation...');
-
-  // We don't actually patch View because that could cause issues
-  // Instead, we rely on our error boundary and safe components
-  // This function is here for future enhancements if needed
+  
+  // Patch React.createElement to filter out problematic text nodes
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    const React = require('react');
+    const originalCreateElement = React.createElement;
+    
+    React.createElement = function(type: any, props: any, ...children: any[]) {
+      // Only filter for View components
+      if (type && (type === 'View' || (type.displayName && type.displayName.includes('View')))) {
+        const filteredChildren = children.map(child => {
+          if (typeof child === 'string') {
+            const trimmed = child.trim();
+            // Filter out problematic single character strings
+            if (!trimmed || trimmed === '.' || trimmed === '...' || trimmed === '…' || /^[\.\s]+$/.test(trimmed)) {
+              console.warn('[GlobalTextNodeFix] Prevented problematic text node from rendering:', JSON.stringify(child));
+              return null;
+            }
+          }
+          return child;
+        }).filter(child => child !== null);
+        
+        return originalCreateElement.call(this, type, props, ...filteredChildren);
+      }
+      
+      return originalCreateElement.call(this, type, props, ...children);
+    };
+    
+    console.log('[GlobalTextNodeFix] ✅ React.createElement patched to filter problematic text nodes');
+  } catch (error) {
+    console.warn('[GlobalTextNodeFix] Failed to patch React.createElement:', error);
+  }
 
   isPatched = true;
   console.log('[GlobalTextNodeFix] ✅ Runtime validation installed');
