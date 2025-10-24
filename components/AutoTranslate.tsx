@@ -8,10 +8,14 @@ interface AutoTranslateProps extends TextProps {
 
 export function AutoTranslate({ children, style, ...props }: AutoTranslateProps) {
   const translatedText = useTranslatedText(children);
+  // CRITICAL: Always ensure we have a renderable string value
+  const safeText = translatedText && translatedText.trim() && translatedText.trim() !== '.' 
+    ? translatedText 
+    : (children || ' ');
   
   return (
     <Text style={style} {...props}>
-      {translatedText}
+      {safeText}
     </Text>
   );
 }

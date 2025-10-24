@@ -43,9 +43,14 @@ export function useTranslatedText(text: string): string {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, currentLanguage, useAITranslation, aiTranslationCache]);
 
-  const result = translatedText || text || '';
-  // Prevent rendering empty strings or single dots that cause 'Unexpected text node' errors
-  return result.trim() === '.' || result.trim() === '' ? (text || '') : result;
+  // CRITICAL: Always return a valid string, never undefined or special characters
+  const result = translatedText || text || ' ';
+  const trimmed = result.trim();
+  // Prevent rendering problematic values that cause 'Unexpected text node' errors
+  if (trimmed === '.' || trimmed === '' || !trimmed) {
+    return text || ' '; // Return space if completely empty
+  }
+  return result;
 }
 
 export function useTranslatedTexts(texts: string[]): string[] {
@@ -90,10 +95,12 @@ export function useTranslatedTexts(texts: string[]): string[] {
       if (translation && translation !== text) {
         console.log(`[useTranslatedTexts] ✅ "${text.substring(0, 30)}..." → "${translation.substring(0, 30)}..."`);
       }
-      const result = translation || text || '';
-      // Prevent rendering empty strings or single dots that cause 'Unexpected text node' errors
-      if (result.trim() === '.' || result.trim() === '') {
-        return text || '';
+      // CRITICAL: Always return a valid string, never undefined or special characters
+      const result = translation || text || ' ';
+      const trimmed = result.trim();
+      // Prevent rendering problematic values that cause 'Unexpected text node' errors
+      if (trimmed === '.' || trimmed === '' || !trimmed) {
+        return text || ' '; // Return space if completely empty
       }
       return result;
     });

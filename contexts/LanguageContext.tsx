@@ -48,7 +48,13 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
 
       const newCache: Record<string, string> = {};
       keys.forEach((key, index) => {
-        newCache[key] = translations[index] || textsToTranslate[index];
+        // CRITICAL: Never cache empty strings or dots
+        const translatedValue = translations[index] || textsToTranslate[index] || ' ';
+        if (translatedValue.trim() && translatedValue.trim() !== '.') {
+          newCache[key] = translatedValue;
+        } else {
+          newCache[key] = textsToTranslate[index] || ' ';
+        }
       });
 
       setAITranslationCache(prev => {
@@ -97,10 +103,11 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       
       if (aiTranslationCache[cacheKey]) {
         const cachedValue = aiTranslationCache[cacheKey];
-        if (cachedValue && cachedValue.trim() !== '.' && cachedValue.trim() !== '') {
+        // CRITICAL: Never return empty or dot-only strings
+        if (cachedValue && cachedValue.trim() && cachedValue.trim() !== '.') {
           return cachedValue;
         }
-        return englishText;
+        return englishText || ' ';
       }
       
       if (!batchQueueRef.current.has(cacheKey)) {
@@ -108,10 +115,12 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         scheduleBatch();
       }
       
-      return englishText;
+      return englishText || ' ';
     }
     
-    return i18n.t(key, { ...options, locale: currentLanguage });
+    const result = i18n.t(key, { ...options, locale: currentLanguage });
+    // CRITICAL: Never return empty strings
+    return result || ' ';
   }, [currentLanguage, useAITranslation, aiTranslationCache, scheduleBatch]);
 
   const preloadAllAppTranslations = useCallback(async (lang: LanguageCodeType) => {
@@ -149,7 +158,13 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
           const newCache: Record<string, string> = {};
           batch.forEach((text, idx) => {
             const cacheKey = `${lang}:${text}`;
-            newCache[cacheKey] = translated[idx] || text;
+            // CRITICAL: Never cache empty strings or dots
+            const translatedValue = translated[idx] || text || ' ';
+            if (translatedValue.trim() && translatedValue.trim() !== '.') {
+              newCache[cacheKey] = translatedValue;
+            } else {
+              newCache[cacheKey] = text || ' ';
+            }
           });
           
           setAITranslationCache(prev => ({ ...prev, ...newCache }));
@@ -284,14 +299,18 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     
     try {
       const result = await aiTranslationService.translate([text], lang, 'en');
-      const translated = result[0] || text;
+      const translated = result[0] || text || ' ';
       
-      setAITranslationCache(prev => ({ ...prev, [cacheKey]: translated }));
-      
-      return translated;
+      // CRITICAL: Never cache empty strings or dots
+      if (translated.trim() && translated.trim() !== '.') {
+        setAITranslationCache(prev => ({ ...prev, [cacheKey]: translated }));
+        return translated;
+      } else {
+        return text || ' ';
+      }
     } catch (error) {
       console.error('[Language] Translation failed:', error);
-      return text;
+      return text || ' ';
     }
   }, [currentLanguage, useAITranslation, aiTranslationCache]);
 

@@ -80,10 +80,11 @@ export class RuntimeErrorDebugger {
         console.error('📁 File location:', fileMatch[1]);
       }
 
-      // Alert on web for immediate visibility
+      // Log to console instead of alert to avoid rendering issues
       if (Platform.OS === 'web') {
         const componentName = componentMatch?.[1] || 'Unknown';
-        alert(`FOUND TEXT NODE ERROR!\n\nComponent: ${componentName}\n\nCheck console for details.`);
+        console.error(`🚨 FOUND TEXT NODE ERROR!\n\nComponent: ${componentName}\n\nCheck console for details.`);
+        // Removed alert() as it can interfere with React Native rendering
       }
     }
 
