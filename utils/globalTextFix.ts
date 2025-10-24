@@ -6,8 +6,6 @@
 import { Text as RNText } from 'react-native';
 import React from 'react';
 
-const originalTextRender = RNText.render;
-
 // Create a safe text filter that removes problematic values
 function safeTextValue(value: any): string {
   // Handle null/undefined
