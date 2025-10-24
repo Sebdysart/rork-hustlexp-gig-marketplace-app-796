@@ -15,7 +15,9 @@ export function AutoTranslateText({ children, disabled, ...props }: AutoTranslat
     return <Text {...props}>{children}</Text>;
   }
   
-  return <Text {...props}>{translated}</Text>;
+  // Safety check: never render empty strings or single dots
+  const safeText = translated && translated.trim() !== '.' && translated.trim() !== '' ? translated : (textContent || '\u00A0');
+  return <Text {...props}>{safeText}</Text>;
 }
 
 export default AutoTranslateText;

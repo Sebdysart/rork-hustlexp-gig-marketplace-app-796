@@ -43,7 +43,9 @@ export function useTranslatedText(text: string): string {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, currentLanguage, useAITranslation, aiTranslationCache]);
 
-  return translatedText || text || '';
+  const result = translatedText || text || '';
+  // Prevent rendering empty strings or single dots that cause 'Unexpected text node' errors
+  return result.trim() === '.' || result.trim() === '' ? text || '\u00A0' : result;
 }
 
 export function useTranslatedTexts(texts: string[]): string[] {
@@ -89,8 +91,9 @@ export function useTranslatedTexts(texts: string[]): string[] {
         console.log(`[useTranslatedTexts] ✅ "${text.substring(0, 30)}..." → "${translation.substring(0, 30)}..."`);
       }
       const result = translation || text || '';
+      // Prevent rendering empty strings or single dots that cause 'Unexpected text node' errors
       if (result.trim() === '.' || result.trim() === '') {
-        return text;
+        return text || '\u00A0';
       }
       return result;
     });

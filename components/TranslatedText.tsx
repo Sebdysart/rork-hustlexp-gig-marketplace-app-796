@@ -7,6 +7,8 @@ interface TranslatedTextProps extends TextProps {
 
 export default function TranslatedText({ children, ...props }: TranslatedTextProps) {
   const translatedText = useTranslatedText(children);
+  // Safety check: never render empty strings or single dots
+  const safeText = translatedText && translatedText.trim() !== '.' && translatedText.trim() !== '' ? translatedText : (children || '\u00A0');
   
-  return <Text {...props}>{translatedText}</Text>;
+  return <Text {...props}>{safeText}</Text>;
 }
