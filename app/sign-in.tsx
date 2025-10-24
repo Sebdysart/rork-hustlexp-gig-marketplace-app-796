@@ -299,7 +299,7 @@ export default function SignInScreen() {
 
               <View style={styles.securityNote}>
                 <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2} />
-                <Text style={styles.securityText}>256-bit encrypted • Your data is secure</Text>
+                <Text style={styles.securityText}>256-bit encrypted - Your data is secure</Text>
               </View>
 
               <TouchableOpacity
@@ -329,7 +329,7 @@ export default function SignInScreen() {
                 <Text style={styles.dividerText}>How it works</Text>
                 <View style={styles.dividerLine} />
               </View>
-              <Text style={styles.infoText}>Enter your email to get started. We&apos;ll sign you in if you have an account, or guide you through creating one!</Text>
+              <Text style={styles.infoText}>Enter your email to get started. We will sign you in if you have an account, or guide you through creating one!</Text>
 
               {email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) && (
                 <TouchableOpacity
