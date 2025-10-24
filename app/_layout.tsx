@@ -20,13 +20,10 @@ import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
-import { installGlobalTextNodeFix } from '@/utils/globalTextNodeFix';
-import { enableTextNodeDetection } from '@/utils/textNodeDetector';
-import '@/utils/globalTextFix'; // New comprehensive fix
+import { applyTextNodeFix } from '@/utils/textNodeFixer';
 
-// Install global text node validation
-installGlobalTextNodeFix();
-enableTextNodeDetection();
+// Install comprehensive text node fix
+applyTextNodeFix();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -79,6 +76,7 @@ function RootLayoutNav() {
         <Stack.Screen name="offers/new" options={{ presentation: 'modal', title: 'Create Offer' }} />
         <Stack.Screen name="analytics-dashboard" options={{ title: 'Analytics' }} />
         <Stack.Screen name="error-finder" options={{ title: 'Error Finder' }} />
+        <Stack.Screen name="text-node-scanner" options={{ title: 'Text Node Scanner' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />

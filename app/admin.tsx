@@ -147,13 +147,24 @@ export default function AdminDashboard() {
         )}
       </View>
 
-      <TouchableOpacity
-        style={styles.backendTestButton}
-        onPress={() => router.push('/backend-test')}
-      >
-        <Server size={20} color={COLORS.info} />
-        <Text style={styles.backendTestText}>Test HustleAI Backend Connection</Text>
-      </TouchableOpacity>
+      <View style={styles.debugTools}>
+        <Text style={styles.sectionTitle}>Debug Tools</Text>
+        <TouchableOpacity
+          style={styles.debugButton}
+          onPress={() => router.push('/backend-test')}
+        >
+          <Server size={20} color={COLORS.info} />
+          <Text style={styles.debugButtonText}>Test HustleAI Backend Connection</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.debugButton}
+          onPress={() => router.push('/text-node-scanner')}
+        >
+          <AlertTriangle size={20} color={COLORS.error} />
+          <Text style={styles.debugButtonText}>Text Node Scanner (Error Detector)</Text>
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.sectionTitle}>Task Status Breakdown</Text>
       <View style={styles.breakdownCard}>
@@ -847,5 +858,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700' as const,
     color: COLORS.info,
+  },
+  debugTools: {
+    marginBottom: 24,
+  },
+  debugButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  debugButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: COLORS.text,
   },
 });
