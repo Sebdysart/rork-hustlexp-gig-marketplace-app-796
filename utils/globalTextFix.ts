@@ -13,6 +13,11 @@ function safeTextValue(value: any): string {
     return '';
   }
 
+  // Handle booleans
+  if (typeof value === 'boolean') {
+    return '';
+  }
+
   // Convert to string
   const str = String(value);
   

@@ -11,6 +11,10 @@ export function T({ children, ...props }: TProps) {
   const safeText = translated && translated.trim() && translated.trim() !== '.' 
     ? translated 
     : (children || '');
+  // Don't render if empty to prevent text node errors
+  if (!safeText || !safeText.trim()) {
+    return null;
+  }
   return <Text {...props}>{safeText}</Text>;
 }
 

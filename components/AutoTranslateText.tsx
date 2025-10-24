@@ -12,6 +12,10 @@ export function AutoTranslateText({ children, disabled, ...props }: AutoTranslat
   const translated = useTranslatedText(textContent);
   
   if (disabled || typeof children !== 'string') {
+    // Handle non-string or disabled case
+    if (typeof children === 'string' && (!children || !children.trim())) {
+      return null;
+    }
     return <Text {...props}>{children}</Text>;
   }
   
@@ -19,6 +23,12 @@ export function AutoTranslateText({ children, disabled, ...props }: AutoTranslat
   const safeText = translated && translated.trim() && translated.trim() !== '.' 
     ? translated 
     : (textContent || '');
+  
+  // Don't render if empty to prevent text node errors
+  if (!safeText || !safeText.trim()) {
+    return null;
+  }
+  
   return <Text {...props}>{safeText}</Text>;
 }
 
