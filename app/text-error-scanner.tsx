@@ -115,7 +115,7 @@ export default function TextErrorScanner() {
           headerShown: true,
           title: 'Text Error Scanner',
           headerStyle: { backgroundColor: premiumColors.deepBlack },
-          headerTintColor: premiumColors.white,
+          headerTintColor: premiumColors.softWhite,
         }}
       />
 
@@ -164,7 +164,7 @@ export default function TextErrorScanner() {
 
           {errors.length === 0 && !scanning && !lastScan && (
             <View style={styles.noErrorsCard}>
-              <AlertCircle size={48} color={premiumColors.electricBlue} />
+              <AlertCircle size={48} color={premiumColors.neonBlue} />
               <Text style={styles.noErrorsText}>Ready to scan</Text>
               <Text style={styles.noErrorsSubtext}>
                 Tap the button above to start scanning
@@ -175,7 +175,7 @@ export default function TextErrorScanner() {
           {errors.map((error, index) => (
             <View key={index} style={styles.errorCard}>
               <View style={styles.errorHeader}>
-                <AlertCircle size={24} color={premiumColors.hotPink} />
+                <AlertCircle size={24} color={premiumColors.neonMagenta} />
                 <Text style={styles.errorComponent}>{error.component}</Text>
               </View>
               
@@ -248,12 +248,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: premiumColors.white,
+    color: premiumColors.softWhite,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     textAlign: 'center',
   },
   scanButton: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   lastScan: {
     fontSize: 14,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -298,13 +298,13 @@ const styles = StyleSheet.create({
   noErrorsText: {
     fontSize: 20,
     fontWeight: '600',
-    color: premiumColors.white,
+    color: premiumColors.softWhite,
     marginTop: 16,
     marginBottom: 8,
   },
   noErrorsSubtext: {
     fontSize: 14,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     textAlign: 'center',
   },
   errorCard: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: `${premiumColors.hotPink}40`,
+    borderColor: `${premiumColors.neonMagenta}40`,
   },
   errorHeader: {
     flexDirection: 'row',
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
   errorComponent: {
     fontSize: 18,
     fontWeight: '600',
-    color: premiumColors.hotPink,
+    color: premiumColors.neonMagenta,
     flex: 1,
   },
   errorMessage: {
     fontSize: 14,
-    color: premiumColors.white,
+    color: premiumColors.softWhite,
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -342,18 +342,18 @@ const styles = StyleSheet.create({
   stackTraceLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: premiumColors.electricBlue,
+    color: premiumColors.neonBlue,
     marginBottom: 8,
   },
   stackTrace: {
     fontSize: 11,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 16,
   },
   errorTime: {
     fontSize: 12,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     textAlign: 'right',
   },
   infoSection: {
@@ -362,17 +362,17 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: `${premiumColors.electricBlue}40`,
+    borderColor: `${premiumColors.neonBlue}40`,
   },
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: premiumColors.electricBlue,
+    color: premiumColors.neonBlue,
     marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     lineHeight: 22,
   },
   tipSection: {
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
-    color: premiumColors.lightGray,
+    color: '#A0A0A0',
     lineHeight: 22,
   },
 });
