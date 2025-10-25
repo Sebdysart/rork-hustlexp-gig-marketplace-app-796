@@ -545,27 +545,26 @@ export default function WelcomeMaxScreen() {
           ]}
         >
           <View style={styles.logo3D}>
-            <View style={styles.logoInner}>
-              <View style={styles.logoZapContainer}>
-                <Zap size={80} color="#FFFFFF" strokeWidth={3} fill="#FFFFFF" />
-                <View style={styles.logoZapGlow1}>
-                  <Zap size={84} color={premiumColors.neonCyan} strokeWidth={2} fill={premiumColors.neonCyan} />
-                </View>
-                <View style={styles.logoZapGlow2}>
-                  <Zap size={88} color={premiumColors.neonMagenta} strokeWidth={1} fill="transparent" />
-                </View>
-              </View>
-            </View>
-            
             <Animated.View
               style={[
-                styles.logoGlow,
+                styles.logoGlowBackground,
                 {
                   shadowRadius: glowScale,
                   shadowOpacity: glowIntensity,
                 },
               ]}
             />
+            <View style={styles.logoInner}>
+              <View style={styles.logoZapContainer}>
+                <View style={styles.logoZapGlow2}>
+                  <Zap size={92} color={premiumColors.neonMagenta} strokeWidth={1} fill="transparent" />
+                </View>
+                <View style={styles.logoZapGlow1}>
+                  <Zap size={86} color={premiumColors.neonCyan} strokeWidth={2} fill={premiumColors.neonCyan} />
+                </View>
+                <Zap size={80} color="#FFFFFF" strokeWidth={3} fill="#FFFFFF" />
+              </View>
+            </View>
           </View>
         </Animated.View>
 
@@ -724,24 +723,31 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(10, 10, 20, 0.8)',
     borderWidth: 3,
     borderColor: premiumColors.neonCyan,
+    zIndex: 2,
   },
   logoZapContainer: {
-    zIndex: 10,
+    position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
+    width: 100,
+    height: 100,
   },
   logoZapGlow1: {
     position: 'absolute',
-    opacity: 0.6,
+    top: -3,
+    left: -3,
+    opacity: 0.5,
   },
   logoZapGlow2: {
     position: 'absolute',
-    opacity: 0.4,
+    top: -6,
+    left: -6,
+    opacity: 0.3,
   },
-  logoGlow: {
+  logoGlowBackground: {
     position: 'absolute',
     width: 160,
     height: 160,
@@ -749,6 +755,7 @@ const styles = StyleSheet.create({
     backgroundColor: premiumColors.neonCyan,
     shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
+    zIndex: 1,
   },
   titleContainer: {
     alignItems: 'center',
