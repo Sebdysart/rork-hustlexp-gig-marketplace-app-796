@@ -335,7 +335,7 @@ export default function DashboardScreen() {
         <TouchableOpacity
           onPress={() => {
             sensory.tap();
-            router.push('/task-feed');
+            router.push('/(tabs)/tasks');
           }}
         >
           <GlassCard style={styles.viewAllCard}>
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   statSubtext: {
     fontSize: 11,
-    color: premiumColors.glassWhiteWeak,
+    color: premiumColors.glassWhite,
   },
   tierCard: {
     marginBottom: spacing.lg,
