@@ -10,20 +10,27 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Easing,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { Sparkles, Send, Loader, Zap, MessageCircle, Brain, Globe } from 'lucide-react-native';
+import { 
+  Sparkles, Send, Loader, MessageCircle, Brain, Mic, Check,
+  Star, MapPin, DollarSign, ArrowRight,
+  X, HelpCircle
+} from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import { hustleAI } from '@/utils/hustleAI';
+
 import Colors from '@/constants/colors';
 import { premiumColors, spacing, borderRadius, neonGlow } from '@/constants/designTokens';
 import Confetti from '@/components/Confetti';
 import { triggerHaptic } from '@/utils/haptics';
-import { UserRole, UserMode } from '@/types';
+import { UserRole, UserMode, Task } from '@/types';
 import { TradeCategory } from '@/constants/tradesmen';
+import { Audio } from 'expo-av';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -32,6 +39,12 @@ interface Message {
   role: 'assistant' | 'user';
   content: string;
   timestamp: Date;
+  uiComponents?: UIComponent[];
+}
+
+interface UIComponent {
+  type: 'role_cards' | 'skill_chips' | 'availability_picker' | 'earnings_preview' | 'confirmation' | 'map_preview';
+  data?: any;
 }
 
 interface ExtractedData {
@@ -39,262 +52,355 @@ interface ExtractedData {
   intent?: 'worker' | 'poster' | 'both';
   categories?: string[];
   trades?: TradeCategory[];
-  priceRange?: [number, number];
   availability?: string[];
   language?: string;
   mode?: UserMode;
   email?: string;
+  location?: { lat: number; lng: number; address: string };
+  travelRadius?: number;
 }
+
+interface PredictiveSuggestion {
+  text: string;
+  action: () => void;
+}
+
+type OnboardingStep = 'welcome' | 'name' | 'role' | 'skills' | 'availability' | 'location' | 'confirmation' | 'complete';
 
 export default function AIOnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { completeOnboarding } = useApp();
+  const { completeOnboarding, tasks: allTasks } = useApp();
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hey! 👋 Welcome to HustleXP! I'm your AI coach here to help you get started. Tell me - are you looking to find work, hire someone, or both? Feel free to type in any language!",
-      timestamp: new Date(),
-    },
-  ]);
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData>({});
-  const [conversationStage, setConversationStage] = useState<
-    'intro' | 'gathering' | 'confirming' | 'complete'
-  >('intro');
   const [showConfetti, setShowConfetti] = useState(false);
-  const [detectedLanguage, setDetectedLanguage] = useState<string>('en');
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [predictiveSuggestions, setPredictiveSuggestions] = useState<PredictiveSuggestion[]>([]);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [nearbyTasks, setNearbyTasks] = useState<Task[]>([]);
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const avatarPulse = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+  const waveformAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    startAvatarPulse();
+    showWelcomeMessage();
   }, []);
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
-  const detectLanguageFromText = async (text: string): Promise<string> => {
-    try {
-      const result = await hustleAI.detectLanguage(text);
-      return result.detectedLanguages[0] || 'en';
-    } catch (error) {
-      console.warn('[AI_ONBOARDING] Language detection failed:', error);
-      return 'en';
-    }
+  const startAvatarPulse = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(avatarPulse, {
+          toValue: 1.15,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(avatarPulse, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   };
 
-  const translateText = async (text: string, targetLang: string): Promise<string> => {
-    if (targetLang === 'en') return text;
+  const showWelcomeMessage = async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    addAIMessage("Hey there! I'm HUSTLEAI 👋", 'welcome');
     
-    try {
-      const result = await hustleAI.translate({
-        text: [text],
-        targetLanguage: targetLang,
-        sourceLanguage: 'en',
-        context: 'HustleXP onboarding conversation',
-      });
-      return result.translations[0] || text;
-    } catch (error) {
-      console.warn('[AI_ONBOARDING] Translation failed:', error);
-      return text;
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    addAIMessage("Let me help you set up your account in about 60 seconds.", 'welcome');
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    askForName();
   };
 
-  const extractInfoFromConversation = async (userMessage: string): Promise<Partial<ExtractedData>> => {
-    const extracted: Partial<ExtractedData> = {};
-    const lowerMessage = userMessage.toLowerCase();
+  const askForName = () => {
+    addAIMessage("What should I call you?", 'name');
+    setPredictiveSuggestions([
+      { text: "Use my real name", action: () => setInput('') },
+      { text: "Pick a cool username", action: () => setInput('') },
+    ]);
+    setProgress(10);
+  };
 
-    // Detect language
-    const lang = await detectLanguageFromText(userMessage);
-    if (lang !== 'en') {
-      extracted.language = lang;
-      setDetectedLanguage(lang);
-    }
+  const askForRole = (name: string) => {
+    addAIMessage(`${name} - I like it! ✨\n\nWhat brings you to HustleXP?`, 'role', [
+      {
+        type: 'role_cards',
+        data: {
+          roles: [
+            {
+              id: 'worker',
+              icon: '💪',
+              title: 'HUSTLER',
+              subtitle: 'Make money doing tasks',
+              description: 'Find gigs, complete tasks, earn cash',
+            },
+            {
+              id: 'poster',
+              icon: '📋',
+              title: 'POSTER',
+              subtitle: 'Get tasks done for you',
+              description: 'Hire workers, post jobs, get help',
+            },
+            {
+              id: 'both',
+              icon: '⚡',
+              title: 'BOTH',
+              subtitle: 'Do it all',
+              description: 'Maximum flexibility',
+            },
+          ],
+        },
+      },
+    ]);
+    setPredictiveSuggestions([
+      { text: "What's the difference?", action: () => handleQuickQuestion("difference") },
+      { text: "Is this safe?", action: () => handleQuickQuestion("safety") },
+    ]);
+    setProgress(25);
+  };
 
-    // Extract name
-    const nameMatch = userMessage.match(/(?:i'm|i am|my name is|call me)\s+([a-z]+)/i);
-    if (nameMatch) {
-      extracted.name = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
-    }
-
-    // Extract intent
-    if (lowerMessage.includes('find work') || lowerMessage.includes('earn money') || lowerMessage.includes('get gigs')) {
-      extracted.intent = 'worker';
-    } else if (lowerMessage.includes('hire') || lowerMessage.includes('post') || lowerMessage.includes('need workers')) {
-      extracted.intent = 'poster';
-    } else if (lowerMessage.includes('both') || (lowerMessage.includes('work') && lowerMessage.includes('hire'))) {
-      extracted.intent = 'both';
-    }
-
-    // Extract categories/skills
-    const categories: string[] = [];
-    if (lowerMessage.includes('clean')) categories.push('Cleaning');
-    if (lowerMessage.includes('deliver') || lowerMessage.includes('driver')) categories.push('Delivery');
-    if (lowerMessage.includes('move') || lowerMessage.includes('furniture')) categories.push('Moving');
-    if (lowerMessage.includes('pet') || lowerMessage.includes('dog')) categories.push('Pet Care');
-    if (lowerMessage.includes('tutor') || lowerMessage.includes('teach')) categories.push('Tutoring');
-    if (lowerMessage.includes('repair') || lowerMessage.includes('fix')) categories.push('Home Repair');
-    if (categories.length > 0) {
-      extracted.categories = categories;
-    }
-
-    // Extract trades
-    const trades: TradeCategory[] = [];
-    if (lowerMessage.includes('plumb')) trades.push('plumber' as TradeCategory);
-    if (lowerMessage.includes('electric')) trades.push('electrician' as TradeCategory);
-    if (lowerMessage.includes('carpent') || lowerMessage.includes('wood')) trades.push('carpenter' as TradeCategory);
-    if (lowerMessage.includes('paint')) trades.push('painter' as TradeCategory);
-    if (lowerMessage.includes('hvac') || lowerMessage.includes('ac') || lowerMessage.includes('heat')) trades.push('hvac' as TradeCategory);
-    if (trades.length > 0) {
-      extracted.trades = trades;
-    }
-
-    // Detect mode preference
-    if (trades.length > 0) {
-      extracted.mode = 'tradesmen';
-    } else if (extracted.intent === 'poster') {
-      extracted.mode = 'business';
+  const askForSkills = (role: 'worker' | 'poster' | 'both') => {
+    const isWorker = role === 'worker' || role === 'both';
+    
+    if (isWorker) {
+      addAIMessage("What kind of work can you do?", 'skills', [
+        {
+          type: 'skill_chips',
+          data: {
+            categories: [
+              { id: 'moving', label: '🚚 Moving', popular: true },
+              { id: 'delivery', label: '📦 Delivery', popular: true },
+              { id: 'cleaning', label: '🧹 Cleaning', popular: true },
+              { id: 'pet_care', label: '🐕 Pet Care', popular: false },
+              { id: 'tutoring', label: '📚 Tutoring', popular: false },
+              { id: 'home_repair', label: '🔧 Handy', popular: false },
+            ],
+            trades: [
+              { id: 'plumber', label: '🚰 Plumber' },
+              { id: 'electrician', label: '⚡ Electrician' },
+              { id: 'carpenter', label: '🪚 Carpenter' },
+              { id: 'painter', label: '🎨 Painter' },
+            ],
+          },
+        },
+      ]);
+      setPredictiveSuggestions([
+        { text: "I can do deliveries and moving", action: () => setInput("I can do deliveries and moving") },
+        { text: "I'm a skilled tradesman", action: () => setInput("I'm a skilled tradesman") },
+      ]);
     } else {
-      extracted.mode = 'everyday';
+      addAIMessage("Great! I'll set you up as a Poster. You can hire workers for any task you need.", 'skills');
+      setTimeout(() => askForAvailability(role), 1000);
     }
-
-    return extracted;
+    setProgress(50);
   };
 
-  const generateAIResponse = async (userMessage: string): Promise<string> => {
-    const currentData = { ...extractedData };
-    const newData = await extractInfoFromConversation(userMessage);
-    const mergedData = { ...currentData, ...newData };
-    setExtractedData(mergedData);
-
-    // Build context for AI
-    const context = `
-Current onboarding stage: ${conversationStage}
-Extracted data so far: ${JSON.stringify(mergedData)}
-User's latest message: ${userMessage}
-Detected language: ${detectedLanguage}
-
-You are HustleXP's friendly onboarding coach. Guide the user naturally through onboarding.
-- If you detect a language other than English, acknowledge it positively and continue in English (translation happens separately)
-- Ask one question at a time
-- Be conversational and encouraging
-- Extract: name, intent (worker/poster/both), skills/categories, trades (if applicable)
-- When you have enough info, summarize and ask for confirmation
-`;
-
-    try {
-      const response = await hustleAI.chat('ai-onboarding', context);
-      let aiMessage = response.response;
-
-      // Translate response if user prefers another language
-      if (detectedLanguage !== 'en') {
-        aiMessage = await translateText(aiMessage, detectedLanguage);
-      }
-
-      // Determine next stage
-      const hasName = !!mergedData.name;
-      const hasIntent = !!mergedData.intent;
-      const hasCategories = (mergedData.categories?.length || 0) > 0 || (mergedData.trades?.length || 0) > 0;
-
-      if (conversationStage === 'intro' && hasName) {
-        setConversationStage('gathering');
-      } else if (conversationStage === 'gathering' && hasName && hasIntent && hasCategories) {
-        setConversationStage('confirming');
-        
-        // Generate confirmation message
-        const confirmMsg = await generateConfirmationMessage(mergedData);
-        return confirmMsg;
-      }
-
-      return aiMessage;
-    } catch (error) {
-      console.error('[AI_ONBOARDING] Error generating response:', error);
-      return "I'm having trouble connecting right now. Could you tell me your name and what you're looking to do on HustleXP?";
-    }
-  };
-
-  const generateConfirmationMessage = async (data: ExtractedData): Promise<string> => {
-    const name = data.name || 'there';
-    const intentText = data.intent === 'worker' ? 'find work and earn money' : 
-                       data.intent === 'poster' ? 'hire workers for your projects' : 
-                       'both work and hire others';
+  const showEarningsPreview = (categories: string[], trades: string[]) => {
+    const skills = [...categories, ...trades];
+    let minEarnings = 200;
+    let maxEarnings = 400;
     
-    const skillsText = data.trades && data.trades.length > 0 
-      ? `skilled trades (${data.trades.join(', ')})`
-      : data.categories && data.categories.length > 0
-      ? `categories like ${data.categories.join(', ')}`
+    if (skills.includes('moving')) {
+      minEarnings += 100;
+      maxEarnings += 200;
+    }
+    if (trades.length > 0) {
+      minEarnings += 200;
+      maxEarnings += 400;
+    }
+
+    addAIMessage(`Perfect! I heard ${skills.length} skill${skills.length > 1 ? 's' : ''}:`, 'skills', [
+      {
+        type: 'earnings_preview',
+        data: {
+          skills,
+          potentialEarnings: {
+            weekly: { min: minEarnings, max: maxEarnings },
+            monthly: { min: minEarnings * 4, max: maxEarnings * 4 },
+          },
+        },
+      },
+    ]);
+
+    setTimeout(() => askForAvailability('worker'), 1500);
+  };
+
+  const askForAvailability = (role: 'worker' | 'poster' | 'both') => {
+    addAIMessage("When can you hustle?", 'availability', [
+      {
+        type: 'availability_picker',
+        data: {
+          quickPicks: [
+            { id: 'mornings', label: '⏰ Mornings', hours: 'Mon-Fri 6am-12pm' },
+            { id: 'afternoons', label: '🌞 Afternoons', hours: 'Mon-Fri 12pm-6pm' },
+            { id: 'evenings', label: '🌙 Evenings', hours: 'Mon-Fri 6pm-12am' },
+            { id: 'weekdays', label: '📅 Weekdays', hours: 'Mon-Fri Anytime' },
+            { id: 'weekends', label: '🎉 Weekends', hours: 'Sat-Sun Anytime' },
+            { id: 'anytime', label: '⚡ Anytime', hours: '24/7 Flexible' },
+          ],
+        },
+      },
+    ]);
+    setPredictiveSuggestions([
+      { text: "I'm flexible", action: () => handleAvailabilitySelect(['anytime']) },
+      { text: "Just weekends", action: () => handleAvailabilitySelect(['weekends']) },
+    ]);
+    setProgress(70);
+  };
+
+  const askForLocation = () => {
+    addAIMessage("Where are you based?", 'location', [
+      {
+        type: 'map_preview',
+        data: {
+          message: "I'll find tasks near you",
+        },
+      },
+    ]);
+    setProgress(85);
+    
+    setTimeout(() => {
+      const mockLocation = {
+        lat: 37.7749 + (Math.random() - 0.5) * 0.1,
+        lng: -122.4194 + (Math.random() - 0.5) * 0.1,
+        address: 'San Francisco, CA',
+      };
+      setExtractedData(prev => ({ ...prev, location: mockLocation, travelRadius: 5 }));
+      
+      const nearby = allTasks.filter(t => t.status === 'open').slice(0, 3);
+      setNearbyTasks(nearby);
+      
+      showConfirmation();
+    }, 2000);
+  };
+
+  const showConfirmation = () => {
+    const { name, intent, categories = [], trades = [], availability = [] } = extractedData;
+    
+    const roleText = intent === 'worker' ? 'find work and earn money' : 
+                     intent === 'poster' ? 'hire workers for your projects' : 
+                     'both work and hire others';
+    
+    const skillsText = trades.length > 0 
+      ? `skilled trades (${trades.join(', ')})`
+      : categories.length > 0
+      ? `${categories.join(', ')}`
       : 'various tasks';
 
-    let message = `Perfect, ${name}! 🎯 Let me confirm what I understood: `;
-    message += `✓ You want to ${intentText}. `;
-    message += `✓ Interested in ${skillsText}. `;
-    if (data.mode) {
-      const modeText = data.mode === 'tradesmen' ? '⚡ Tradesman Pro' : 
-                       data.mode === 'business' ? '🏢 Business Poster' : 
-                       '💪 Everyday Hustler';
-      message += `✓ Starting as ${modeText}. `;
-    }
-    message += ` Type "yes" to get started, or tell me what to change!`;
-
-    if (detectedLanguage !== 'en') {
-      message = await translateText(message, detectedLanguage);
-    }
-
-    return message;
+    addAIMessage(`Perfect, ${name}! 🎯\n\nLet me confirm what I understood:`, 'confirmation', [
+      {
+        type: 'confirmation',
+        data: {
+          name,
+          role: roleText,
+          skills: skillsText,
+          availability: availability.join(', '),
+          nearbyTasks: nearbyTasks.length,
+        },
+      },
+    ]);
+    
+    setPredictiveSuggestions([
+      { text: "Looks good!", action: () => confirmAndComplete() },
+      { text: "Change something", action: () => askForName() },
+    ]);
+    setProgress(95);
+    setCurrentStep('confirmation');
   };
 
-  const completeOnboardingWithData = async () => {
-    if (!extractedData.name) {
-      console.error('[AI_ONBOARDING] Cannot complete - missing name');
-      return;
-    }
+  const confirmAndComplete = async () => {
+    if (!extractedData.name) return;
+
+    setShowConfetti(true);
+    triggerHaptic('success');
+    setProgress(100);
+
+    addAIMessage("🎉 Awesome! Let's get you set up. Creating your account now...", 'complete');
 
     const role: UserRole = 
       extractedData.intent === 'both' ? 'both' :
       extractedData.intent === 'poster' ? 'poster' : 'worker';
 
-    const mode: UserMode = extractedData.mode || 'everyday';
+    const mode: UserMode = extractedData.mode || (role === 'poster' ? 'business' : 'everyday');
     const trades = extractedData.trades || [];
-
-    setShowConfetti(true);
-    triggerHaptic('success');
 
     await completeOnboarding(
       extractedData.name,
       role,
-      {
+      extractedData.location || {
         lat: 37.7749,
         lng: -122.4194,
         address: 'San Francisco, CA',
       },
       extractedData.email,
-      undefined, // password (will be generated)
+      undefined,
       mode,
       trades
     );
 
     setTimeout(() => {
-      router.replace('/welcome-tutorial?fromOnboarding=true');
-    }, 500);
+      setCurrentStep('complete');
+      showFinalReveal();
+    }, 1000);
+  };
+
+  const showFinalReveal = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    router.replace('/welcome-tutorial?fromOnboarding=true');
+  };
+
+  const addAIMessage = (content: string, step: OnboardingStep, uiComponents?: UIComponent[]) => {
+    const newMessage: Message = {
+      id: `ai-${Date.now()}`,
+      role: 'assistant',
+      content,
+      timestamp: new Date(),
+      uiComponents,
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    setCurrentStep(step);
+  };
+
+  const addUserMessage = (content: string) => {
+    const newMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content,
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
   };
 
   const handleSend = async () => {
@@ -302,69 +408,180 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
 
     const userMessage = input.trim();
     setInput('');
+    addUserMessage(userMessage);
     triggerHaptic('light');
-
-    // Add user message
-    const newUserMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, newUserMessage]);
 
     setIsProcessing(true);
 
     try {
-      // Check for confirmation
-      const lowerMessage = userMessage.toLowerCase();
-      if (conversationStage === 'confirming') {
-        if (lowerMessage.includes('yes') || lowerMessage.includes('confirm') || 
-            lowerMessage.includes('correct') || lowerMessage.includes('right') ||
-            lowerMessage === 'ok' || lowerMessage === 'yep' || lowerMessage === 'yeah') {
-          
-          const completeMessage: Message = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: await translateText(
-              "🎉 Awesome! Let's get you set up. Creating your account now...",
-              detectedLanguage
-            ),
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, completeMessage]);
-          
-          setTimeout(() => {
-            completeOnboardingWithData();
-          }, 1000);
-          
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // Generate AI response
-      const aiResponse = await generateAIResponse(userMessage);
-
-      const newAssistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: aiResponse,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, newAssistantMessage]);
+      await processUserInput(userMessage);
     } catch (error) {
       console.error('[AI_ONBOARDING] Error processing message:', error);
-      
-      const errorMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: "I'm having trouble processing that. Could you rephrase?",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      addAIMessage("I'm having trouble processing that. Could you rephrase?", currentStep);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const processUserInput = async (message: string) => {
+    const lowerMessage = message.toLowerCase();
+
+    if (currentStep === 'welcome' || currentStep === 'name') {
+      if (!extractedData.name) {
+        const nameMatch = message.match(/(?:i'm|i am|my name is|call me)?\s*([a-z]+)/i);
+        const name = nameMatch ? nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1) : message.split(' ')[0];
+        setExtractedData(prev => ({ ...prev, name }));
+        await new Promise(resolve => setTimeout(resolve, 500));
+        askForRole(name);
+      }
+    } else if (currentStep === 'skills') {
+      const categories: string[] = [];
+      if (lowerMessage.includes('clean')) categories.push('Cleaning');
+      if (lowerMessage.includes('deliver') || lowerMessage.includes('driver')) categories.push('Delivery');
+      if (lowerMessage.includes('move') || lowerMessage.includes('furniture')) categories.push('Moving');
+      if (lowerMessage.includes('pet') || lowerMessage.includes('dog')) categories.push('Pet Care');
+      if (lowerMessage.includes('tutor') || lowerMessage.includes('teach')) categories.push('Tutoring');
+      if (lowerMessage.includes('repair') || lowerMessage.includes('fix')) categories.push('Home Repair');
+
+      const trades: TradeCategory[] = [];
+      if (lowerMessage.includes('plumb')) trades.push('plumber' as TradeCategory);
+      if (lowerMessage.includes('electric')) trades.push('electrician' as TradeCategory);
+      if (lowerMessage.includes('carpent') || lowerMessage.includes('wood')) trades.push('carpenter' as TradeCategory);
+      if (lowerMessage.includes('paint')) trades.push('painter' as TradeCategory);
+
+      setExtractedData(prev => ({ ...prev, categories, trades, mode: trades.length > 0 ? 'tradesmen' : 'everyday' }));
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      showEarningsPreview(categories, trades);
+    } else if (currentStep === 'confirmation') {
+      if (lowerMessage.includes('yes') || lowerMessage.includes('good') || lowerMessage.includes('correct')) {
+        confirmAndComplete();
+      }
+    }
+  };
+
+  const handleRoleSelect = (roleId: string) => {
+    triggerHaptic('light');
+    const intent = roleId as 'worker' | 'poster' | 'both';
+    setExtractedData(prev => ({ ...prev, intent }));
+    addUserMessage(`I choose: ${roleId.toUpperCase()}`);
+    
+    setTimeout(() => {
+      askForSkills(intent);
+    }, 500);
+  };
+
+  const handleSkillSelect = (skillId: string, type: 'category' | 'trade') => {
+    triggerHaptic('light');
+    
+    setExtractedData(prev => {
+      if (type === 'category') {
+        const categories = prev.categories || [];
+        const exists = categories.includes(skillId);
+        return {
+          ...prev,
+          categories: exists 
+            ? categories.filter(c => c !== skillId)
+            : [...categories, skillId],
+        };
+      } else {
+        const trades = prev.trades || [];
+        const exists = trades.includes(skillId as TradeCategory);
+        return {
+          ...prev,
+          trades: exists 
+            ? trades.filter(t => t !== skillId)
+            : [...trades, skillId as TradeCategory],
+          mode: trades.length > 0 || skillId ? 'tradesmen' : 'everyday',
+        };
+      }
+    });
+  };
+
+  const handleAvailabilitySelect = (selected: string[]) => {
+    triggerHaptic('light');
+    setExtractedData(prev => ({ ...prev, availability: selected }));
+    addUserMessage(`Availability: ${selected.join(', ')}`);
+    
+    setTimeout(() => {
+      addAIMessage(`Great! ${selected.length === 1 && selected[0] === 'anytime' ? "Love the flexibility! 💪" : "Perfect timing! ⏰"}`, 'availability');
+      setTimeout(() => askForLocation(), 1000);
+    }, 500);
+  };
+
+  const handleQuickQuestion = (type: string) => {
+    triggerHaptic('light');
+    if (type === 'difference') {
+      setShowHelpModal(true);
+    } else if (type === 'safety') {
+      setShowHelpModal(true);
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    if (Platform.OS === 'web') {
+      addAIMessage("Voice input is not available on web. Please type your message.", currentStep);
+      return;
+    }
+
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) {
+        addAIMessage("I need microphone permission to use voice input.", currentStep);
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(newRecording);
+      setIsRecording(true);
+      triggerHaptic('light');
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(waveformAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(waveformAnim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } catch (error) {
+      console.error('[VOICE] Failed to start recording:', error);
+    }
+  };
+
+  const stopVoiceRecording = async () => {
+    if (!recording) return;
+
+    try {
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      
+      setIsRecording(false);
+      setRecording(null);
+      triggerHaptic('success');
+      waveformAnim.setValue(0);
+
+      addAIMessage("Processing your voice input...", currentStep);
+      
+      setTimeout(() => {
+        addAIMessage("Voice input processed! (Demo mode - please type instead)", currentStep);
+      }, 1500);
+    } catch (error) {
+      console.error('[VOICE] Failed to stop recording:', error);
     }
   };
 
@@ -385,14 +602,19 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
         ]}
       >
         {!isUser && (
-          <View style={styles.avatarContainer}>
+          <Animated.View 
+            style={[
+              styles.avatarContainer,
+              { transform: [{ scale: avatarPulse }] }
+            ]}
+          >
             <LinearGradient
               colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
               style={styles.avatar}
             >
               <Brain size={20} color={Colors.background} />
             </LinearGradient>
-          </View>
+          </Animated.View>
         )}
         
         <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
@@ -411,9 +633,302 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
             </LinearGradient>
           </BlurView>
         </View>
+
+        {!isUser && message.uiComponents && (
+          <View style={styles.uiComponentsContainer}>
+            {message.uiComponents.map((component, idx) => renderUIComponent(component, idx))}
+          </View>
+        )}
       </Animated.View>
     );
   };
+
+  const renderUIComponent = (component: UIComponent, index: number) => {
+    switch (component.type) {
+      case 'role_cards':
+        return (
+          <View key={index} style={styles.roleCardsContainer}>
+            {component.data.roles.map((role: any) => (
+              <TouchableOpacity
+                key={role.id}
+                style={styles.roleCard}
+                onPress={() => handleRoleSelect(role.id)}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[premiumColors.glassDark + 'CC', premiumColors.glassDark + '99']}
+                  style={styles.roleCardGradient}
+                >
+                  <Text style={styles.roleCardIcon}>{role.icon}</Text>
+                  <Text style={styles.roleCardTitle}>{role.title}</Text>
+                  <Text style={styles.roleCardSubtitle}>{role.subtitle}</Text>
+                  <Text style={styles.roleCardDescription}>{role.description}</Text>
+                  <View style={styles.roleCardButton}>
+                    <Text style={styles.roleCardButtonText}>SELECT</Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        );
+
+      case 'skill_chips':
+        return (
+          <View key={index} style={styles.skillChipsContainer}>
+            <Text style={styles.skillChipsLabel}>Popular near you:</Text>
+            <View style={styles.chipsList}>
+              {component.data.categories.map((cat: any) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.chip,
+                    (extractedData.categories || []).includes(cat.id) && styles.chipSelected,
+                  ]}
+                  onPress={() => handleSkillSelect(cat.id, 'category')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.chipText,
+                    (extractedData.categories || []).includes(cat.id) && styles.chipTextSelected,
+                  ]}>
+                    {cat.label}
+                  </Text>
+                  {cat.popular && (
+                    <View style={styles.popularBadge}>
+                      <Text style={styles.popularText}>HOT</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            {component.data.trades.length > 0 && (
+              <>
+                <Text style={[styles.skillChipsLabel, { marginTop: spacing.lg }]}>Skilled Trades:</Text>
+                <View style={styles.chipsList}>
+                  {component.data.trades.map((trade: any) => (
+                    <TouchableOpacity
+                      key={trade.id}
+                      style={[
+                        styles.chip,
+                        styles.tradeChip,
+                        (extractedData.trades || []).includes(trade.id) && styles.chipSelected,
+                      ]}
+                      onPress={() => handleSkillSelect(trade.id, 'trade')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        styles.chipText,
+                        (extractedData.trades || []).includes(trade.id) && styles.chipTextSelected,
+                      ]}>
+                        {trade.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {(extractedData.categories?.length || 0) + (extractedData.trades?.length || 0) > 0 && (
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={() => showEarningsPreview(extractedData.categories || [], extractedData.trades || [])}
+              >
+                <LinearGradient
+                  colors={[premiumColors.neonCyan, premiumColors.neonBlue]}
+                  style={styles.confirmButtonGradient}
+                >
+                  <Text style={styles.confirmButtonText}>LOOKS GOOD</Text>
+                  <ArrowRight size={18} color={Colors.background} />
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </View>
+        );
+
+      case 'earnings_preview':
+        const { skills, potentialEarnings } = component.data;
+        return (
+          <View key={index} style={styles.earningsPreview}>
+            <BlurView intensity={50} tint="dark" style={styles.earningsBlur}>
+              <View style={styles.earningsContent}>
+                <View style={styles.skillsList}>
+                  {skills.map((skill: string, idx: number) => (
+                    <View key={idx} style={styles.skillTag}>
+                      <Check size={14} color={premiumColors.neonGreen} />
+                      <Text style={styles.skillTagText}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.earningsDivider} />
+
+                <View style={styles.earningsSection}>
+                  <DollarSign size={20} color={premiumColors.neonGreen} />
+                  <Text style={styles.earningsTitle}>Potential Earnings:</Text>
+                </View>
+
+                <View style={styles.earningsRow}>
+                  <Text style={styles.earningsLabel}>Weekly:</Text>
+                  <Text style={styles.earningsValue}>
+                    ${potentialEarnings.weekly.min}-${potentialEarnings.weekly.max}
+                  </Text>
+                </View>
+
+                <View style={styles.earningsRow}>
+                  <Text style={styles.earningsLabel}>Monthly:</Text>
+                  <Text style={styles.earningsValue}>
+                    ${potentialEarnings.monthly.min.toLocaleString()}-${potentialEarnings.monthly.max.toLocaleString()}
+                  </Text>
+                </View>
+
+                <Text style={styles.earningsNote}>
+                  ⬆️ As you level up!
+                </Text>
+              </View>
+            </BlurView>
+          </View>
+        );
+
+      case 'availability_picker':
+        return (
+          <View key={index} style={styles.availabilityPicker}>
+            {component.data.quickPicks.map((pick: any) => (
+              <TouchableOpacity
+                key={pick.id}
+                style={styles.availabilityCard}
+                onPress={() => handleAvailabilitySelect([pick.id])}
+                activeOpacity={0.8}
+              >
+                <BlurView intensity={40} tint="dark" style={styles.availabilityBlur}>
+                  <Text style={styles.availabilityLabel}>{pick.label}</Text>
+                  <Text style={styles.availabilityHours}>{pick.hours}</Text>
+                </BlurView>
+              </TouchableOpacity>
+            ))}
+          </View>
+        );
+
+      case 'map_preview':
+        return (
+          <View key={index} style={styles.mapPreview}>
+            <BlurView intensity={50} tint="dark" style={styles.mapBlur}>
+              <MapPin size={32} color={premiumColors.neonCyan} />
+              <Text style={styles.mapText}>Detecting your location...</Text>
+              <View style={styles.mapLoader}>
+                <Loader size={20} color={premiumColors.neonCyan} />
+              </View>
+            </BlurView>
+          </View>
+        );
+
+      case 'confirmation':
+        const { name, role, skills: confirmSkills, availability, nearbyTasks: tasksCount } = component.data;
+        return (
+          <View key={index} style={styles.confirmationCard}>
+            <BlurView intensity={60} tint="dark" style={styles.confirmationBlur}>
+              <View style={styles.confirmationRow}>
+                <Check size={20} color={premiumColors.neonGreen} />
+                <Text style={styles.confirmationLabel}>You want to {role}</Text>
+              </View>
+              <View style={styles.confirmationRow}>
+                <Check size={20} color={premiumColors.neonGreen} />
+                <Text style={styles.confirmationLabel}>Interested in {confirmSkills}</Text>
+              </View>
+              <View style={styles.confirmationRow}>
+                <Check size={20} color={premiumColors.neonGreen} />
+                <Text style={styles.confirmationLabel}>Available {availability}</Text>
+              </View>
+
+              {tasksCount > 0 && (
+                <View style={styles.confirmationHighlight}>
+                  <Star size={18} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                  <Text style={styles.confirmationHighlightText}>
+                    {tasksCount} perfect tasks waiting for you!
+                  </Text>
+                </View>
+              )}
+            </BlurView>
+          </View>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const renderHelpModal = () => (
+    <Modal
+      visible={showHelpModal}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowHelpModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <BlurView intensity={80} tint="dark" style={styles.modalBlur}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.modalClose}
+              onPress={() => setShowHelpModal(false)}
+            >
+              <X size={24} color={Colors.text} />
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>Quick Guide 📚</Text>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalSectionTitle}>💪 Hustler</Text>
+              <Text style={styles.modalText}>
+                Find gigs, complete tasks, earn money. Perfect if you want to make extra cash!
+              </Text>
+              <Text style={styles.modalExample}>
+                Example: Deliver groceries, $15-50/hr
+              </Text>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalSectionTitle}>📋 Poster</Text>
+              <Text style={styles.modalText}>
+                Post tasks, hire workers. Get things done without lifting a finger!
+              </Text>
+              <Text style={styles.modalExample}>
+                Example: &quot;Clean my garage&quot; → $50
+              </Text>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalSectionTitle}>⚡ Both</Text>
+              <Text style={styles.modalText}>
+                Maximum flexibility! Work when you want, hire when you need.
+              </Text>
+            </View>
+
+            <View style={styles.modalSafety}>
+              <Text style={styles.modalSafetyTitle}>🛡️ Safety First</Text>
+              <View style={styles.safetyFeatures}>
+                <Text style={styles.safetyFeature}>✓ All users ID verified</Text>
+                <Text style={styles.safetyFeature}>✓ Real-time GPS tracking</Text>
+                <Text style={styles.safetyFeature}>✓ 24/7 support team</Text>
+                <Text style={styles.safetyFeature}>✓ Payment in escrow</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowHelpModal(false)}
+            >
+              <LinearGradient
+                colors={[premiumColors.neonCyan, premiumColors.neonBlue]}
+                style={styles.modalButtonGradient}
+              >
+                <Text style={styles.modalButtonText}>Got it!</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
+      </View>
+    </Modal>
+  );
 
   return (
     <View style={styles.container}>
@@ -425,24 +940,44 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
       />
 
       {showConfetti && <Confetti />}
+      {renderHelpModal()}
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
             <Sparkles size={24} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
             <Text style={styles.headerTitle}>HustleXP AI Coach</Text>
           </View>
-          {detectedLanguage !== 'en' && (
-            <View style={styles.languageBadge}>
-              <Globe size={14} color={premiumColors.neonGreen} />
-              <Text style={styles.languageText}>{detectedLanguage.toUpperCase()}</Text>
-            </View>
-          )}
+          <TouchableOpacity
+            style={styles.helpButton}
+            onPress={() => setShowHelpModal(true)}
+          >
+            <HelpCircle size={24} color={premiumColors.glassWhiteStrong} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.progressBarContainer}>
+          <Animated.View
+            style={[
+              styles.progressBar,
+              {
+                width: progressAnim.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ['0%', '100%'],
+                }),
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
         </View>
       </View>
 
-      {/* Messages */}
       <KeyboardAvoidingView
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -467,9 +1002,25 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
               </View>
             </View>
           )}
+
+          {predictiveSuggestions.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              <Text style={styles.suggestionsLabel}>💡 Quick options:</Text>
+              {predictiveSuggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestionButton}
+                  onPress={suggestion.action}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.suggestionText}>{suggestion.text}</Text>
+                  <ArrowRight size={16} color={premiumColors.neonCyan} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </ScrollView>
 
-        {/* Input */}
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom + spacing.md }]}>
           <BlurView intensity={60} tint="dark" style={styles.inputBlur}>
             <View style={styles.inputWrapper}>
@@ -486,6 +1037,29 @@ You are HustleXP's friendly onboarding coach. Guide the user naturally through o
                 maxLength={500}
                 editable={!isProcessing}
               />
+              
+              {Platform.OS !== 'web' && (
+                <TouchableOpacity
+                  style={styles.voiceButton}
+                  onPress={isRecording ? stopVoiceRecording : startVoiceRecording}
+                  activeOpacity={0.7}
+                >
+                  <Animated.View
+                    style={[
+                      styles.voiceButtonInner,
+                      isRecording && {
+                        opacity: waveformAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.5, 1],
+                        }),
+                      },
+                    ]}
+                  >
+                    <Mic size={18} color={isRecording ? premiumColors.neonMagenta : premiumColors.glassWhiteStrong} />
+                  </Animated.View>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={[styles.sendButton, (!input.trim() || isProcessing) && styles.sendButtonDisabled]}
                 onPress={handleSend}
@@ -526,6 +1100,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: spacing.md,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -537,21 +1112,18 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginLeft: spacing.sm,
   },
-  languageBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    backgroundColor: premiumColors.neonGreen + '20',
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: premiumColors.neonGreen,
+  helpButton: {
+    padding: spacing.xs,
   },
-  languageText: {
-    fontSize: 11,
-    fontWeight: '700' as const,
-    color: premiumColors.neonGreen,
-    marginLeft: spacing.xs,
+  progressBarContainer: {
+    height: 4,
+    backgroundColor: premiumColors.glassWhite,
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: borderRadius.full,
   },
   content: {
     flex: 1,
@@ -564,15 +1136,14 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   messageContainer: {
-    flexDirection: 'row',
     marginBottom: spacing.lg,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   userMessageContainer: {
-    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
   },
   assistantMessageContainer: {
-    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
   },
   avatarContainer: {
     marginRight: spacing.sm,
@@ -616,6 +1187,290 @@ const styles = StyleSheet.create({
   userMessageText: {
     color: Colors.text,
   },
+  uiComponentsContainer: {
+    width: '100%',
+    marginTop: spacing.md,
+  },
+  roleCardsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  roleCard: {
+    flex: 1,
+    minWidth: (SCREEN_WIDTH - spacing.xl * 2 - spacing.md * 2) / 3 - spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+  },
+  roleCardGradient: {
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  roleCardIcon: {
+    fontSize: 32,
+    marginBottom: spacing.sm,
+  },
+  roleCardTitle: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: spacing.xs,
+  },
+  roleCardSubtitle: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginBottom: spacing.xs,
+    textAlign: 'center',
+  },
+  roleCardDescription: {
+    fontSize: 10,
+    fontWeight: '500' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  roleCardButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: premiumColors.neonCyan + '30',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan,
+  },
+  roleCardButtonText: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: premiumColors.neonCyan,
+  },
+  skillChipsContainer: {
+    width: '100%',
+  },
+  skillChipsLabel: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginBottom: spacing.sm,
+  },
+  chipsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: premiumColors.glassDark + '80',
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: premiumColors.glassWhite,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chipSelected: {
+    backgroundColor: premiumColors.neonCyan + '30',
+    borderColor: premiumColors.neonCyan,
+  },
+  tradeChip: {
+    backgroundColor: premiumColors.neonMagenta + '20',
+    borderColor: premiumColors.neonMagenta + '60',
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  chipTextSelected: {
+    color: premiumColors.neonCyan,
+  },
+  popularBadge: {
+    marginLeft: spacing.xs,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    backgroundColor: premiumColors.neonMagenta,
+    borderRadius: borderRadius.sm,
+  },
+  popularText: {
+    fontSize: 9,
+    fontWeight: '800' as const,
+    color: Colors.background,
+  },
+  confirmButton: {
+    marginTop: spacing.lg,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  confirmButtonGradient: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  confirmButtonText: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+    color: Colors.background,
+  },
+  earningsPreview: {
+    width: '100%',
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.neonGreen + '40',
+  },
+  earningsBlur: {
+    borderRadius: borderRadius.xl,
+  },
+  earningsContent: {
+    padding: spacing.lg,
+  },
+  skillsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  skillTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: premiumColors.neonGreen + '20',
+    borderRadius: borderRadius.md,
+  },
+  skillTagText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: premiumColors.neonGreen,
+  },
+  earningsDivider: {
+    height: 1,
+    backgroundColor: premiumColors.glassWhite,
+    marginVertical: spacing.md,
+  },
+  earningsSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  earningsTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  earningsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  earningsLabel: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  earningsValue: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: premiumColors.neonGreen,
+  },
+  earningsNote: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
+  availabilityPicker: {
+    width: '100%',
+    gap: spacing.sm,
+  },
+  availabilityCard: {
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhite,
+  },
+  availabilityBlur: {
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  availabilityLabel: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: spacing.xs,
+  },
+  availabilityHours: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
+  mapPreview: {
+    width: '100%',
+    height: 150,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan + '40',
+  },
+  mapBlur: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  mapText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  mapLoader: {
+    marginTop: spacing.sm,
+  },
+  confirmationCard: {
+    width: '100%',
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.neonGreen + '40',
+  },
+  confirmationBlur: {
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
+  },
+  confirmationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  confirmationLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    flex: 1,
+  },
+  confirmationHighlight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: premiumColors.neonAmber + '20',
+    borderRadius: borderRadius.lg,
+  },
+  confirmationHighlightText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: premiumColors.neonAmber,
+  },
   typingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -636,6 +1491,33 @@ const styles = StyleSheet.create({
     color: premiumColors.glassWhiteStrong,
     fontStyle: 'italic' as const,
     marginLeft: spacing.sm,
+  },
+  suggestionsContainer: {
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  suggestionsLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginBottom: spacing.sm,
+  },
+  suggestionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: premiumColors.glassDark + '60',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: premiumColors.glassWhite,
+    marginBottom: spacing.sm,
+  },
+  suggestionText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
   },
   inputContainer: {
     paddingHorizontal: spacing.lg,
@@ -665,6 +1547,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     marginHorizontal: spacing.sm,
   },
+  voiceButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.xs,
+  },
+  voiceButtonInner: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   sendButton: {
     width: 40,
     height: 40,
@@ -679,5 +1575,92 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBlur: {
+    width: SCREEN_WIDTH - spacing.xl * 2,
+    maxHeight: SCREEN_HEIGHT * 0.8,
+    borderRadius: borderRadius.xxl,
+    overflow: 'hidden',
+  },
+  modalContent: {
+    padding: spacing.xl,
+  },
+  modalClose: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    zIndex: 10,
+    padding: spacing.sm,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: spacing.xl,
+    textAlign: 'center',
+  },
+  modalSection: {
+    marginBottom: spacing.lg,
+  },
+  modalSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: premiumColors.neonCyan,
+    marginBottom: spacing.sm,
+  },
+  modalText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.text,
+    lineHeight: 20,
+    marginBottom: spacing.sm,
+  },
+  modalExample: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: premiumColors.glassWhiteStrong,
+    fontStyle: 'italic' as const,
+  },
+  modalSafety: {
+    marginTop: spacing.xl,
+    padding: spacing.lg,
+    backgroundColor: premiumColors.neonGreen + '20',
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    borderColor: premiumColors.neonGreen,
+  },
+  modalSafetyTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: premiumColors.neonGreen,
+    marginBottom: spacing.md,
+  },
+  safetyFeatures: {
+    gap: spacing.sm,
+  },
+  safetyFeature: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: Colors.text,
+  },
+  modalButton: {
+    marginTop: spacing.xl,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  modalButtonGradient: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: Colors.background,
   },
 });
