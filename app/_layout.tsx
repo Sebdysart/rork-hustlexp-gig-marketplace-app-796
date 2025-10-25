@@ -23,6 +23,7 @@ import '@/utils/errorDebugger';
 import { applyTextNodeFix } from '@/utils/textNodeFixer';
 import { enableTextNodeScanning } from '@/utils/textNodeScanner';
 import { installTextErrorInterceptor } from '@/utils/textErrorInterceptor';
+import { enableTextNodeErrorLogging } from '@/utils/textNodeDetectorRuntime';
 
 // Install comprehensive text node fix
 applyTextNodeFix();
@@ -31,6 +32,7 @@ applyTextNodeFix();
 if (__DEV__) {
   enableTextNodeScanning();
   installTextErrorInterceptor();
+  enableTextNodeErrorLogging();
 }
 
 SplashScreen.preventAutoHideAsync();

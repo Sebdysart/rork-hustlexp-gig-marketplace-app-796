@@ -240,6 +240,9 @@ export const COLORS = {
   info: '#00FFFF',
   border: 'rgba(255, 255, 255, 0.1)',
   white: '#FFFFFF',
+  lightGray: '#D1D5DB',
+  electricBlue: '#5271FF',
+  hotPink: '#FF00A8',
   legendary: '#FFB800',
   
   rarity: {
