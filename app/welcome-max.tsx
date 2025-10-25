@@ -67,6 +67,13 @@ export default function WelcomeMaxScreen() {
   const hologramShift = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const lightRayRotation = useRef(new Animated.Value(0)).current;
+  const buttonWave = useRef(new Animated.Value(0)).current;
+  const rippleScale = useRef(new Animated.Value(0)).current;
+  const rippleOpacity = useRef(new Animated.Value(0)).current;
+  const nebulaSwirl = useRef(new Animated.Value(0)).current;
+  const ambientHue = useRef(new Animated.Value(0)).current;
+  const textRevealProgress = useRef(new Animated.Value(0)).current;
+  const sparkBurst = useRef(new Animated.Value(0)).current;
 
 
 
@@ -349,6 +356,84 @@ export default function WelcomeMaxScreen() {
     ).start();
 
     Animated.loop(
+      Animated.timing(buttonWave, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rippleScale, {
+          toValue: 2,
+          duration: 2000,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rippleScale, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rippleOpacity, {
+          toValue: 0.8,
+          duration: 500,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rippleOpacity, {
+          toValue: 0,
+          duration: 1500,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.timing(nebulaSwirl, {
+        toValue: 360,
+        duration: 30000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(ambientHue, {
+          toValue: 1,
+          duration: 10000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+        Animated.timing(ambientHue, {
+          toValue: 0,
+          duration: 10000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+
+    Animated.sequence([
+      Animated.delay(1500),
+      Animated.timing(textRevealProgress, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]).start();
+
+    Animated.loop(
       Animated.sequence([
         Animated.timing(hologramShift, {
           toValue: 5,
@@ -369,6 +454,20 @@ export default function WelcomeMaxScreen() {
   const handleGetStarted = () => {
     sensory.success();
     setShowConfetti(true);
+
+    Animated.sequence([
+      Animated.timing(sparkBurst, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(sparkBurst, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     Animated.parallel([
       Animated.timing(mainOpacity, {
@@ -406,23 +505,72 @@ export default function WelcomeMaxScreen() {
     outputRange: [0, 80],
   });
 
+  const nebulaSwirlRotate = nebulaSwirl.interpolate({
+    inputRange: [0, 360],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const buttonWavePosition = buttonWave.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['-100%', '200%'],
+  });
+
+  const ambientColor1 = ambientHue.interpolate({
+    inputRange: [0, 0.33, 0.66, 1],
+    outputRange: ['#0D0D0F', '#1A0A1F', '#0A1F1A', '#0D0D0F'],
+  });
+
+  const ambientColor2 = ambientHue.interpolate({
+    inputRange: [0, 0.33, 0.66, 1],
+    outputRange: ['#1A0A1F', '#0F1A2E', '#1A0A1F', '#1A0A1F'],
+  });
+
+  const ambientColor3 = ambientHue.interpolate({
+    inputRange: [0, 0.33, 0.66, 1],
+    outputRange: ['#0F1A2E', '#0D0D0F', '#2E0F1A', '#0F1A2E'],
+  });
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={[
-          '#000000',
-          '#0D0D0F',
-          '#1A0A1F',
-          '#0F1A2E',
-          '#000000',
+      <Animated.View style={StyleSheet.absoluteFill}>
+        <LinearGradient
+          colors={[
+            '#000000',
+            ambientColor1 as any,
+            ambientColor2 as any,
+            ambientColor3 as any,
+            '#000000',
+          ]}
+          style={StyleSheet.absoluteFill}
+          locations={[0, 0.25, 0.5, 0.75, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          styles.nebulaContainer,
+          {
+            transform: [{ rotate: nebulaSwirlRotate }],
+          },
         ]}
-        style={StyleSheet.absoluteFill}
-        locations={[0, 0.25, 0.5, 0.75, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
+      >
+        <LinearGradient
+          colors={[
+            'transparent',
+            premiumColors.neonCyan + '15',
+            premiumColors.neonMagenta + '15',
+            premiumColors.neonBlue + '15',
+            'transparent',
+          ]}
+          style={styles.nebula}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </Animated.View>
 
       {floatingElements.map((element) => (
         <Animated.View
@@ -578,6 +726,25 @@ export default function WelcomeMaxScreen() {
               ]}
             />
             
+            <Animated.View
+              style={[
+                styles.logoRipple,
+                {
+                  transform: [{ scale: rippleScale }],
+                  opacity: rippleOpacity,
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={[
+                  premiumColors.neonCyan + '80',
+                  premiumColors.neonMagenta + '40',
+                  'transparent',
+                ]}
+                style={styles.rippleGradient}
+              />
+            </Animated.View>
+
             <LinearGradient
               colors={[
                 premiumColors.neonCyan + '60',
@@ -602,22 +769,42 @@ export default function WelcomeMaxScreen() {
                   <View style={styles.logoZapGlow1}>
                     <Zap size={104} color={premiumColors.neonCyan} strokeWidth={4.5} fill={premiumColors.neonCyan + '50'} />
                   </View>
-                  <LinearGradient
-                    colors={[
-                      '#FFFFFF',
-                      premiumColors.neonCyan,
-                      premiumColors.neonBlue,
-                      premiumColors.neonMagenta,
-                      premiumColors.neonAmber,
-                      '#FFFFFF',
+                  <Animated.View
+                    style={[
+                      { position: 'absolute' },
+                      {
+                        transform: [
+                          {
+                            scale: sparkBurst.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [1, 1.3, 1],
+                            }),
+                          },
+                        ],
+                        opacity: sparkBurst.interpolate({
+                          inputRange: [0, 0.3, 1],
+                          outputRange: [1, 0.5, 1],
+                        }),
+                      },
                     ]}
-                    locations={[0, 0.2, 0.35, 0.65, 0.8, 1]}
-                    style={{ position: 'absolute' }}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
                   >
-                    <Zap size={100} color="#FFFFFF" strokeWidth={6} fill="#FFFFFF" />
-                  </LinearGradient>
+                    <LinearGradient
+                      colors={[
+                        '#FFFFFF',
+                        premiumColors.neonCyan,
+                        premiumColors.neonBlue,
+                        premiumColors.neonMagenta,
+                        premiumColors.neonAmber,
+                        '#FFFFFF',
+                      ]}
+                      locations={[0, 0.2, 0.35, 0.65, 0.8, 1]}
+                      style={{ position: 'absolute' }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Zap size={100} color="#FFFFFF" strokeWidth={6} fill="#FFFFFF" />
+                    </LinearGradient>
+                  </Animated.View>
                 </View>
                 
                 <Animated.View
@@ -727,16 +914,36 @@ export default function WelcomeMaxScreen() {
             ]}
           >
             <BlurView intensity={20} tint="dark" style={styles.buttonBlur}>
-              <LinearGradient
-                colors={[
-                  premiumColors.neonCyan,
-                  premiumColors.neonBlue,
-                  premiumColors.neonMagenta,
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.buttonGradient}
-              >
+              <View style={styles.buttonGradientContainer}>
+                <LinearGradient
+                  colors={[
+                    premiumColors.neonCyan,
+                    premiumColors.neonBlue,
+                    premiumColors.neonMagenta,
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                />
+                <Animated.View
+                  style={[
+                    styles.buttonWave,
+                    {
+                      transform: [{ translateX: buttonWavePosition as any }],
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[
+                      'transparent',
+                      'rgba(255, 255, 255, 0.5)',
+                      'transparent',
+                    ]}
+                    style={styles.waveGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  />
+                </Animated.View>
                 <Animated.View
                   style={[
                     styles.buttonContent,
@@ -744,10 +951,10 @@ export default function WelcomeMaxScreen() {
                   ]}
                 >
                   <Rocket size={28} color="#000000" strokeWidth={3} />
-                  <Text style={styles.buttonText}>Start Your Journey</Text>
+                  <Text style={styles.buttonText}>Begin Your First Quest</Text>
                   <ArrowRight size={28} color="#000000" strokeWidth={3} />
                 </Animated.View>
-              </LinearGradient>
+              </View>
             </BlurView>
           </Animated.View>
         </TouchableOpacity>
@@ -775,6 +982,28 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: 100,
     zIndex: 2,
+  },
+  nebulaContainer: {
+    position: 'absolute',
+    width: SCREEN_WIDTH * 2,
+    height: SCREEN_HEIGHT * 2,
+    left: -SCREEN_WIDTH / 2,
+    top: -SCREEN_HEIGHT / 2,
+  },
+  nebula: {
+    flex: 1,
+    opacity: 0.4,
+  },
+  logoRipple: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    zIndex: 0,
+  },
+  rippleGradient: {
+    flex: 1,
+    borderRadius: 90,
   },
   lightRayContainer: {
     position: 'absolute',
@@ -1011,9 +1240,25 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     overflow: 'hidden',
   },
+  buttonGradientContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: borderRadius.full,
+  },
   buttonGradient: {
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.xxl,
+  },
+  buttonWave: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+  },
+  waveGradient: {
+    flex: 1,
   },
   buttonContent: {
     flexDirection: 'row',
