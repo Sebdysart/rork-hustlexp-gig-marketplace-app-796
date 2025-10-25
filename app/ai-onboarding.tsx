@@ -20,8 +20,9 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { 
   Sparkles, Send, Loader, MessageCircle, Brain, Mic, Check,
-  Star, MapPin, DollarSign, ArrowRight, Zap,
-  X, HelpCircle, TrendingUp, Award, ChevronLeft, ChevronRight
+  Star, MapPin, ArrowRight, Zap,
+  X, HelpCircle, TrendingUp, ChevronLeft, ChevronRight,
+  Rocket
 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 
@@ -50,6 +51,7 @@ interface UIComponent {
 
 interface ExtractedData {
   name?: string;
+  gamertag?: string;
   intent?: 'worker' | 'poster' | 'both';
   categories?: string[];
   trades?: TradeCategory[];
@@ -72,21 +74,206 @@ interface Particle {
   y: Animated.Value;
   scale: Animated.Value;
   opacity: Animated.Value;
+  color: string;
 }
 
 interface ContextualBubble {
   id: string;
   text: string;
+  icon: string;
   x: number;
   y: number;
   visible: boolean;
 }
 
+interface RoleData {
+  id: string;
+  icon: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  color: string;
+}
+
 type OnboardingStep = 'welcome' | 'name' | 'role' | 'skills' | 'availability' | 'location' | 'confirmation' | 'complete';
 type AvatarExpression = 'neutral' | 'happy' | 'thinking' | 'excited' | 'celebrating';
 
-const PARTICLE_COUNT = 60;
-const FIREWORK_PARTICLE_COUNT = 120;
+const PARTICLE_COUNT = 80;
+const FIREWORK_PARTICLE_COUNT = 150;
+
+// 🎯 3D Role Card Component with Maximum Polish
+function RoleCard3D({ role, onSelect, flipAnim, index }: { role: RoleData; onSelect: () => void; flipAnim: Animated.Value; index: number }) {
+  const rotateY = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+  
+  const scale = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    // Continuous float animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000 + index * 300,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000 + index * 300,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+    
+    // Glow pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+  
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.92,
+      useNativeDriver: true,
+    }).start();
+    if (Platform.OS !== 'web') {
+      triggerHaptic('light');
+    }
+  };
+  
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      tension: 40,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+  };
+  
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -8],
+  });
+  
+  return (
+    <Animated.View
+      style={[
+        styles.roleCardWrapper,
+        {
+          transform: [
+            { perspective: 1200 },
+            { rotateY },
+            { scale },
+            { translateY },
+          ],
+        },
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.roleCard}
+        onPress={onSelect}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        {/* 3D depth layers */}
+        <Animated.View 
+          style={[
+            styles.card3DLayer1,
+            {
+              opacity: glowAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.3, 0.6],
+              }),
+              backgroundColor: role.color,
+            }
+          ]} 
+        />
+        <Animated.View 
+          style={[
+            styles.card3DLayer2,
+            {
+              opacity: glowAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.2, 0.4],
+              }),
+              backgroundColor: role.color,
+            }
+          ]} 
+        />
+        
+        <BlurView intensity={50} tint="dark" style={styles.roleCardContent}>
+          <LinearGradient
+            colors={[
+              premiumColors.glassDark + '80',
+              premiumColors.glassDark + '40',
+            ]}
+            style={styles.roleCardGradient}
+          >
+            {/* Animated icon with glow */}
+            <Animated.View
+              style={[
+                styles.roleCardIconContainer,
+                {
+                  transform: [{
+                    scale: glowAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.1],
+                    })
+                  }]
+                }
+              ]}
+            >
+              <Text style={styles.roleCardIcon}>{role.icon}</Text>
+              <Animated.View 
+                style={[
+                  styles.iconGlow,
+                  {
+                    opacity: glowAnim,
+                    backgroundColor: role.color,
+                  }
+                ]}
+              />
+            </Animated.View>
+            
+            <Text style={styles.roleCardTitle}>{role.title}</Text>
+            <Text style={styles.roleCardSubtitle}>{role.subtitle}</Text>
+            <Text style={styles.roleCardDescription}>{role.description}</Text>
+            
+            <View style={styles.roleCardButton}>
+              <LinearGradient
+                colors={[role.color + '60', role.color + '40']}
+                style={styles.roleCardButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={[styles.roleCardButtonText, { color: role.color }]}>SELECT</Text>
+                <Zap size={12} color={role.color} fill={role.color} />
+              </LinearGradient>
+            </View>
+          </LinearGradient>
+        </BlurView>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
 
 export default function AIOnboardingScreen() {
   const router = useRouter();
@@ -131,6 +318,7 @@ export default function AIOnboardingScreen() {
   const avatarRotate = useRef(new Animated.Value(0)).current;
   const avatarScale = useRef(new Animated.Value(1)).current;
   const bubbleAnim = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   // Gesture for swiping between steps
   const panResponder = useRef(
@@ -140,10 +328,8 @@ export default function AIOnboardingScreen() {
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx > 50) {
-          // Swipe right - go back
           handleSwipeBack();
         } else if (gestureState.dx < -50) {
-          // Swipe left - go forward
           handleSwipeForward();
         }
       },
@@ -207,6 +393,8 @@ export default function AIOnboardingScreen() {
     if (currentStep === 'name') {
       if (lowerText.includes('my name')) {
         setTypingPrediction(' is...');
+      } else if (lowerText.length > 2) {
+        setTypingPrediction('');
       }
     } else if (currentStep === 'skills') {
       if (lowerText.includes('i can')) {
@@ -221,21 +409,23 @@ export default function AIOnboardingScreen() {
     }
   };
 
-  const showContextualBubble = (text: string, delay: number = 2000) => {
+  const showContextualBubble = (text: string, icon: string, delay: number = 2000) => {
     const bubble: ContextualBubble = {
       id: `bubble-${Date.now()}`,
       text,
-      x: Math.random() * (SCREEN_WIDTH - 200),
-      y: SCREEN_HEIGHT * 0.3 + Math.random() * 100,
+      icon,
+      x: Math.random() * (SCREEN_WIDTH - 220) + 20,
+      y: SCREEN_HEIGHT * 0.2 + Math.random() * 100,
       visible: true,
     };
     
     setContextualBubbles(prev => [...prev, bubble]);
     
     Animated.sequence([
-      Animated.timing(bubbleAnim, {
+      Animated.spring(bubbleAnim, {
         toValue: 1,
-        duration: 300,
+        tension: 40,
+        friction: 7,
         useNativeDriver: true,
       }),
       Animated.delay(delay),
@@ -250,14 +440,23 @@ export default function AIOnboardingScreen() {
   };
 
   const initializeParticles = () => {
+    const colors = [
+      premiumColors.neonCyan,
+      premiumColors.neonMagenta,
+      premiumColors.neonAmber,
+      premiumColors.neonGreen,
+      premiumColors.neonViolet,
+    ];
+    
     const newParticles: Particle[] = [];
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       newParticles.push({
         id: i,
         x: new Animated.Value(Math.random() * SCREEN_WIDTH),
         y: new Animated.Value(Math.random() * SCREEN_HEIGHT),
-        scale: new Animated.Value(Math.random() * 0.5 + 0.3),
-        opacity: new Animated.Value(Math.random() * 0.3 + 0.1),
+        scale: new Animated.Value(Math.random() * 0.5 + 0.5),
+        opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
+        color: colors[Math.floor(Math.random() * colors.length)],
       });
     }
     setParticles(newParticles);
@@ -266,8 +465,8 @@ export default function AIOnboardingScreen() {
 
   const animateParticles = (particleList: Particle[]) => {
     particleList.forEach((particle, index) => {
-      const randomDelay = Math.random() * 2000;
-      const randomDuration = 8000 + Math.random() * 4000;
+      const randomDelay = Math.random() * 3000;
+      const randomDuration = 10000 + Math.random() * 8000;
 
       Animated.loop(
         Animated.sequence([
@@ -276,23 +475,35 @@ export default function AIOnboardingScreen() {
             Animated.timing(particle.x, {
               toValue: Math.random() * SCREEN_WIDTH,
               duration: randomDuration,
-              easing: Easing.inOut(Easing.ease),
+              easing: Easing.bezier(0.4, 0, 0.2, 1),
               useNativeDriver: true,
             }),
             Animated.timing(particle.y, {
               toValue: Math.random() * SCREEN_HEIGHT,
               duration: randomDuration,
-              easing: Easing.inOut(Easing.ease),
+              easing: Easing.bezier(0.4, 0, 0.2, 1),
               useNativeDriver: true,
             }),
             Animated.sequence([
               Animated.timing(particle.opacity, {
-                toValue: Math.random() * 0.4 + 0.2,
+                toValue: Math.random() * 0.6 + 0.3,
                 duration: randomDuration / 2,
                 useNativeDriver: true,
               }),
               Animated.timing(particle.opacity, {
-                toValue: Math.random() * 0.2 + 0.05,
+                toValue: Math.random() * 0.3 + 0.1,
+                duration: randomDuration / 2,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.timing(particle.scale, {
+                toValue: Math.random() * 0.8 + 0.6,
+                duration: randomDuration / 2,
+                useNativeDriver: true,
+              }),
+              Animated.timing(particle.scale, {
+                toValue: Math.random() * 0.5 + 0.3,
                 duration: randomDuration / 2,
                 useNativeDriver: true,
               }),
@@ -305,18 +516,23 @@ export default function AIOnboardingScreen() {
 
   const triggerFireworks = () => {
     setShowFireworks(true);
+    const colors = [
+      premiumColors.neonAmber,
+      premiumColors.neonMagenta,
+      premiumColors.neonCyan,
+      premiumColors.neonGreen,
+    ];
+    
     const newFireworkParticles: Particle[] = [];
     
     for (let i = 0; i < FIREWORK_PARTICLE_COUNT; i++) {
-      const angle = (Math.PI * 2 * i) / FIREWORK_PARTICLE_COUNT;
-      const velocity = Math.random() * 150 + 100;
-      
       newFireworkParticles.push({
         id: i,
         x: new Animated.Value(SCREEN_WIDTH / 2),
         y: new Animated.Value(SCREEN_HEIGHT / 2),
         scale: new Animated.Value(1),
         opacity: new Animated.Value(1),
+        color: colors[Math.floor(Math.random() * colors.length)],
       });
     }
     
@@ -324,42 +540,44 @@ export default function AIOnboardingScreen() {
     
     newFireworkParticles.forEach((particle, index) => {
       const angle = (Math.PI * 2 * index) / FIREWORK_PARTICLE_COUNT;
-      const velocity = Math.random() * 200 + 150;
+      const velocity = Math.random() * 250 + 200;
       const targetX = SCREEN_WIDTH / 2 + Math.cos(angle) * velocity;
       const targetY = SCREEN_HEIGHT / 2 + Math.sin(angle) * velocity;
       
       Animated.parallel([
         Animated.timing(particle.x, {
           toValue: targetX,
-          duration: 1000,
-          easing: Easing.out(Easing.quad),
+          duration: 1200,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(particle.y, {
           toValue: targetY,
-          duration: 1000,
-          easing: Easing.out(Easing.quad),
+          duration: 1200,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(particle.opacity, {
           toValue: 0,
-          duration: 1000,
+          duration: 1200,
           useNativeDriver: true,
         }),
         Animated.sequence([
           Animated.timing(particle.scale, {
-            toValue: 1.5,
-            duration: 500,
+            toValue: 2,
+            duration: 600,
             useNativeDriver: true,
           }),
           Animated.timing(particle.scale, {
             toValue: 0,
-            duration: 500,
+            duration: 600,
             useNativeDriver: true,
           }),
         ]),
       ]).start();
     });
+
+    playHapticSymphony('celebration');
 
     setTimeout(() => {
       setShowFireworks(false);
@@ -385,6 +603,7 @@ export default function AIOnboardingScreen() {
         setTimeout(() => triggerHaptic('light'), 200);
         setTimeout(() => triggerHaptic('medium'), 300);
         setTimeout(() => triggerHaptic('success'), 500);
+        setTimeout(() => triggerHaptic('success'), 700);
         break;
     }
   };
@@ -392,11 +611,10 @@ export default function AIOnboardingScreen() {
   const changeAvatarExpression = (expression: AvatarExpression) => {
     setAvatarExpression(expression);
     
-    // Animate avatar based on expression
     switch (expression) {
       case 'happy':
         Animated.spring(avatarScale, {
-          toValue: 1.2,
+          toValue: 1.3,
           tension: 100,
           friction: 3,
           useNativeDriver: true,
@@ -428,7 +646,7 @@ export default function AIOnboardingScreen() {
       case 'excited':
         Animated.sequence([
           Animated.timing(avatarScale, {
-            toValue: 1.3,
+            toValue: 1.4,
             duration: 200,
             useNativeDriver: true,
           }),
@@ -436,6 +654,30 @@ export default function AIOnboardingScreen() {
             toValue: 1,
             tension: 50,
             friction: 3,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        
+        // Shake animation
+        Animated.sequence([
+          Animated.timing(shakeAnim, {
+            toValue: 10,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shakeAnim, {
+            toValue: -10,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shakeAnim, {
+            toValue: 10,
+            duration: 50,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shakeAnim, {
+            toValue: 0,
+            duration: 50,
             useNativeDriver: true,
           }),
         ]).start();
@@ -462,11 +704,11 @@ export default function AIOnboardingScreen() {
   const animateEarningsChart = () => {
     chartBarAnims.forEach((anim, index) => {
       Animated.sequence([
-        Animated.delay(index * 200),
+        Animated.delay(index * 250),
         Animated.spring(anim, {
           toValue: 1,
-          tension: 40,
-          friction: 5,
+          tension: 30,
+          friction: 6,
           useNativeDriver: true,
         }),
       ]).start();
@@ -477,14 +719,14 @@ export default function AIOnboardingScreen() {
     if (currentStep === 'name' || currentStep === 'welcome') return;
     
     triggerHaptic('light');
-    showContextualBubble('💡 Going back a step');
+    showContextualBubble('Going back a step', '👈', 1500);
   };
 
   const handleSwipeForward = () => {
     if (!canSwipeForward()) return;
     
     triggerHaptic('light');
-    showContextualBubble('✨ Moving forward!');
+    showContextualBubble('Moving forward!', '✨', 1500);
   };
 
   const canSwipeForward = () => {
@@ -506,13 +748,13 @@ export default function AIOnboardingScreen() {
         Animated.timing(avatarPulse, {
           toValue: 1.15,
           duration: 2000,
-          easing: Easing.inOut(Easing.ease),
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(avatarPulse, {
           toValue: 1,
           duration: 2000,
-          easing: Easing.inOut(Easing.ease),
+          easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
       ])
@@ -560,14 +802,14 @@ export default function AIOnboardingScreen() {
     Animated.sequence([
       Animated.timing(cardFlipAnim, {
         toValue: 1,
-        duration: 300,
-        easing: Easing.inOut(Easing.ease),
+        duration: 400,
+        easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.timing(cardFlipAnim, {
         toValue: 0,
-        duration: 300,
-        easing: Easing.inOut(Easing.ease),
+        duration: 400,
+        easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       }),
     ]).start();
@@ -584,18 +826,18 @@ export default function AIOnboardingScreen() {
     addAIMessage("Let me help you set up your account in about 60 seconds.", 'welcome');
     
     await new Promise(resolve => setTimeout(resolve, 1000));
-    showContextualBubble('💡 Tip: You can use voice or text!', 3000);
+    showContextualBubble('You can use voice or text!', '🎙️', 4000);
     askForName();
   };
 
   const askForName = () => {
     changeAvatarExpression('neutral');
-    addAIMessage("What's your real name?", 'name');
+    addAIMessage("What's your real name? (We'll generate a cool gamertag for you!)", 'name');
     setPredictiveSuggestions([
-      { text: "Use my real name", action: () => setInput('') },
+      { text: "Why do you need my real name?", action: () => handleQuickQuestion("name_reason") },
     ]);
     setProgress(10);
-    showContextualBubble('✨ Your name builds trust with clients', 4000);
+    showContextualBubble('Your name builds trust with clients', '✨', 4000);
   };
 
   const generateGamertag = (name: string): string => {
@@ -619,42 +861,52 @@ export default function AIOnboardingScreen() {
 
   const askForRole = (name: string) => {
     const gamertag = generateGamertag(name);
+    setExtractedData(prev => ({ ...prev, gamertag }));
     changeAvatarExpression('happy');
-    addAIMessage(`${name} - I like it! ✨\n\nYour gamertag: ${gamertag}\n\nWhat brings you to HustleXP?`, 'role', [
-      {
-        type: 'role_cards',
-        data: {
-          roles: [
-            {
-              id: 'worker',
-              icon: '💪',
-              title: 'HUSTLER',
-              subtitle: 'Make money doing tasks',
-              description: 'Find gigs, complete tasks, earn cash',
-            },
-            {
-              id: 'poster',
-              icon: '📋',
-              title: 'POSTER',
-              subtitle: 'Get tasks done for you',
-              description: 'Hire workers, post jobs, get help',
-            },
-            {
-              id: 'both',
-              icon: '⚡',
-              title: 'BOTH',
-              subtitle: 'Do it all',
-              description: 'Maximum flexibility',
-            },
-          ],
+    
+    addAIMessage(
+      `${name} - I like it! ✨\n\n🎮 Your gamertag: ${gamertag}\n\nNow, what brings you to HustleXP?`, 
+      'role', 
+      [
+        {
+          type: 'role_cards',
+          data: {
+            roles: [
+              {
+                id: 'worker',
+                icon: '💪',
+                title: 'HUSTLER',
+                subtitle: 'Make money doing tasks',
+                description: 'Find gigs, complete tasks, earn cash',
+                color: premiumColors.neonCyan,
+              },
+              {
+                id: 'poster',
+                icon: '📋',
+                title: 'POSTER',
+                subtitle: 'Get tasks done for you',
+                description: 'Hire workers, post jobs, get help',
+                color: premiumColors.neonMagenta,
+              },
+              {
+                id: 'both',
+                icon: '⚡',
+                title: 'BOTH',
+                subtitle: 'Do it all',
+                description: 'Maximum flexibility',
+                color: premiumColors.neonAmber,
+              },
+            ],
+          },
         },
-      },
-    ]);
+      ]
+    );
     setPredictiveSuggestions([
       { text: "What's the difference?", action: () => handleQuickQuestion("difference") },
       { text: "Is this safe?", action: () => handleQuickQuestion("safety") },
     ]);
     setProgress(25);
+    showContextualBubble('Most users start as Hustlers', '💡', 3000);
   };
 
   const askForSkills = (role: 'worker' | 'poster' | 'both') => {
@@ -687,7 +939,7 @@ export default function AIOnboardingScreen() {
         { text: "I can do deliveries and moving", action: () => setInput("I can do deliveries and moving") },
         { text: "I'm a skilled tradesman", action: () => setInput("I'm a skilled tradesman") },
       ]);
-      showContextualBubble('🎯 Pick skills to see earnings!', 3000);
+      showContextualBubble('Pick skills to see earnings!', '🎯', 3000);
     } else {
       addAIMessage("Great! I'll set you up as a Poster. You can hire workers for any task you need.", 'skills');
       setTimeout(() => askForAvailability(role), 1000);
@@ -726,6 +978,7 @@ export default function AIOnboardingScreen() {
     setTimeout(() => {
       animateEarningsChart();
       playHapticSymphony('success');
+      showContextualBubble('Nice! You could earn great money!', '💰', 3000);
     }, 300);
 
     setTimeout(() => askForAvailability('worker'), 2000);
@@ -753,7 +1006,7 @@ export default function AIOnboardingScreen() {
       { text: "Just weekends", action: () => handleAvailabilitySelect(['weekends']) },
     ]);
     setProgress(70);
-    showContextualBubble('⏰ More availability = more tasks', 3000);
+    showContextualBubble('More availability = more tasks', '⏰', 3000);
   };
 
   const askForLocation = () => {
@@ -816,7 +1069,7 @@ export default function AIOnboardingScreen() {
     ]);
     setProgress(95);
     setCurrentStep('confirmation');
-    showContextualBubble('🎉 Almost there!', 2000);
+    showContextualBubble('Almost there!', '🎉', 2000);
   };
 
   const confirmAndComplete = async () => {
@@ -914,7 +1167,7 @@ export default function AIOnboardingScreen() {
 
     if (currentStep === 'welcome' || currentStep === 'name') {
       if (!extractedData.name) {
-        const nameMatch = message.match(/(?:i'm|i am|my name is|call me)?\s*([a-z]+)/i);
+        const nameMatch = message.match(/(?:i'm|i am|my name is|call me)?\s*([a-zA-Z]+)/i);
         const name = nameMatch ? nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1) : message.split(' ')[0];
         setExtractedData(prev => ({ ...prev, name }));
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -998,11 +1251,7 @@ export default function AIOnboardingScreen() {
 
   const handleQuickQuestion = (type: string) => {
     playHapticSymphony('success');
-    if (type === 'difference') {
-      setShowHelpModal(true);
-    } else if (type === 'safety') {
-      setShowHelpModal(true);
-    }
+    setShowHelpModal(true);
   };
 
   const startVoiceRecording = async () => {
@@ -1035,12 +1284,12 @@ export default function AIOnboardingScreen() {
         Animated.sequence([
           Animated.timing(waveformAnim, {
             toValue: 1,
-            duration: 500,
+            duration: 400,
             useNativeDriver: true,
           }),
           Animated.timing(waveformAnim, {
             toValue: 0,
-            duration: 500,
+            duration: 400,
             useNativeDriver: true,
           }),
         ])
@@ -1100,7 +1349,8 @@ export default function AIOnboardingScreen() {
                       inputRange: [-2, 2],
                       outputRange: ['-10deg', '10deg'],
                     })
-                  }
+                  },
+                  { translateX: shakeAnim }
                 ] 
               }
             ]}
@@ -1120,15 +1370,14 @@ export default function AIOnboardingScreen() {
               <Brain size={20} color={Colors.background} />
             </LinearGradient>
             
-            {/* Hologram scanline effect */}
             <Animated.View
               style={[
-                styles.hologramScanline,
+                styles.avatarGlow,
                 {
                   transform: [{
                     translateY: hologramAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, 36],
+                      outputRange: [0, 40],
                     })
                   }]
                 }
@@ -1138,12 +1387,12 @@ export default function AIOnboardingScreen() {
         )}
         
         <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-          <BlurView intensity={isUser ? 30 : 40} tint="dark" style={styles.messageBlur}>
+          <BlurView intensity={isUser ? 30 : 50} tint="dark" style={styles.messageBlur}>
             <LinearGradient
               colors={
                 isUser
-                  ? [premiumColors.neonCyan + '40', premiumColors.neonBlue + '20']
-                  : [premiumColors.glassDark + '80', premiumColors.glassDark + '60']
+                  ? [premiumColors.neonCyan + '50', premiumColors.neonBlue + '30']
+                  : [premiumColors.glassDark + '90', premiumColors.glassDark + '70']
               }
               style={styles.messageGradient}
             >
@@ -1168,45 +1417,15 @@ export default function AIOnboardingScreen() {
       case 'role_cards':
         return (
           <View key={index} style={styles.roleCardsContainer}>
-            {component.data.roles.map((role: any, roleIndex: number) => {
-              const rotateY = cardFlipAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '360deg'],
-              });
-              
-              return (
-                <Animated.View
-                  key={role.id}
-                  style={{
-                    transform: [{ perspective: 1000 }, { rotateY }],
-                  }}
-                >
-                  <TouchableOpacity
-                    style={styles.roleCard}
-                    onPress={() => handleRoleSelect(role.id)}
-                    activeOpacity={0.8}
-                  >
-                    <BlurView intensity={40} tint="dark" style={styles.roleCardContent}>
-                      <LinearGradient
-                        colors={[
-                          premiumColors.glassDark + '60',
-                          premiumColors.glassDark + '40',
-                        ]}
-                        style={styles.roleCardGradient}
-                      >
-                        <Text style={styles.roleCardIcon}>{role.icon}</Text>
-                        <Text style={styles.roleCardTitle}>{role.title}</Text>
-                        <Text style={styles.roleCardSubtitle}>{role.subtitle}</Text>
-                        <Text style={styles.roleCardDescription}>{role.description}</Text>
-                        <View style={styles.roleCardButton}>
-                          <Text style={styles.roleCardButtonText}>SELECT</Text>
-                        </View>
-                      </LinearGradient>
-                    </BlurView>
-                  </TouchableOpacity>
-                </Animated.View>
-              );
-            })}
+            {component.data.roles.map((role: RoleData, roleIndex: number) => (
+              <RoleCard3D
+                key={role.id}
+                role={role}
+                onSelect={() => handleRoleSelect(role.id)}
+                flipAnim={cardFlipAnim}
+                index={roleIndex}
+              />
+            ))}
           </View>
         );
 
@@ -1295,7 +1514,7 @@ export default function AIOnboardingScreen() {
 
         return (
           <View key={index} style={styles.earningsPreview}>
-            <BlurView intensity={50} tint="dark" style={styles.earningsBlur}>
+            <BlurView intensity={60} tint="dark" style={styles.earningsBlur}>
               <View style={styles.earningsContent}>
                 <View style={styles.skillsList}>
                   {skills.map((skill: string, idx: number) => (
@@ -1313,7 +1532,6 @@ export default function AIOnboardingScreen() {
                   <Text style={styles.earningsTitle}>Your Growth Potential:</Text>
                 </View>
 
-                {/* Animated chart */}
                 <View style={styles.earningsChart}>
                   {weeklyEarnings.map((week, idx) => (
                     <View key={idx} style={styles.chartColumn}>
@@ -1438,20 +1656,21 @@ export default function AIOnboardingScreen() {
 
     return (
       <View style={styles.waveformContainer}>
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((barIndex) => (
           <Animated.View
-            key={index}
+            key={barIndex}
             style={[
               styles.waveformBar,
               {
                 height: waveformAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [10, 40],
+                  outputRange: [8, 45 - Math.abs(barIndex - 5.5) * 3],
                 }),
                 opacity: waveformAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0.3, 1],
+                  outputRange: [0.4, 1],
                 }),
+                backgroundColor: barIndex % 2 === 0 ? premiumColors.neonMagenta : premiumColors.neonCyan,
               },
             ]}
           />
@@ -1468,7 +1687,7 @@ export default function AIOnboardingScreen() {
       onRequestClose={() => setShowHelpModal(false)}
     >
       <View style={styles.modalOverlay}>
-        <BlurView intensity={80} tint="dark" style={styles.modalBlur}>
+        <BlurView intensity={90} tint="dark" style={styles.modalBlur}>
           <View style={styles.modalContent}>
             <TouchableOpacity
               style={styles.modalClose}
@@ -1536,13 +1755,13 @@ export default function AIOnboardingScreen() {
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <LinearGradient
-        colors={[premiumColors.deepBlack, premiumColors.richBlack, '#1A1A2E']}
+        colors={[premiumColors.deepBlack, premiumColors.richBlack, '#1A1A2E', '#16213E']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Floating particles */}
+      {/* Enhanced floating particles with colors */}
       {particles.map((particle) => (
         <Animated.View
           key={particle.id}
@@ -1555,6 +1774,7 @@ export default function AIOnboardingScreen() {
                 { scale: particle.scale },
               ],
               opacity: particle.opacity,
+              backgroundColor: particle.color,
             },
           ]}
         />
@@ -1573,12 +1793,13 @@ export default function AIOnboardingScreen() {
                 { scale: particle.scale },
               ],
               opacity: particle.opacity,
+              backgroundColor: particle.color,
             },
           ]}
         />
       ))}
 
-      {/* Contextual bubbles */}
+      {/* Enhanced contextual bubbles */}
       {contextualBubbles.map((bubble) => (
         <Animated.View
           key={bubble.id}
@@ -1591,13 +1812,16 @@ export default function AIOnboardingScreen() {
               transform: [{
                 translateY: bubbleAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [20, 0],
-                })
+                  outputRange: [30, 0],
+                }),
+              }, {
+                scale: bubbleAnim,
               }]
             },
           ]}
         >
-          <BlurView intensity={40} tint="dark" style={styles.bubbleBlur}>
+          <BlurView intensity={50} tint="dark" style={styles.bubbleBlur}>
+            <Text style={styles.bubbleIcon}>{bubble.icon}</Text>
             <Text style={styles.bubbleText}>{bubble.text}</Text>
           </BlurView>
         </Animated.View>
@@ -1611,6 +1835,16 @@ export default function AIOnboardingScreen() {
           <View style={styles.logoContainer}>
             <Sparkles size={24} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
             <Text style={styles.headerTitle}>HustleXP AI Coach</Text>
+            <Animated.View style={{
+              transform: [{
+                rotate: hologramAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '360deg'],
+                })
+              }]
+            }}>
+              <Rocket size={20} color={premiumColors.neonAmber} />
+            </Animated.View>
           </View>
           <TouchableOpacity
             style={styles.helpButton}
@@ -1633,7 +1867,7 @@ export default function AIOnboardingScreen() {
             ]}
           >
             <LinearGradient
-              colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
+              colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta, premiumColors.neonAmber]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
@@ -1641,11 +1875,10 @@ export default function AIOnboardingScreen() {
           </Animated.View>
         </View>
 
-        {/* Gesture hints */}
         <View style={styles.gestureHints}>
           <View style={styles.gestureHint}>
             <ChevronLeft size={16} color={premiumColors.glassWhiteStrong} />
-            <Text style={styles.gestureHintText}>Swipe</Text>
+            <Text style={styles.gestureHintText}>Swipe to navigate</Text>
             <ChevronRight size={16} color={premiumColors.glassWhiteStrong} />
           </View>
         </View>
@@ -1670,7 +1903,16 @@ export default function AIOnboardingScreen() {
           {isProcessing && (
             <View style={styles.typingContainer}>
               <View style={styles.typingBubble}>
-                <Loader size={16} color={premiumColors.neonCyan} />
+                <Animated.View style={{
+                  transform: [{
+                    rotate: hologramAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    })
+                  }]
+                }}>
+                  <Loader size={16} color={premiumColors.neonCyan} />
+                </Animated.View>
                 <Text style={styles.typingText}>AI is thinking...</Text>
               </View>
             </View>
@@ -1697,7 +1939,7 @@ export default function AIOnboardingScreen() {
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom + spacing.md }]}>
           {renderWaveformVisualizer()}
           
-          <BlurView intensity={60} tint="dark" style={styles.inputBlur}>
+          <BlurView intensity={70} tint="dark" style={styles.inputBlur}>
             <View style={styles.inputWrapper}>
               <MessageCircle size={20} color={premiumColors.glassWhiteStrong} />
               <View style={styles.inputWithPrediction}>
@@ -1723,7 +1965,7 @@ export default function AIOnboardingScreen() {
               
               {Platform.OS !== 'web' && (
                 <TouchableOpacity
-                  style={styles.voiceButton}
+                  style={[styles.voiceButton, isRecording && styles.voiceButtonRecording]}
                   onPress={isRecording ? stopVoiceRecording : startVoiceRecording}
                   activeOpacity={0.7}
                 >
@@ -1733,7 +1975,7 @@ export default function AIOnboardingScreen() {
                       isRecording && {
                         opacity: waveformAnim.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [0.5, 1],
+                          outputRange: [0.6, 1],
                         }),
                       },
                     ]}
@@ -1775,32 +2017,37 @@ const styles = StyleSheet.create({
   },
   particle: {
     position: 'absolute',
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: premiumColors.neonCyan,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   fireworkParticle: {
     position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: premiumColors.neonAmber,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   contextualBubble: {
     position: 'absolute',
     zIndex: 1000,
   },
   bubbleBlur: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: premiumColors.neonCyan,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan + '60',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    ...neonGlow.cyan,
+  },
+  bubbleIcon: {
+    fontSize: 16,
   },
   bubbleText: {
-    fontSize: 12,
-    fontWeight: '600' as const,
+    fontSize: 13,
+    fontWeight: '700' as const,
     color: Colors.text,
   },
   header: {
@@ -1818,21 +2065,22 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800' as const,
     color: Colors.text,
-    marginLeft: spacing.sm,
   },
   helpButton: {
     padding: spacing.xs,
   },
   progressBarContainer: {
-    height: 4,
+    height: 6,
     backgroundColor: premiumColors.glassWhite,
     borderRadius: borderRadius.full,
     overflow: 'hidden',
+    ...neonGlow.subtle,
   },
   progressBar: {
     height: '100%',
@@ -1840,7 +2088,7 @@ const styles = StyleSheet.create({
   },
   gestureHints: {
     alignItems: 'center',
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
   },
   gestureHint: {
     flexDirection: 'row',
@@ -1848,7 +2096,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   gestureHintText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
   },
@@ -1863,7 +2111,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   messageContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
     alignItems: 'flex-start',
   },
   userMessageContainer: {
@@ -1878,25 +2126,26 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     ...neonGlow.cyan,
-    shadowRadius: 15,
-    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    shadowOpacity: 1,
   },
-  hologramScanline: {
+  avatarGlow: {
     position: 'absolute',
-    width: 36,
-    height: 2,
+    width: 40,
+    height: 3,
     backgroundColor: premiumColors.neonCyan,
-    opacity: 0.5,
+    opacity: 0.7,
+    borderRadius: 2,
   },
   messageBubble: {
-    maxWidth: '75%',
-    borderRadius: borderRadius.xl,
+    maxWidth: '80%',
+    borderRadius: borderRadius.xxl,
     overflow: 'hidden',
   },
   userBubble: {
@@ -1906,12 +2155,12 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   messageBlur: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
     borderWidth: 2,
     borderColor: premiumColors.glassWhite,
   },
   messageGradient: {
-    padding: spacing.md,
+    padding: spacing.lg,
   },
   messageText: {
     fontSize: 15,
@@ -1924,73 +2173,114 @@ const styles = StyleSheet.create({
   },
   uiComponentsContainer: {
     width: '100%',
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
   },
+  
+  // 🎯 Enhanced 3D Role Cards
   roleCardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: spacing.lg,
+  },
+  roleCardWrapper: {
+    flex: 1,
+    minWidth: (SCREEN_WIDTH - spacing.xl * 2 - spacing.lg * 2) / 3 - spacing.lg,
   },
   roleCard: {
-    flex: 1,
-    minWidth: (SCREEN_WIDTH - spacing.xl * 2 - spacing.md * 2) / 3 - spacing.md,
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: premiumColors.glassWhite,
+    borderRadius: borderRadius.xxl,
+    overflow: 'visible',
+  },
+  card3DLayer1: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: -4,
+    bottom: -4,
+    borderRadius: borderRadius.xxl,
+    zIndex: -1,
+  },
+  card3DLayer2: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    right: -8,
+    bottom: -8,
+    borderRadius: borderRadius.xxl,
+    zIndex: -2,
   },
   roleCardContent: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
   },
   roleCardGradient: {
-    padding: spacing.md,
+    padding: spacing.lg,
     alignItems: 'center',
   },
+  roleCardIconContainer: {
+    position: 'relative',
+    marginBottom: spacing.md,
+  },
   roleCardIcon: {
-    fontSize: 32,
-    marginBottom: spacing.sm,
+    fontSize: 40,
+  },
+  iconGlow: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    top: -10,
+    left: -10,
+    opacity: 0.3,
   },
   roleCardTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800' as const,
     color: Colors.text,
     marginBottom: spacing.xs,
   },
   roleCardSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   roleCardDescription: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500' as const,
     color: premiumColors.glassWhiteStrong,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
   roleCardButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    backgroundColor: premiumColors.neonCyan + '30',
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: premiumColors.neonCyan,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  roleCardButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
   },
   roleCardButtonText: {
-    fontSize: 11,
-    fontWeight: '700' as const,
-    color: premiumColors.neonCyan,
+    fontSize: 12,
+    fontWeight: '800' as const,
   },
+  
   skillChipsContainer: {
     width: '100%',
   },
   skillChipsLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700' as const,
     color: premiumColors.glassWhiteStrong,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   chipsList: {
     flexDirection: 'row',
@@ -1998,35 +2288,36 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: premiumColors.glassDark + '80',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: premiumColors.glassDark + '90',
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: premiumColors.glassWhite,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
     flexDirection: 'row',
     alignItems: 'center',
   },
   chipSelected: {
-    backgroundColor: premiumColors.neonCyan + '30',
+    backgroundColor: premiumColors.neonCyan + '40',
     borderColor: premiumColors.neonCyan,
+    ...neonGlow.cyan,
   },
   tradeChip: {
     backgroundColor: premiumColors.neonMagenta + '20',
     borderColor: premiumColors.neonMagenta + '60',
   },
   chipText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
+    fontSize: 14,
+    fontWeight: '700' as const,
     color: Colors.text,
   },
   chipTextSelected: {
     color: premiumColors.neonCyan,
   },
   popularBadge: {
-    marginLeft: spacing.xs,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
+    marginLeft: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
     backgroundColor: premiumColors.neonMagenta,
     borderRadius: borderRadius.sm,
   },
@@ -2036,12 +2327,13 @@ const styles = StyleSheet.create({
     color: Colors.background,
   },
   confirmButton: {
-    marginTop: spacing.lg,
-    borderRadius: borderRadius.xl,
+    marginTop: spacing.xl,
+    borderRadius: borderRadius.xxl,
     overflow: 'hidden',
+    ...neonGlow.cyan,
   },
   confirmButtonGradient: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2049,56 +2341,59 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   confirmButtonText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800' as const,
     color: Colors.background,
   },
   earningsPreview: {
     width: '100%',
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: premiumColors.neonGreen + '40',
+    borderColor: premiumColors.neonGreen + '60',
+    ...neonGlow.green,
   },
   earningsBlur: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
   },
   earningsContent: {
-    padding: spacing.lg,
+    padding: spacing.xl,
   },
   skillsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   skillTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    backgroundColor: premiumColors.neonGreen + '20',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: premiumColors.neonGreen + '30',
     borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: premiumColors.neonGreen,
   },
   skillTagText: {
-    fontSize: 12,
-    fontWeight: '600' as const,
+    fontSize: 13,
+    fontWeight: '700' as const,
     color: premiumColors.neonGreen,
   },
   earningsDivider: {
     height: 1,
-    backgroundColor: premiumColors.glassWhite,
-    marginVertical: spacing.md,
+    backgroundColor: premiumColors.glassWhiteStrong,
+    marginVertical: spacing.lg,
   },
   earningsSection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   earningsTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.text,
   },
@@ -2106,8 +2401,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    height: 120,
-    marginBottom: spacing.lg,
+    height: 130,
+    marginBottom: spacing.xl,
   },
   chartColumn: {
     flex: 1,
@@ -2118,16 +2413,17 @@ const styles = StyleSheet.create({
     width: '70%',
     borderRadius: borderRadius.md,
     overflow: 'hidden',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
+    ...neonGlow.green,
   },
   chartLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
     marginTop: spacing.xs,
   },
   chartValue: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700' as const,
     color: premiumColors.neonGreen,
   },
@@ -2138,63 +2434,64 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   earningsLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500' as const,
     color: premiumColors.glassWhiteStrong,
   },
   earningsValue: {
-    fontSize: 16,
-    fontWeight: '700' as const,
+    fontSize: 18,
+    fontWeight: '800' as const,
     color: premiumColors.neonGreen,
   },
   earningsNote: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
     textAlign: 'center',
   },
   availabilityPicker: {
     width: '100%',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   availabilityCard: {
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: premiumColors.glassWhite,
+    borderColor: premiumColors.glassWhiteStrong,
   },
   availabilityBlur: {
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
   },
   availabilityLabel: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.text,
     marginBottom: spacing.xs,
   },
   availabilityHours: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500' as const,
     color: premiumColors.glassWhiteStrong,
   },
   mapPreview: {
     width: '100%',
-    height: 150,
-    borderRadius: borderRadius.xl,
+    height: 160,
+    borderRadius: borderRadius.xxl,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: premiumColors.neonCyan + '40',
+    borderColor: premiumColors.neonCyan + '60',
+    ...neonGlow.cyan,
   },
   mapBlur: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   mapText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.text,
   },
@@ -2203,23 +2500,24 @@ const styles = StyleSheet.create({
   },
   confirmationCard: {
     width: '100%',
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: premiumColors.neonGreen + '40',
+    borderColor: premiumColors.neonGreen + '60',
+    ...neonGlow.green,
   },
   confirmationBlur: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    borderRadius: borderRadius.xxl,
   },
   confirmationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   confirmationLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.text,
     flex: 1,
@@ -2228,13 +2526,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: premiumColors.neonAmber + '20',
-    borderRadius: borderRadius.lg,
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    backgroundColor: premiumColors.neonAmber + '30',
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    borderColor: premiumColors.neonAmber,
   },
   confirmationHighlightText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700' as const,
     color: premiumColors.neonAmber,
   },
@@ -2248,74 +2548,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: premiumColors.glassDark,
+    backgroundColor: premiumColors.glassDark + '90',
     borderRadius: borderRadius.xl,
-    marginLeft: 44,
+    marginLeft: 48,
+    gap: spacing.sm,
   },
   typingText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
     fontStyle: 'italic' as const,
-    marginLeft: spacing.sm,
   },
   suggestionsContainer: {
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
   },
   suggestionsLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: premiumColors.glassWhiteStrong,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   suggestionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: premiumColors.glassDark + '60',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: premiumColors.glassWhite,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    backgroundColor: premiumColors.glassDark + '70',
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    borderColor: premiumColors.glassWhiteStrong,
     marginBottom: spacing.sm,
   },
   suggestionText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.text,
   },
   inputContainer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    backgroundColor: premiumColors.deepBlack + 'F0',
+    backgroundColor: premiumColors.deepBlack + 'F5',
     borderTopWidth: 1,
-    borderTopColor: premiumColors.glassWhite,
+    borderTopColor: premiumColors.glassWhiteStrong,
   },
   waveformContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
+    gap: 4,
+    paddingVertical: spacing.md,
   },
   waveformBar: {
-    width: 3,
-    backgroundColor: premiumColors.neonMagenta,
+    width: 4,
     borderRadius: 2,
   },
   inputBlur: {
     borderRadius: borderRadius.xxl,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: premiumColors.glassWhite,
+    borderColor: premiumColors.glassWhiteStrong,
+    ...neonGlow.subtle,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   inputWithPrediction: {
     flex: 1,
@@ -2323,33 +2623,38 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '500' as const,
     color: Colors.text,
-    maxHeight: 100,
-    paddingVertical: spacing.xs,
-    marginHorizontal: spacing.sm,
+    maxHeight: 120,
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.md,
   },
   typingPrediction: {
     position: 'absolute',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '500' as const,
     color: 'transparent',
-    paddingVertical: spacing.xs,
-    marginHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.md,
     pointerEvents: 'none',
   },
   typingPredictionSuggestion: {
     color: premiumColors.glassWhiteStrong,
-    opacity: 0.5,
+    opacity: 0.6,
   },
   voiceButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.xs,
+    marginRight: spacing.sm,
+    backgroundColor: premiumColors.glassDark,
+  },
+  voiceButtonRecording: {
+    backgroundColor: premiumColors.neonMagenta + '30',
+    ...neonGlow.magenta,
   },
   voiceButtonInner: {
     width: '100%',
@@ -2358,13 +2663,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     overflow: 'hidden',
+    ...neonGlow.cyan,
   },
   sendButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   sendButtonGradient: {
     width: '100%',
@@ -2374,88 +2680,93 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalBlur: {
     width: SCREEN_WIDTH - spacing.xl * 2,
-    maxHeight: SCREEN_HEIGHT * 0.8,
+    maxHeight: SCREEN_HEIGHT * 0.85,
     borderRadius: borderRadius.xxl,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan,
   },
   modalContent: {
-    padding: spacing.xl,
+    padding: spacing.xxl,
   },
   modalClose: {
     position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
+    top: spacing.lg,
+    right: spacing.lg,
     zIndex: 10,
-    padding: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: premiumColors.glassDark,
+    borderRadius: borderRadius.full,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800' as const,
     color: Colors.text,
     marginBottom: spacing.xl,
     textAlign: 'center',
   },
   modalSection: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   modalSectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700' as const,
     color: premiumColors.neonCyan,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   modalText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500' as const,
     color: Colors.text,
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: spacing.sm,
   },
   modalExample: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500' as const,
     color: premiumColors.glassWhiteStrong,
     fontStyle: 'italic' as const,
   },
   modalSafety: {
     marginTop: spacing.xl,
-    padding: spacing.lg,
+    padding: spacing.xl,
     backgroundColor: premiumColors.neonGreen + '20',
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
     borderWidth: 2,
     borderColor: premiumColors.neonGreen,
   },
   modalSafetyTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700' as const,
     color: premiumColors.neonGreen,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   safetyFeatures: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   safetyFeature: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500' as const,
     color: Colors.text,
   },
   modalButton: {
-    marginTop: spacing.xl,
-    borderRadius: borderRadius.xl,
+    marginTop: spacing.xxl,
+    borderRadius: borderRadius.xxl,
     overflow: 'hidden',
+    ...neonGlow.cyan,
   },
   modalButtonGradient: {
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.xl,
     alignItems: 'center',
   },
   modalButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800' as const,
     color: Colors.background,
   },
