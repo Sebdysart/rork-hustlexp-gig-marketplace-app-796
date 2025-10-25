@@ -450,34 +450,36 @@ export default function WelcomeScreen() {
                         {
                           scale: sparkBurst.interpolate({
                             inputRange: [0, 0.5, 1],
-                            outputRange: [1, 1.2, 1],
+                            outputRange: [1, 1.4, 1],
                           }),
                         },
                       ],
                       opacity: sparkBurst.interpolate({
                         inputRange: [0, 0.4, 1],
-                        outputRange: [1, 0.8, 1],
+                        outputRange: [1, 0.6, 1],
                       }),
                     },
                   ]}
                 >
-                  <View
-                    style={{
-                      width: 90,
-                      height: 90,
-                      borderRadius: 45,
-                      backgroundColor: premiumColors.neonCyan + '15',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
+                  <LinearGradient
+                    colors={[
+                      '#FFFFFF',
+                      premiumColors.neonCyan,
+                      premiumColors.neonAmber,
+                      '#FFFFFF',
+                    ]}
+                    locations={[0, 0.3, 0.7, 1]}
+                    style={{ borderRadius: 100 }}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
                     <Zap 
-                      size={56} 
-                      color={premiumColors.neonCyan} 
-                      strokeWidth={2.5} 
-                      fill={premiumColors.neonCyan} 
+                      size={120} 
+                      color="#FFFFFF" 
+                      strokeWidth={7} 
+                      fill={premiumColors.neonCyan + 'DD'} 
                     />
-                  </View>
+                  </LinearGradient>
                 </Animated.View>
               </View>
             </BlurView>
@@ -485,7 +487,21 @@ export default function WelcomeScreen() {
         </Animated.View>
 
         <View style={styles.titleContainer}>
-          <Text style={styles.mainTitle}>HUSTLEXP</Text>
+          <LinearGradient
+            colors={[
+              premiumColors.neonCyan,
+              '#FFFFFF',
+              premiumColors.neonAmber,
+              '#FFFFFF',
+              premiumColors.neonMagenta,
+            ]}
+            locations={[0, 0.25, 0.5, 0.75, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.titleGradientWrapper}
+          >
+            <Text style={styles.mainTitle}>HUSTLEXP</Text>
+          </LinearGradient>
         </View>
 
         <Text style={styles.tagline}>
@@ -571,10 +587,23 @@ export default function WelcomeScreen() {
                     end={{ x: 1, y: 0 }}
                   />
                 </Animated.View>
-                <View style={styles.buttonContent}>
+                <Animated.View
+                  style={[
+                    styles.buttonContent,
+                    { 
+                      transform: [{ 
+                        scale: Animated.multiply(logoPulse, 0.98).interpolate({
+                          inputRange: [0.9, 1.1],
+                          outputRange: [0.98, 1.02],
+                        }),
+                      }] 
+                    },
+                  ]}
+                >
+                  <Zap size={32} color="#000000" strokeWidth={3.5} fill="#000000" />
                   <Text style={styles.buttonText}>Start Your Journey</Text>
-                  <ArrowRight size={24} color="#FFFFFF" strokeWidth={2.5} />
-                </View>
+                  <ArrowRight size={32} color="#000000" strokeWidth={3.5} />
+                </Animated.View>
               </View>
             </BlurView>
           </Animated.View>
@@ -679,35 +708,52 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  titleGradientWrapper: {
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 40,
+    shadowOpacity: 1,
   },
   mainTitle: {
-    fontSize: 48,
+    fontSize: 62,
     fontWeight: '900' as const,
     color: '#FFFFFF',
-    letterSpacing: 4,
+    letterSpacing: 8,
+    textShadowColor: premiumColors.neonCyan,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 40,
     textAlign: 'center',
-    opacity: 0.92,
   },
   tagline: {
-    fontSize: 19,
-    fontWeight: '600' as const,
+    fontSize: 22,
+    fontWeight: '700' as const,
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: spacing.xxl,
-    letterSpacing: 0.5,
-    opacity: 0.85,
+    letterSpacing: 2,
+    textShadowColor: premiumColors.neonCyan,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan + '40',
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 20,
+    shadowOpacity: 0.5,
   },
   statItem: {
     flexDirection: 'row',
@@ -716,9 +762,9 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 14,
-    fontWeight: '700' as const,
+    fontWeight: '800' as const,
     color: '#FFFFFF',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   footer: {
     position: 'absolute',
@@ -769,9 +815,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   buttonText: {
-    fontSize: 19,
+    fontSize: 22,
     fontWeight: '900' as const,
-    color: '#FFFFFF',
-    letterSpacing: 0.8,
+    color: '#000000',
+    letterSpacing: 1.5,
   },
 });

@@ -854,7 +854,7 @@ export default function OnboardingScreen() {
               <View style={styles.header}>
                 <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
                   <LinearGradient
-                    colors={['rgba(0, 255, 255, 0.6)', 'rgba(82, 113, 255, 0.4)', 'rgba(155, 94, 255, 0.3)']}
+                    colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
                     style={styles.iconGradientBg}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -863,7 +863,7 @@ export default function OnboardingScreen() {
                       <View style={styles.logoRingInner} />
                     </Animated.View>
                     <View style={styles.iconGlow}>
-                      <Zap size={40} color="#00E5E5" strokeWidth={2.5} fill="#00E5E5" />
+                      <Zap size={48} color={premiumColors.neonCyan} strokeWidth={3} />
                     </View>
                   </LinearGradient>
                 </Animated.View>
@@ -1154,12 +1154,14 @@ export default function OnboardingScreen() {
               accessibilityState={{ disabled: !name.trim() || !email.trim() || !password.trim() }}
             >
               <LinearGradient
-                colors={name.trim() && email.trim() && password.trim() ? ['#00E5E5', '#5271FF', '#FF00A8'] : ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.1)']}
+                colors={name.trim() && email.trim() && password.trim() ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : [premiumColors.glassWhite, premiumColors.glassWhite]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}
               >
-                <Text style={[styles.buttonText, (!name.trim() || !email.trim() || !password.trim()) && styles.buttonTextDisabled]}>{translations[13] || "Let's Hustle 🚀"}</Text>
+                <Zap size={24} color={name.trim() && email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} fill={name.trim() && email.trim() && password.trim() ? premiumColors.deepBlack : 'transparent'} />
+                <Text style={[styles.buttonText, (!name.trim() || !email.trim() || !password.trim()) && styles.buttonTextDisabled]}>{translations[13]}</Text>
+                <Sparkles size={22} color={name.trim() && email.trim() && password.trim() ? premiumColors.deepBlack : Colors.textSecondary} strokeWidth={3} />
               </LinearGradient>
             </TouchableOpacity>
             </Animated.View>
@@ -2190,24 +2192,23 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   iconGradientBg: {
-    width: 120,
-    height: 120,
+    width: 80,
+    height: 80,
     borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: 'rgba(0, 255, 255, 0.5)',
-    shadowOffset: { width: 0, height: 0 },
+    ...neonGlow.cyan,
     shadowRadius: 50,
-    shadowOpacity: 0.8,
+    shadowOpacity: 1,
   },
   logoRing: {
     position: 'absolute',
-    width: 100,
-    height: 100,
+    width: 70,
+    height: 70,
     borderRadius: borderRadius.full,
-    borderWidth: 3,
-    borderColor: 'rgba(0, 255, 255, 0.3)',
-    borderStyle: 'solid' as const,
+    borderWidth: 2,
+    borderColor: premiumColors.neonCyan,
+    borderStyle: 'dashed',
   },
   logoRingInner: {
     width: '100%',
@@ -2215,18 +2216,17 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   iconGlow: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(10, 10, 12, 0.9)',
+    backgroundColor: 'rgba(0, 255, 255, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(0, 255, 255, 0.25)',
-    shadowColor: 'rgba(0, 255, 255, 0.6)',
-    shadowOffset: { width: 0, height: 0 },
+    borderWidth: 3,
+    borderColor: 'rgba(0, 255, 255, 0.4)',
+    ...neonGlow.cyan,
     shadowRadius: 40,
-    shadowOpacity: 0.7,
+    shadowOpacity: 0.8,
   },
   tagline: {
     flexDirection: 'row',
@@ -2253,13 +2253,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '900' as const,
-    color: 'rgba(255, 255, 255, 0.95)',
+    color: '#FFFFFF',
     marginTop: spacing.xs,
     textAlign: 'center',
-    letterSpacing: -1,
-    textShadowColor: 'rgba(0, 255, 255, 0.3)',
+    letterSpacing: -2,
+    textShadowColor: premiumColors.neonCyan,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    textShadowRadius: 30,
   },
   pathTitle: {
     fontSize: 28,
