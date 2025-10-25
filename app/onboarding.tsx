@@ -683,7 +683,7 @@ export default function OnboardingScreen() {
                   style={styles.tutorialButtonGradient}
                 >
                   <Text style={styles.tutorialButtonText}>
-                    {tutorialIndex < slides.length - 1 ? translations[80] : translations[81]}
+                    {tutorialIndex < slides.length - 1 ? (translations[80] || 'Next') : (translations[81] || 'Get Started')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
