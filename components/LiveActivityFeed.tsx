@@ -119,10 +119,15 @@ export default function LiveActivityFeed() {
     ]).start();
 
     const interval = setInterval(() => {
+      const firstNames = ['Alex', 'Jordan', 'Taylor', 'Casey', 'Morgan'];
+      const lastInitials = ['A', 'B', 'C', 'D'];
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastInitial = lastInitials[Math.floor(Math.random() * lastInitials.length)];
+      
       const newActivity: Activity = {
         id: Date.now().toString(),
         type: ['quest_completed', 'level_up', 'badge_earned', 'instant_hire'][Math.floor(Math.random() * 4)] as ActivityType,
-        userName: ['Alex', 'Jordan', 'Taylor', 'Casey', 'Morgan'][Math.floor(Math.random() * 5)] + ' ' + ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)] + '.',
+        userName: `${firstName} ${lastInitial}.`,
         detail: 'just completed a quest',
         timestamp: new Date(),
         xpGained: Math.floor(Math.random() * 200) + 50,
