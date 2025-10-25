@@ -196,7 +196,7 @@ import { useApp } from '@/contexts/AppContext';
 export default function TaskCompleteScreen() {
   const { currentUser } = useApp();
   const tierData = useAscensionTier(currentUser?.level || 1);
-  const task = /* your task */;
+  const task = { xpReward: 100, payAmount: 150 }; // Replace with actual task data
 
   const baseXP = task.xpReward;
   const bonusXP = calculateTierBonusXP(baseXP, currentUser?.level || 1);
