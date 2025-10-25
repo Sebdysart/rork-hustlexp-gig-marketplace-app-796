@@ -12,6 +12,7 @@ import {
   ScrollView,
   Easing,
   Modal,
+  PanResponder,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,8 +20,8 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { 
   Sparkles, Send, Loader, MessageCircle, Brain, Mic, Check,
-  Star, MapPin, DollarSign, ArrowRight,
-  X, HelpCircle
+  Star, MapPin, DollarSign, ArrowRight, Zap,
+  X, HelpCircle, TrendingUp, Award, ChevronLeft, ChevronRight
 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 
@@ -65,7 +66,27 @@ interface PredictiveSuggestion {
   action: () => void;
 }
 
+interface Particle {
+  id: number;
+  x: Animated.Value;
+  y: Animated.Value;
+  scale: Animated.Value;
+  opacity: Animated.Value;
+}
+
+interface ContextualBubble {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  visible: boolean;
+}
+
 type OnboardingStep = 'welcome' | 'name' | 'role' | 'skills' | 'availability' | 'location' | 'confirmation' | 'complete';
+type AvatarExpression = 'neutral' | 'happy' | 'thinking' | 'excited' | 'celebrating';
+
+const PARTICLE_COUNT = 60;
+const FIREWORK_PARTICLE_COUNT = 120;
 
 export default function AIOnboardingScreen() {
   const router = useRouter();
@@ -85,6 +106,12 @@ export default function AIOnboardingScreen() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [progress, setProgress] = useState(0);
   const [nearbyTasks, setNearbyTasks] = useState<Task[]>([]);
+  const [avatarExpression, setAvatarExpression] = useState<AvatarExpression>('neutral');
+  const [contextualBubbles, setContextualBubbles] = useState<ContextualBubble[]>([]);
+  const [typingPrediction, setTypingPrediction] = useState('');
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [fireworkParticles, setFireworkParticles] = useState<Particle[]>([]);
+  const [showFireworks, setShowFireworks] = useState(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const avatarPulse = useRef(new Animated.Value(1)).current;
@@ -92,17 +119,44 @@ export default function AIOnboardingScreen() {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const waveformAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const particleAnim = useRef(new Animated.Value(0)).current;
   const hologramAnim = useRef(new Animated.Value(0)).current;
   const cardFlipAnim = useRef(new Animated.Value(0)).current;
   const breatheAnim = useRef(new Animated.Value(1)).current;
+  const chartBarAnims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+  const avatarRotate = useRef(new Animated.Value(0)).current;
+  const avatarScale = useRef(new Animated.Value(1)).current;
+  const bubbleAnim = useRef(new Animated.Value(0)).current;
+
+  // Gesture for swiping between steps
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 20;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 50) {
+          // Swipe right - go back
+          handleSwipeBack();
+        } else if (gestureState.dx < -50) {
+          // Swipe left - go forward
+          handleSwipeForward();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     startAvatarPulse();
     startHologramEffect();
-    startParticleSystem();
+    initializeParticles();
     startBreatheAnimation();
     showWelcomeMessage();
+    startMessageAnimation();
   }, []);
 
   useEffect(() => {
@@ -112,11 +166,339 @@ export default function AIOnboardingScreen() {
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
+
+    if (progress === 100) {
+      triggerFireworks();
+    }
   }, [progress]);
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  useEffect(() => {
+    if (input.length > 3) {
+      generateTypingPrediction(input);
+    } else {
+      setTypingPrediction('');
+    }
+  }, [input]);
+
+  const startMessageAnimation = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const generateTypingPrediction = (text: string) => {
+    const lowerText = text.toLowerCase();
+    
+    if (currentStep === 'name') {
+      if (lowerText.includes('my name')) {
+        setTypingPrediction(' is...');
+      }
+    } else if (currentStep === 'skills') {
+      if (lowerText.includes('i can')) {
+        setTypingPrediction(' do deliveries and moving');
+      } else if (lowerText.includes('good at')) {
+        setTypingPrediction(' cleaning and pet care');
+      }
+    } else if (currentStep === 'availability') {
+      if (lowerText.includes('i')) {
+        setTypingPrediction("'m available weekends");
+      }
+    }
+  };
+
+  const showContextualBubble = (text: string, delay: number = 2000) => {
+    const bubble: ContextualBubble = {
+      id: `bubble-${Date.now()}`,
+      text,
+      x: Math.random() * (SCREEN_WIDTH - 200),
+      y: SCREEN_HEIGHT * 0.3 + Math.random() * 100,
+      visible: true,
+    };
+    
+    setContextualBubbles(prev => [...prev, bubble]);
+    
+    Animated.sequence([
+      Animated.timing(bubbleAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(delay),
+      Animated.timing(bubbleAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setContextualBubbles(prev => prev.filter(b => b.id !== bubble.id));
+    });
+  };
+
+  const initializeParticles = () => {
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      newParticles.push({
+        id: i,
+        x: new Animated.Value(Math.random() * SCREEN_WIDTH),
+        y: new Animated.Value(Math.random() * SCREEN_HEIGHT),
+        scale: new Animated.Value(Math.random() * 0.5 + 0.3),
+        opacity: new Animated.Value(Math.random() * 0.3 + 0.1),
+      });
+    }
+    setParticles(newParticles);
+    animateParticles(newParticles);
+  };
+
+  const animateParticles = (particleList: Particle[]) => {
+    particleList.forEach((particle, index) => {
+      const randomDelay = Math.random() * 2000;
+      const randomDuration = 8000 + Math.random() * 4000;
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(randomDelay),
+          Animated.parallel([
+            Animated.timing(particle.x, {
+              toValue: Math.random() * SCREEN_WIDTH,
+              duration: randomDuration,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(particle.y, {
+              toValue: Math.random() * SCREEN_HEIGHT,
+              duration: randomDuration,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.sequence([
+              Animated.timing(particle.opacity, {
+                toValue: Math.random() * 0.4 + 0.2,
+                duration: randomDuration / 2,
+                useNativeDriver: true,
+              }),
+              Animated.timing(particle.opacity, {
+                toValue: Math.random() * 0.2 + 0.05,
+                duration: randomDuration / 2,
+                useNativeDriver: true,
+              }),
+            ]),
+          ]),
+        ])
+      ).start();
+    });
+  };
+
+  const triggerFireworks = () => {
+    setShowFireworks(true);
+    const newFireworkParticles: Particle[] = [];
+    
+    for (let i = 0; i < FIREWORK_PARTICLE_COUNT; i++) {
+      const angle = (Math.PI * 2 * i) / FIREWORK_PARTICLE_COUNT;
+      const velocity = Math.random() * 150 + 100;
+      
+      newFireworkParticles.push({
+        id: i,
+        x: new Animated.Value(SCREEN_WIDTH / 2),
+        y: new Animated.Value(SCREEN_HEIGHT / 2),
+        scale: new Animated.Value(1),
+        opacity: new Animated.Value(1),
+      });
+    }
+    
+    setFireworkParticles(newFireworkParticles);
+    
+    newFireworkParticles.forEach((particle, index) => {
+      const angle = (Math.PI * 2 * index) / FIREWORK_PARTICLE_COUNT;
+      const velocity = Math.random() * 200 + 150;
+      const targetX = SCREEN_WIDTH / 2 + Math.cos(angle) * velocity;
+      const targetY = SCREEN_HEIGHT / 2 + Math.sin(angle) * velocity;
+      
+      Animated.parallel([
+        Animated.timing(particle.x, {
+          toValue: targetX,
+          duration: 1000,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(particle.y, {
+          toValue: targetY,
+          duration: 1000,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(particle.opacity, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(particle.scale, {
+            toValue: 1.5,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(particle.scale, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    });
+
+    setTimeout(() => {
+      setShowFireworks(false);
+      setFireworkParticles([]);
+    }, 1500);
+  };
+
+  const playHapticSymphony = (pattern: 'success' | 'warning' | 'celebration') => {
+    if (Platform.OS === 'web') return;
+
+    switch (pattern) {
+      case 'success':
+        triggerHaptic('light');
+        setTimeout(() => triggerHaptic('medium'), 100);
+        break;
+      case 'warning':
+        triggerHaptic('medium');
+        setTimeout(() => triggerHaptic('medium'), 150);
+        break;
+      case 'celebration':
+        triggerHaptic('success');
+        setTimeout(() => triggerHaptic('light'), 100);
+        setTimeout(() => triggerHaptic('light'), 200);
+        setTimeout(() => triggerHaptic('medium'), 300);
+        setTimeout(() => triggerHaptic('success'), 500);
+        break;
+    }
+  };
+
+  const changeAvatarExpression = (expression: AvatarExpression) => {
+    setAvatarExpression(expression);
+    
+    // Animate avatar based on expression
+    switch (expression) {
+      case 'happy':
+        Animated.spring(avatarScale, {
+          toValue: 1.2,
+          tension: 100,
+          friction: 3,
+          useNativeDriver: true,
+        }).start(() => {
+          Animated.spring(avatarScale, {
+            toValue: 1,
+            tension: 100,
+            friction: 8,
+            useNativeDriver: true,
+          }).start();
+        });
+        break;
+      case 'thinking':
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(avatarRotate, {
+              toValue: 1,
+              duration: 1000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(avatarRotate, {
+              toValue: -1,
+              duration: 1000,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+        break;
+      case 'excited':
+        Animated.sequence([
+          Animated.timing(avatarScale, {
+            toValue: 1.3,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(avatarScale, {
+            toValue: 1,
+            tension: 50,
+            friction: 3,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        break;
+      case 'celebrating':
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(avatarRotate, {
+              toValue: 2,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(avatarRotate, {
+              toValue: -2,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+        break;
+    }
+  };
+
+  const animateEarningsChart = () => {
+    chartBarAnims.forEach((anim, index) => {
+      Animated.sequence([
+        Animated.delay(index * 200),
+        Animated.spring(anim, {
+          toValue: 1,
+          tension: 40,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  };
+
+  const handleSwipeBack = () => {
+    if (currentStep === 'name' || currentStep === 'welcome') return;
+    
+    triggerHaptic('light');
+    showContextualBubble('💡 Going back a step');
+  };
+
+  const handleSwipeForward = () => {
+    if (!canSwipeForward()) return;
+    
+    triggerHaptic('light');
+    showContextualBubble('✨ Moving forward!');
+  };
+
+  const canSwipeForward = () => {
+    switch (currentStep) {
+      case 'name':
+        return !!extractedData.name;
+      case 'role':
+        return !!extractedData.intent;
+      case 'skills':
+        return (extractedData.categories?.length || 0) > 0 || (extractedData.trades?.length || 0) > 0;
+      default:
+        return false;
+    }
+  };
 
   const startAvatarPulse = () => {
     Animated.loop(
@@ -152,17 +534,6 @@ export default function AIOnboardingScreen() {
           useNativeDriver: true,
         }),
       ])
-    ).start();
-  };
-
-  const startParticleSystem = () => {
-    Animated.loop(
-      Animated.timing(particleAnim, {
-        toValue: 1,
-        duration: 8000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
     ).start();
   };
 
@@ -203,26 +574,33 @@ export default function AIOnboardingScreen() {
   }, []);
 
   const showWelcomeMessage = async () => {
+    changeAvatarExpression('happy');
     await new Promise(resolve => setTimeout(resolve, 500));
     addAIMessage("Hey there! I'm HUSTLEAI 👋", 'welcome');
+    playHapticSymphony('success');
     
     await new Promise(resolve => setTimeout(resolve, 1500));
+    changeAvatarExpression('excited');
     addAIMessage("Let me help you set up your account in about 60 seconds.", 'welcome');
     
     await new Promise(resolve => setTimeout(resolve, 1000));
+    showContextualBubble('💡 Tip: You can use voice or text!', 3000);
     askForName();
   };
 
   const askForName = () => {
+    changeAvatarExpression('neutral');
     addAIMessage("What should I call you?", 'name');
     setPredictiveSuggestions([
       { text: "Use my real name", action: () => setInput('') },
       { text: "Pick a cool username", action: () => setInput('') },
     ]);
     setProgress(10);
+    showContextualBubble('✨ Pro tip: Your name will be visible to others', 4000);
   };
 
   const askForRole = (name: string) => {
+    changeAvatarExpression('happy');
     addAIMessage(`${name} - I like it! ✨\n\nWhat brings you to HustleXP?`, 'role', [
       {
         type: 'role_cards',
@@ -264,6 +642,7 @@ export default function AIOnboardingScreen() {
     const isWorker = role === 'worker' || role === 'both';
     
     if (isWorker) {
+      changeAvatarExpression('thinking');
       addAIMessage("What kind of work can you do?", 'skills', [
         {
           type: 'skill_chips',
@@ -289,6 +668,7 @@ export default function AIOnboardingScreen() {
         { text: "I can do deliveries and moving", action: () => setInput("I can do deliveries and moving") },
         { text: "I'm a skilled tradesman", action: () => setInput("I'm a skilled tradesman") },
       ]);
+      showContextualBubble('🎯 Pick skills to see earnings!', 3000);
     } else {
       addAIMessage("Great! I'll set you up as a Poster. You can hire workers for any task you need.", 'skills');
       setTimeout(() => askForAvailability(role), 1000);
@@ -297,6 +677,7 @@ export default function AIOnboardingScreen() {
   };
 
   const showEarningsPreview = (categories: string[], trades: string[]) => {
+    changeAvatarExpression('excited');
     const skills = [...categories, ...trades];
     let minEarnings = 200;
     let maxEarnings = 400;
@@ -323,10 +704,16 @@ export default function AIOnboardingScreen() {
       },
     ]);
 
-    setTimeout(() => askForAvailability('worker'), 1500);
+    setTimeout(() => {
+      animateEarningsChart();
+      playHapticSymphony('success');
+    }, 300);
+
+    setTimeout(() => askForAvailability('worker'), 2000);
   };
 
   const askForAvailability = (role: 'worker' | 'poster' | 'both') => {
+    changeAvatarExpression('neutral');
     addAIMessage("When can you hustle?", 'availability', [
       {
         type: 'availability_picker',
@@ -347,9 +734,11 @@ export default function AIOnboardingScreen() {
       { text: "Just weekends", action: () => handleAvailabilitySelect(['weekends']) },
     ]);
     setProgress(70);
+    showContextualBubble('⏰ More availability = more tasks', 3000);
   };
 
   const askForLocation = () => {
+    changeAvatarExpression('thinking');
     addAIMessage("Where are you based?", 'location', [
       {
         type: 'map_preview',
@@ -376,6 +765,7 @@ export default function AIOnboardingScreen() {
   };
 
   const showConfirmation = () => {
+    changeAvatarExpression('happy');
     const { name, intent, categories = [], trades = [], availability = [] } = extractedData;
     
     const roleText = intent === 'worker' ? 'find work and earn money' : 
@@ -407,13 +797,15 @@ export default function AIOnboardingScreen() {
     ]);
     setProgress(95);
     setCurrentStep('confirmation');
+    showContextualBubble('🎉 Almost there!', 2000);
   };
 
   const confirmAndComplete = async () => {
     if (!extractedData.name) return;
 
+    changeAvatarExpression('celebrating');
     setShowConfetti(true);
-    triggerHaptic('success');
+    playHapticSymphony('celebration');
     setProgress(100);
 
     addAIMessage("🎉 Awesome! Let's get you set up. Creating your account now...", 'complete');
@@ -462,6 +854,7 @@ export default function AIOnboardingScreen() {
     
     setMessages(prev => [...prev, newMessage]);
     setCurrentStep(step);
+    startMessageAnimation();
   };
 
   const addUserMessage = (content: string) => {
@@ -480,8 +873,9 @@ export default function AIOnboardingScreen() {
 
     const userMessage = input.trim();
     setInput('');
+    setTypingPrediction('');
     addUserMessage(userMessage);
-    triggerHaptic('light');
+    playHapticSymphony('success');
 
     setIsProcessing(true);
 
@@ -496,6 +890,7 @@ export default function AIOnboardingScreen() {
   };
 
   const processUserInput = async (message: string) => {
+    changeAvatarExpression('thinking');
     const lowerMessage = message.toLowerCase();
 
     if (currentStep === 'welcome' || currentStep === 'name') {
@@ -533,7 +928,7 @@ export default function AIOnboardingScreen() {
   };
 
   const handleRoleSelect = (roleId: string) => {
-    triggerHaptic('medium');
+    playHapticSymphony('success');
     triggerCardFlip();
     const intent = roleId as 'worker' | 'poster' | 'both';
     setExtractedData(prev => ({ ...prev, intent }));
@@ -545,7 +940,7 @@ export default function AIOnboardingScreen() {
   };
 
   const handleSkillSelect = (skillId: string, type: 'category' | 'trade') => {
-    triggerHaptic('light');
+    playHapticSymphony('success');
     
     setExtractedData(prev => {
       if (type === 'category') {
@@ -572,7 +967,7 @@ export default function AIOnboardingScreen() {
   };
 
   const handleAvailabilitySelect = (selected: string[]) => {
-    triggerHaptic('light');
+    playHapticSymphony('success');
     setExtractedData(prev => ({ ...prev, availability: selected }));
     addUserMessage(`Availability: ${selected.join(', ')}`);
     
@@ -583,7 +978,7 @@ export default function AIOnboardingScreen() {
   };
 
   const handleQuickQuestion = (type: string) => {
-    triggerHaptic('light');
+    playHapticSymphony('success');
     if (type === 'difference') {
       setShowHelpModal(true);
     } else if (type === 'safety') {
@@ -615,7 +1010,7 @@ export default function AIOnboardingScreen() {
 
       setRecording(newRecording);
       setIsRecording(true);
-      triggerHaptic('light');
+      playHapticSymphony('success');
 
       Animated.loop(
         Animated.sequence([
@@ -645,7 +1040,7 @@ export default function AIOnboardingScreen() {
       
       setIsRecording(false);
       setRecording(null);
-      triggerHaptic('success');
+      playHapticSymphony('success');
       waveformAnim.setValue(0);
 
       addAIMessage("Processing your voice input...", currentStep);
@@ -680,20 +1075,46 @@ export default function AIOnboardingScreen() {
               styles.avatarContainer,
               { 
                 transform: [
-                  { scale: avatarPulse },
-                  { scale: breatheAnim }
+                  { scale: Animated.multiply(avatarPulse, Animated.multiply(breatheAnim, avatarScale)) },
+                  { 
+                    rotate: avatarRotate.interpolate({
+                      inputRange: [-2, 2],
+                      outputRange: ['-10deg', '10deg'],
+                    })
+                  }
                 ] 
               }
             ]}
           >
             <LinearGradient
-              colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
+              colors={
+                avatarExpression === 'celebrating' 
+                  ? [premiumColors.neonAmber, premiumColors.neonMagenta]
+                  : avatarExpression === 'excited'
+                  ? [premiumColors.neonGreen, premiumColors.neonCyan]
+                  : [premiumColors.neonCyan, premiumColors.neonMagenta]
+              }
               style={styles.avatar}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
               <Brain size={20} color={Colors.background} />
             </LinearGradient>
+            
+            {/* Hologram scanline effect */}
+            <Animated.View
+              style={[
+                styles.hologramScanline,
+                {
+                  transform: [{
+                    translateY: hologramAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 36],
+                    })
+                  }]
+                }
+              ]}
+            />
           </Animated.View>
         )}
         
@@ -728,24 +1149,45 @@ export default function AIOnboardingScreen() {
       case 'role_cards':
         return (
           <View key={index} style={styles.roleCardsContainer}>
-            {component.data.roles.map((role: any) => (
-              <TouchableOpacity
-                key={role.id}
-                style={styles.roleCard}
-                onPress={() => handleRoleSelect(role.id)}
-                activeOpacity={0.8}
-              >
-                <BlurView intensity={40} tint="dark" style={styles.roleCardGradient}>
-                  <Text style={styles.roleCardIcon}>{role.icon}</Text>
-                  <Text style={styles.roleCardTitle}>{role.title}</Text>
-                  <Text style={styles.roleCardSubtitle}>{role.subtitle}</Text>
-                  <Text style={styles.roleCardDescription}>{role.description}</Text>
-                  <View style={styles.roleCardButton}>
-                    <Text style={styles.roleCardButtonText}>SELECT</Text>
-                  </View>
-                </BlurView>
-              </TouchableOpacity>
-            ))}
+            {component.data.roles.map((role: any, roleIndex: number) => {
+              const rotateY = cardFlipAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0deg', '360deg'],
+              });
+              
+              return (
+                <Animated.View
+                  key={role.id}
+                  style={{
+                    transform: [{ perspective: 1000 }, { rotateY }],
+                  }}
+                >
+                  <TouchableOpacity
+                    style={styles.roleCard}
+                    onPress={() => handleRoleSelect(role.id)}
+                    activeOpacity={0.8}
+                  >
+                    <BlurView intensity={40} tint="dark" style={styles.roleCardContent}>
+                      <LinearGradient
+                        colors={[
+                          premiumColors.glassDark + '60',
+                          premiumColors.glassDark + '40',
+                        ]}
+                        style={styles.roleCardGradient}
+                      >
+                        <Text style={styles.roleCardIcon}>{role.icon}</Text>
+                        <Text style={styles.roleCardTitle}>{role.title}</Text>
+                        <Text style={styles.roleCardSubtitle}>{role.subtitle}</Text>
+                        <Text style={styles.roleCardDescription}>{role.description}</Text>
+                        <View style={styles.roleCardButton}>
+                          <Text style={styles.roleCardButtonText}>SELECT</Text>
+                        </View>
+                      </LinearGradient>
+                    </BlurView>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
           </View>
         );
 
@@ -825,6 +1267,13 @@ export default function AIOnboardingScreen() {
 
       case 'earnings_preview':
         const { skills, potentialEarnings } = component.data;
+        const weeklyEarnings = [
+          { label: 'Week 1', value: potentialEarnings.weekly.min },
+          { label: 'Week 2', value: potentialEarnings.weekly.min * 1.2 },
+          { label: 'Week 3', value: potentialEarnings.weekly.min * 1.5 },
+          { label: 'Week 4', value: potentialEarnings.weekly.max },
+        ];
+
         return (
           <View key={index} style={styles.earningsPreview}>
             <BlurView intensity={50} tint="dark" style={styles.earningsBlur}>
@@ -841,26 +1290,45 @@ export default function AIOnboardingScreen() {
                 <View style={styles.earningsDivider} />
 
                 <View style={styles.earningsSection}>
-                  <DollarSign size={20} color={premiumColors.neonGreen} />
-                  <Text style={styles.earningsTitle}>Potential Earnings:</Text>
+                  <TrendingUp size={20} color={premiumColors.neonGreen} />
+                  <Text style={styles.earningsTitle}>Your Growth Potential:</Text>
+                </View>
+
+                {/* Animated chart */}
+                <View style={styles.earningsChart}>
+                  {weeklyEarnings.map((week, idx) => (
+                    <View key={idx} style={styles.chartColumn}>
+                      <Animated.View
+                        style={[
+                          styles.chartBar,
+                          {
+                            height: chartBarAnims[idx].interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, (week.value / potentialEarnings.weekly.max) * 100],
+                            }),
+                          },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={[premiumColors.neonGreen, premiumColors.neonCyan]}
+                          style={StyleSheet.absoluteFill}
+                        />
+                      </Animated.View>
+                      <Text style={styles.chartLabel}>{week.label}</Text>
+                      <Text style={styles.chartValue}>${week.value}</Text>
+                    </View>
+                  ))}
                 </View>
 
                 <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Weekly:</Text>
-                  <Text style={styles.earningsValue}>
-                    ${potentialEarnings.weekly.min}-${potentialEarnings.weekly.max}
-                  </Text>
-                </View>
-
-                <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Monthly:</Text>
+                  <Text style={styles.earningsLabel}>Monthly Potential:</Text>
                   <Text style={styles.earningsValue}>
                     ${potentialEarnings.monthly.min.toLocaleString()}-${potentialEarnings.monthly.max.toLocaleString()}
                   </Text>
                 </View>
 
                 <Text style={styles.earningsNote}>
-                  ⬆️ As you level up!
+                  📈 As you level up and build trust!
                 </Text>
               </View>
             </BlurView>
@@ -892,9 +1360,21 @@ export default function AIOnboardingScreen() {
             <BlurView intensity={50} tint="dark" style={styles.mapBlur}>
               <MapPin size={32} color={premiumColors.neonCyan} />
               <Text style={styles.mapText}>Detecting your location...</Text>
-              <View style={styles.mapLoader}>
+              <Animated.View 
+                style={[
+                  styles.mapLoader,
+                  {
+                    transform: [{
+                      rotate: hologramAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg'],
+                      })
+                    }]
+                  }
+                ]}
+              >
                 <Loader size={20} color={premiumColors.neonCyan} />
-              </View>
+              </Animated.View>
             </BlurView>
           </View>
         );
@@ -932,6 +1412,33 @@ export default function AIOnboardingScreen() {
       default:
         return null;
     }
+  };
+
+  const renderWaveformVisualizer = () => {
+    if (!isRecording) return null;
+
+    return (
+      <View style={styles.waveformContainer}>
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.waveformBar,
+              {
+                height: waveformAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [10, 40],
+                }),
+                opacity: waveformAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 1],
+                }),
+              },
+            ]}
+          />
+        ))}
+      </View>
+    );
   };
 
   const renderHelpModal = () => (
@@ -1008,13 +1515,74 @@ export default function AIOnboardingScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       <LinearGradient
         colors={[premiumColors.deepBlack, premiumColors.richBlack, '#1A1A2E']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       />
+
+      {/* Floating particles */}
+      {particles.map((particle) => (
+        <Animated.View
+          key={particle.id}
+          style={[
+            styles.particle,
+            {
+              transform: [
+                { translateX: particle.x },
+                { translateY: particle.y },
+                { scale: particle.scale },
+              ],
+              opacity: particle.opacity,
+            },
+          ]}
+        />
+      ))}
+
+      {/* Firework particles */}
+      {showFireworks && fireworkParticles.map((particle) => (
+        <Animated.View
+          key={`firework-${particle.id}`}
+          style={[
+            styles.fireworkParticle,
+            {
+              transform: [
+                { translateX: particle.x },
+                { translateY: particle.y },
+                { scale: particle.scale },
+              ],
+              opacity: particle.opacity,
+            },
+          ]}
+        />
+      ))}
+
+      {/* Contextual bubbles */}
+      {contextualBubbles.map((bubble) => (
+        <Animated.View
+          key={bubble.id}
+          style={[
+            styles.contextualBubble,
+            {
+              left: bubble.x,
+              top: bubble.y,
+              opacity: bubbleAnim,
+              transform: [{
+                translateY: bubbleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            },
+          ]}
+        >
+          <BlurView intensity={40} tint="dark" style={styles.bubbleBlur}>
+            <Text style={styles.bubbleText}>{bubble.text}</Text>
+          </BlurView>
+        </Animated.View>
+      ))}
 
       {showConfetti && <Confetti />}
       {renderHelpModal()}
@@ -1052,6 +1620,15 @@ export default function AIOnboardingScreen() {
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
+        </View>
+
+        {/* Gesture hints */}
+        <View style={styles.gestureHints}>
+          <View style={styles.gestureHint}>
+            <ChevronLeft size={16} color={premiumColors.glassWhiteStrong} />
+            <Text style={styles.gestureHintText}>Swipe</Text>
+            <ChevronRight size={16} color={premiumColors.glassWhiteStrong} />
+          </View>
         </View>
       </View>
 
@@ -1099,21 +1676,31 @@ export default function AIOnboardingScreen() {
         </ScrollView>
 
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom + spacing.md }]}>
+          {renderWaveformVisualizer()}
+          
           <BlurView intensity={60} tint="dark" style={styles.inputBlur}>
             <View style={styles.inputWrapper}>
               <MessageCircle size={20} color={premiumColors.glassWhiteStrong} />
-              <TextInput
-                style={styles.input}
-                placeholder="Type your message..."
-                placeholderTextColor={premiumColors.glassWhiteStrong}
-                value={input}
-                onChangeText={setInput}
-                onSubmitEditing={handleSend}
-                returnKeyType="send"
-                multiline
-                maxLength={500}
-                editable={!isProcessing}
-              />
+              <View style={styles.inputWithPrediction}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Type your message..."
+                  placeholderTextColor={premiumColors.glassWhiteStrong}
+                  value={input}
+                  onChangeText={setInput}
+                  onSubmitEditing={handleSend}
+                  returnKeyType="send"
+                  multiline
+                  maxLength={500}
+                  editable={!isProcessing}
+                />
+                {typingPrediction && (
+                  <Text style={styles.typingPrediction}>
+                    {input}
+                    <Text style={styles.typingPredictionSuggestion}>{typingPrediction}</Text>
+                  </Text>
+                )}
+              </View>
               
               {Platform.OS !== 'web' && (
                 <TouchableOpacity
@@ -1167,6 +1754,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: premiumColors.deepBlack,
   },
+  particle: {
+    position: 'absolute',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: premiumColors.neonCyan,
+  },
+  fireworkParticle: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: premiumColors.neonAmber,
+  },
+  contextualBubble: {
+    position: 'absolute',
+    zIndex: 1000,
+  },
+  bubbleBlur: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan,
+  },
+  bubbleText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
   header: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.md,
@@ -1202,6 +1819,20 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: borderRadius.full,
   },
+  gestureHints: {
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  gestureHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  gestureHintText: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+  },
   content: {
     flex: 1,
   },
@@ -1225,6 +1856,7 @@ const styles = StyleSheet.create({
   avatarContainer: {
     marginRight: spacing.sm,
     marginBottom: spacing.xs,
+    position: 'relative',
   },
   avatar: {
     width: 36,
@@ -1235,6 +1867,13 @@ const styles = StyleSheet.create({
     ...neonGlow.cyan,
     shadowRadius: 15,
     shadowOpacity: 0.8,
+  },
+  hologramScanline: {
+    position: 'absolute',
+    width: 36,
+    height: 2,
+    backgroundColor: premiumColors.neonCyan,
+    opacity: 0.5,
   },
   messageBubble: {
     maxWidth: '75%',
@@ -1280,6 +1919,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: premiumColors.glassWhite,
+  },
+  roleCardContent: {
+    borderRadius: borderRadius.xl,
   },
   roleCardGradient: {
     padding: spacing.md,
@@ -1440,6 +2082,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700' as const,
     color: Colors.text,
+  },
+  earningsChart: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 120,
+    marginBottom: spacing.lg,
+  },
+  chartColumn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  chartBar: {
+    width: '70%',
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    marginBottom: spacing.xs,
+  },
+  chartLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: premiumColors.glassWhiteStrong,
+    marginTop: spacing.xs,
+  },
+  chartValue: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: premiumColors.neonGreen,
   },
   earningsRow: {
     flexDirection: 'row',
@@ -1603,6 +2274,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: premiumColors.glassWhite,
   },
+  waveformContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  waveformBar: {
+    width: 3,
+    backgroundColor: premiumColors.neonMagenta,
+    borderRadius: 2,
+  },
   inputBlur: {
     borderRadius: borderRadius.xxl,
     overflow: 'hidden',
@@ -1615,6 +2298,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
+  inputWithPrediction: {
+    flex: 1,
+    position: 'relative',
+  },
   input: {
     flex: 1,
     fontSize: 15,
@@ -1623,6 +2310,19 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     paddingVertical: spacing.xs,
     marginHorizontal: spacing.sm,
+  },
+  typingPrediction: {
+    position: 'absolute',
+    fontSize: 15,
+    fontWeight: '500' as const,
+    color: 'transparent',
+    paddingVertical: spacing.xs,
+    marginHorizontal: spacing.sm,
+    pointerEvents: 'none',
+  },
+  typingPredictionSuggestion: {
+    color: premiumColors.glassWhiteStrong,
+    opacity: 0.5,
   },
   voiceButton: {
     width: 40,
