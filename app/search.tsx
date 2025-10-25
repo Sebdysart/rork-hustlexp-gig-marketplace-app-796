@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,33 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal, X, DollarSign, Zap, MapPin, Calendar, Sparkles } from 'lucide-react-native';
+import { 
+  Search, 
+  SlidersHorizontal, 
+  X, 
+  DollarSign, 
+  Zap, 
+  MapPin, 
+  Calendar, 
+  Sparkles,
+  Target,
+  TrendingUp,
+  Clock,
+  Award,
+  Flame,
+  Zap as Lightning
+} from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { spacing, typography, borderRadius, premiumColors } from '@/constants/designTokens';
+import { useSensory } from '@/hooks/useSensory';
+import Confetti from '@/components/Confetti';
 
 type SearchFilter = {
   minPay?: number;
@@ -24,17 +43,72 @@ type SearchFilter = {
   status?: 'open' | 'in_progress' | 'completed';
 };
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function SearchScreen() {
-  const { tasks, users } = useApp();
+  const { tasks, users, currentUser } = useApp();
   const { colors: theme } = useTheme();
   const router = useRouter();
+  const sensory = useSensory();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchType, setSearchType] = useState<'tasks' | 'users'>('tasks');
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [filters, setFilters] = useState<SearchFilter>({});
+  const [smartFilter, setSmartFilter] = useState<'for_me' | 'quick_wins' | 'big_scores' | 'on_route' | 'level_up' | null>(null);
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
+  const [newMatches, setNewMatches] = useState<number>(0);
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const calculateMatchScore = (task: any): number => {
+    if (!currentUser) return 70;
+
+    let score = 70;
+
+    const distance = calculateDistance(
+      currentUser.location.lat,
+      currentUser.location.lng,
+      task.location.lat,
+      task.location.lng
+    );
+
+    if (distance < 2) score += 15;
+    else if (distance < 5) score += 10;
+    else if (distance < 10) score += 5;
+
+    if (currentUser.level >= 10) score += 5;
+    if (currentUser.reputationScore >= 4.5) score += 5;
+    if (currentUser.tasksCompleted >= 10) score += 5;
+
+    return Math.min(100, Math.max(0, score));
+  };
+
+  const getSuccessProbability = (task: any): number => {
+    if (!currentUser) return 75;
+
+    let probability = 75;
+
+    if (currentUser.tasksCompleted > 50) probability += 10;
+    else if (currentUser.tasksCompleted > 20) probability += 5;
+
+    if (currentUser.reputationScore >= 4.5) probability += 10;
+    else if (currentUser.reputationScore >= 4.0) probability += 5;
+
+    return Math.min(99, probability);
+  };
 
   const filteredTasks = useMemo(() => {
-    let results = tasks;
+    let results = tasks.filter(t => t.status === 'open');
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -66,8 +140,49 @@ export default function SearchScreen() {
       results = results.filter((task) => task.status === filters.status);
     }
 
+    if (smartFilter && currentUser) {
+      switch (smartFilter) {
+        case 'for_me':
+          results = results.sort((a, b) => calculateMatchScore(b) - calculateMatchScore(a));
+          break;
+        case 'quick_wins':
+          results = results.filter(t => {
+            const estimatedHours = parseInt(t.estimatedDuration || '2');
+            return estimatedHours <= 2;
+          }).sort((a, b) => getSuccessProbability(b) - getSuccessProbability(a));
+          break;
+        case 'big_scores':
+          results = results.sort((a, b) => (b.xpReward + b.payAmount) - (a.xpReward + a.payAmount));
+          break;
+        case 'on_route':
+          if (currentUser) {
+            results = results
+              .map(task => ({
+                task,
+                distance: calculateDistance(
+                  currentUser.location.lat,
+                  currentUser.location.lng,
+                  task.location.lat,
+                  task.location.lng
+                )
+              }))
+              .filter(({ distance }) => distance < 10)
+              .sort((a, b) => a.distance - b.distance)
+              .map(({ task }) => task);
+          }
+          break;
+        case 'level_up':
+          const xpNeededForNextLevel = (currentUser.level * 100) - currentUser.xp;
+          results = results.filter(t => t.xpReward >= xpNeededForNextLevel * 0.2)
+            .sort((a, b) => b.xpReward - a.xpReward);
+          break;
+      }
+    } else {
+      results = results.sort((a, b) => calculateMatchScore(b) - calculateMatchScore(a));
+    }
+
     return results;
-  }, [tasks, searchQuery, filters]);
+  }, [tasks, searchQuery, filters, smartFilter, currentUser]);
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
@@ -90,7 +205,31 @@ export default function SearchScreen() {
     setFilters({});
   };
 
-  const hasActiveFilters = Object.keys(filters).length > 0;
+  const hasActiveFilters = Object.keys(filters).length > 0 || smartFilter !== null;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const random = Math.floor(Math.random() * 5);
+      if (random === 0) {
+        setNewMatches(prev => prev + 1);
+        sensory.notification();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleTaskPress = (task: any, matchScore: number) => {
+    sensory.tap();
+    
+    if (matchScore >= 90) {
+      setShowConfetti(true);
+      sensory.achievement();
+      setTimeout(() => setShowConfetti(false), 3000);
+    }
+    
+    router.push(`/task/${task.id}`);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom']}>
@@ -99,11 +238,31 @@ export default function SearchScreen() {
           headerShown: false,
         }}
       />
+      
+      {showConfetti && <Confetti count={60} duration={3000} />}
 
       <View style={styles.headerContainer}>
         <View style={styles.heroSection}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Find Quests</Text>
-          <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Discover opportunities near you</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>AI-matched opportunities just for you</Text>
+          {currentUser && currentUser.level < 13 && (
+            <View style={styles.levelProgressContainer}>
+              <View style={styles.miniXPBar}>
+                <View 
+                  style={[
+                    styles.miniXPFill, 
+                    { 
+                      width: `${(currentUser.xp % 100)}%`,
+                      backgroundColor: premiumColors.neonViolet 
+                    }
+                  ]} 
+                />
+              </View>
+              <Text style={[styles.levelProgressText, { color: theme.textSecondary }]}>
+                Complete 2 more tasks to reach Level {currentUser.level + 1}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.searchContainer}>
           <View style={[styles.searchBar, { backgroundColor: theme.card }]}>
@@ -132,6 +291,133 @@ export default function SearchScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {newMatches > 0 && (
+        <TouchableOpacity 
+          style={[styles.liveActivityBanner, { backgroundColor: premiumColors.neonCyan + '20' }]}
+          onPress={() => {
+            setNewMatches(0);
+            sensory.tap();
+          }}
+        >
+          <Lightning size={16} color={premiumColors.neonCyan} />
+          <Text style={[styles.liveActivityText, { color: premiumColors.neonCyan }]}>
+            {newMatches} new perfect {newMatches === 1 ? 'match' : 'matches'} found while you were searching
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.smartFilters}
+        contentContainerStyle={styles.smartFiltersContent}
+      >
+        <TouchableOpacity
+          style={[
+            styles.smartFilterChip,
+            smartFilter === 'for_me' && styles.smartFilterChipActive,
+            { 
+              backgroundColor: smartFilter === 'for_me' ? premiumColors.neonViolet + '30' : theme.card,
+              borderColor: smartFilter === 'for_me' ? premiumColors.neonViolet : theme.border 
+            }
+          ]}
+          onPress={() => {
+            setSmartFilter(smartFilter === 'for_me' ? null : 'for_me');
+            sensory.tap();
+          }}
+        >
+          <Target size={16} color={smartFilter === 'for_me' ? premiumColors.neonViolet : theme.text} />
+          <Text style={[
+            styles.smartFilterText, 
+            { color: smartFilter === 'for_me' ? premiumColors.neonViolet : theme.text }
+          ]}>For Me</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.smartFilterChip,
+            smartFilter === 'quick_wins' && styles.smartFilterChipActive,
+            { 
+              backgroundColor: smartFilter === 'quick_wins' ? premiumColors.neonGreen + '30' : theme.card,
+              borderColor: smartFilter === 'quick_wins' ? premiumColors.neonGreen : theme.border 
+            }
+          ]}
+          onPress={() => {
+            setSmartFilter(smartFilter === 'quick_wins' ? null : 'quick_wins');
+            sensory.tap();
+          }}
+        >
+          <Clock size={16} color={smartFilter === 'quick_wins' ? premiumColors.neonGreen : theme.text} />
+          <Text style={[
+            styles.smartFilterText, 
+            { color: smartFilter === 'quick_wins' ? premiumColors.neonGreen : theme.text }
+          ]}>Quick Wins</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.smartFilterChip,
+            smartFilter === 'big_scores' && styles.smartFilterChipActive,
+            { 
+              backgroundColor: smartFilter === 'big_scores' ? premiumColors.neonAmber + '30' : theme.card,
+              borderColor: smartFilter === 'big_scores' ? premiumColors.neonAmber : theme.border 
+            }
+          ]}
+          onPress={() => {
+            setSmartFilter(smartFilter === 'big_scores' ? null : 'big_scores');
+            sensory.tap();
+          }}
+        >
+          <TrendingUp size={16} color={smartFilter === 'big_scores' ? premiumColors.neonAmber : theme.text} />
+          <Text style={[
+            styles.smartFilterText, 
+            { color: smartFilter === 'big_scores' ? premiumColors.neonAmber : theme.text }
+          ]}>Big Scores</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.smartFilterChip,
+            smartFilter === 'on_route' && styles.smartFilterChipActive,
+            { 
+              backgroundColor: smartFilter === 'on_route' ? premiumColors.neonCyan + '30' : theme.card,
+              borderColor: smartFilter === 'on_route' ? premiumColors.neonCyan : theme.border 
+            }
+          ]}
+          onPress={() => {
+            setSmartFilter(smartFilter === 'on_route' ? null : 'on_route');
+            sensory.tap();
+          }}
+        >
+          <MapPin size={16} color={smartFilter === 'on_route' ? premiumColors.neonCyan : theme.text} />
+          <Text style={[
+            styles.smartFilterText, 
+            { color: smartFilter === 'on_route' ? premiumColors.neonCyan : theme.text }
+          ]}>On My Route</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.smartFilterChip,
+            smartFilter === 'level_up' && styles.smartFilterChipActive,
+            { 
+              backgroundColor: smartFilter === 'level_up' ? premiumColors.neonMagenta + '30' : theme.card,
+              borderColor: smartFilter === 'level_up' ? premiumColors.neonMagenta : theme.border 
+            }
+          ]}
+          onPress={() => {
+            setSmartFilter(smartFilter === 'level_up' ? null : 'level_up');
+            sensory.tap();
+          }}
+        >
+          <Award size={16} color={smartFilter === 'level_up' ? premiumColors.neonMagenta : theme.text} />
+          <Text style={[
+            styles.smartFilterText, 
+            { color: smartFilter === 'level_up' ? premiumColors.neonMagenta : theme.text }
+          ]}>Level Up</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       <View style={styles.tabs}>
         <TouchableOpacity
@@ -283,9 +569,29 @@ export default function SearchScreen() {
       <ScrollView style={styles.results} showsVerticalScrollIndicator={false}>
         {searchType === 'tasks' ? (
           filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <TaskCardItem key={task.id} task={task} onPress={() => router.push(`/task/${task.id}`)} theme={theme} />
-            ))
+            filteredTasks.map((task) => {
+              const matchScore = calculateMatchScore(task);
+              const successProbability = getSuccessProbability(task);
+              const distance = currentUser ? calculateDistance(
+                currentUser.location.lat,
+                currentUser.location.lng,
+                task.location.lat,
+                task.location.lng
+              ) : 0;
+
+              return (
+                <EnhancedTaskCard 
+                  key={task.id} 
+                  task={task} 
+                  matchScore={matchScore}
+                  successProbability={successProbability}
+                  distance={distance}
+                  currentStreak={currentUser?.streaks.current || 0}
+                  onPress={() => handleTaskPress(task, matchScore)} 
+                  theme={theme} 
+                />
+              );
+            })
           ) : (
             <View style={styles.emptyState}>
               <View style={[styles.emptyIconContainer, { backgroundColor: theme.card }]}>
@@ -293,8 +599,20 @@ export default function SearchScreen() {
               </View>
               <Text style={[styles.emptyTitle, { color: theme.text }]}>No quests found</Text>
               <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                {searchQuery ? 'Try adjusting your filters or search terms' : 'Start searching for quests'}
+                {searchQuery || hasActiveFilters ? "Here's what you CAN do:" : 'Start searching for quests'}
               </Text>
+              {(searchQuery || hasActiveFilters) && currentUser && (
+                <TouchableOpacity 
+                  style={[styles.aiCoachButton, { backgroundColor: premiumColors.neonViolet + '20', borderColor: premiumColors.neonViolet }]}
+                  onPress={() => {
+                    sensory.tap();
+                    router.push('/ai-coach');
+                  }}
+                >
+                  <Sparkles size={20} color={premiumColors.neonViolet} />
+                  <Text style={[styles.aiCoachText, { color: premiumColors.neonViolet }]}>Get AI Recommendations</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )
         ) : (
@@ -354,13 +672,85 @@ export default function SearchScreen() {
   );
 }
 
-interface TaskCardItemProps {
+interface EnhancedTaskCardProps {
   task: any;
+  matchScore: number;
+  successProbability: number;
+  distance: number;
+  currentStreak: number;
   onPress: () => void;
   theme: any;
 }
 
-function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
+function EnhancedTaskCard({ 
+  task, 
+  matchScore, 
+  successProbability, 
+  distance, 
+  currentStreak,
+  onPress, 
+  theme 
+}: EnhancedTaskCardProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const getMatchColor = (): string => {
+    if (matchScore >= 90) return premiumColors.neonMagenta;
+    if (matchScore >= 80) return premiumColors.neonAmber;
+    if (matchScore >= 70) return premiumColors.neonCyan;
+    return premiumColors.glassWhite;
+  };
+
+  const getMatchLabel = (): string => {
+    if (matchScore >= 90) return 'Perfect Match';
+    if (matchScore >= 80) return 'Excellent Match';
+    if (matchScore >= 70) return 'Good Match';
+    return 'Available';
+  };
+
+  const matchColor = getMatchColor();
+  const matchLabel = getMatchLabel();
+  const commission = task.payAmount * 0.125;
+  const netEarnings = task.payAmount - commission;
+
+  const isUrgent = task.urgency === 'today' || task.urgency === '48h';
+  const hasSpeedBonus = parseInt(task.estimatedDuration || '2') <= 2;
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (matchScore >= 90) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [matchScore]);
   const daysUntilDue = task.dateTime
     ? Math.ceil((new Date(task.dateTime).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : 7;
@@ -377,21 +767,47 @@ function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.75}
-      onPress={onPress}
-      style={[styles.taskCard, { backgroundColor: theme.card, shadowColor: premiumColors.neonCyan }]}
-    >
-      <LinearGradient
-        colors={[
-          premiumColors.neonCyan + '15',
-          premiumColors.neonMagenta + '10',
-          'transparent',
+    <Animated.View style={{ transform: [{ scale: matchScore >= 90 ? pulseAnim : 1 }] }}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[
+          styles.taskCard, 
+          { 
+            backgroundColor: theme.card, 
+            borderColor: matchColor,
+            borderWidth: matchScore >= 80 ? 2 : 1,
+            shadowColor: matchColor,
+            shadowOpacity: matchScore >= 90 ? 0.5 : 0.2,
+          }
         ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.taskGradient}
-      />
+      >
+        <LinearGradient
+          colors={[
+            matchColor + (matchScore >= 90 ? '30' : '15'),
+            matchColor + '10',
+            'transparent',
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.taskGradient}
+        />
+
+        <View style={[styles.matchBadge, { backgroundColor: matchColor + '20' }]}>
+          {matchScore >= 90 && <Sparkles size={12} color={matchColor} />}
+          <Text style={[styles.matchBadgeText, { color: matchColor }]}>
+            {matchLabel} • {matchScore}%
+          </Text>
+        </View>
+
+        {isUrgent && (
+          <View style={[styles.urgentBadge, { backgroundColor: premiumColors.neonOrange + '20' }]}>
+            <Flame size={12} color={premiumColors.neonOrange} />
+            <Text style={[styles.urgentText, { color: premiumColors.neonOrange }]}>URGENT - 2X XP</Text>
+          </View>
+        )}
 
       <View style={styles.taskContent}>
         <View style={styles.taskHeader}>
@@ -408,45 +824,229 @@ function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
           </View>
         </View>
 
+        <View style={styles.aiInsights}>
+          <View style={styles.insightRow}>
+            <View style={[styles.insightBadge, { backgroundColor: premiumColors.neonGreen + '20' }]}>
+              <Target size={12} color={premiumColors.neonGreen} />
+              <Text style={[styles.insightText, { color: premiumColors.neonGreen }]}>
+                {successProbability}% success rate for you
+              </Text>
+            </View>
+          </View>
+          {hasSpeedBonus && (
+            <View style={styles.insightRow}>
+              <View style={[styles.insightBadge, { backgroundColor: premiumColors.neonAmber + '20' }]}>
+                <Lightning size={12} color={premiumColors.neonAmber} />
+                <Text style={[styles.insightText, { color: premiumColors.neonAmber }]}>
+                  Complete in under 2hrs = +50 XP bonus
+                </Text>
+              </View>
+            </View>
+          )}
+          {currentStreak >= 5 && (
+            <View style={styles.insightRow}>
+              <View style={[styles.insightBadge, { backgroundColor: premiumColors.neonMagenta + '20' }]}>
+                <Flame size={12} color={premiumColors.neonMagenta} />
+                <Text style={[styles.insightText, { color: premiumColors.neonMagenta }]}>
+                  Complete this to extend your {currentStreak}-day streak!
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
         <View style={styles.taskMeta}>
           <View style={styles.taskMetaRow}>
             <View style={styles.taskMetaItem}>
               <MapPin size={14} color={theme.textSecondary} />
               <Text style={[styles.taskMetaText, { color: theme.textSecondary }]} numberOfLines={1}>
-                {getLocationText(task.location)}
-              </Text>
-            </View>
-            <View style={styles.taskMetaItem}>
-              <Calendar size={14} color={theme.textSecondary} />
-              <Text style={[styles.taskMetaText, { color: theme.textSecondary }]}>
-                {daysUntilDue > 0 ? `In ${daysUntilDue} days` : 'Today'}
+                {distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(1)} mi`} away • On your route home
               </Text>
             </View>
           </View>
         </View>
 
         <View style={styles.taskFooter}>
-          <View style={[styles.taskPriceTag, { backgroundColor: premiumColors.neonGreen + '20' }]}>
-            <DollarSign size={16} color={premiumColors.neonGreen} />
-            <Text style={[styles.taskPrice, { color: premiumColors.neonGreen }]}>
-              ${task.payAmount}
-            </Text>
+          <View style={styles.rewardColumn}>
+            <Text style={[styles.netEarningsLabel, { color: theme.textSecondary }]}>You&apos;ll pocket</Text>
+            <View style={[styles.taskPriceTag, { backgroundColor: premiumColors.neonGreen + '20' }]}>
+              <DollarSign size={18} color={premiumColors.neonGreen} />
+              <Text style={[styles.taskPrice, { color: premiumColors.neonGreen }]}>
+                ${netEarnings.toFixed(2)}
+              </Text>
+            </View>
           </View>
           <View style={[styles.taskXPTag, { backgroundColor: premiumColors.neonAmber + '20' }]}>
             <Zap size={16} color={premiumColors.neonAmber} />
             <Text style={[styles.taskXP, { color: premiumColors.neonAmber }]}>
-              {task.xpReward} XP
+              {task.xpReward}{hasSpeedBonus ? '+50' : ''} XP
             </Text>
           </View>
+          <TouchableOpacity 
+            style={[styles.instantMatchButton, { backgroundColor: matchScore >= 90 ? matchColor : premiumColors.neonViolet }]}
+            onPress={(e) => {
+              e.stopPropagation();
+              onPress();
+            }}
+          >
+            <Text style={styles.instantMatchText}>Instant Match</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  liveActivityBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan,
+  },
+  liveActivityText: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+  },
+  levelProgressContainer: {
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  miniXPBar: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: borderRadius.sm,
+    overflow: 'hidden',
+  },
+  miniXPFill: {
+    height: '100%',
+  },
+  levelProgressText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+  },
+  smartFilters: {
+    maxHeight: 50,
+    marginBottom: spacing.md,
+  },
+  smartFiltersContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  smartFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    marginRight: spacing.sm,
+  },
+  smartFilterChipActive: {
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  smartFilterText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+  },
+  matchBadge: {
+    position: 'absolute' as const,
+    top: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.md,
+    zIndex: 10,
+  },
+  matchBadgeText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+  },
+  urgentBadge: {
+    position: 'absolute' as const,
+    top: spacing.sm,
+    left: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.md,
+    zIndex: 10,
+  },
+  urgentText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+  },
+  aiInsights: {
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  insightRow: {
+    flexDirection: 'row',
+  },
+  insightBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  insightText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+  },
+  rewardColumn: {
+    gap: 4,
+  },
+  netEarningsLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+  },
+  instantMatchButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instantMatchText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: '#FFFFFF',
+  },
+  aiCoachButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    marginTop: spacing.lg,
+  },
+  aiCoachText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
   },
   headerContainer: {
     paddingHorizontal: spacing.lg,
@@ -669,7 +1269,9 @@ const styles = StyleSheet.create({
   },
   taskFooter: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
     gap: spacing.md,
+    marginTop: spacing.sm,
   },
   taskPriceTag: {
     flexDirection: 'row',
