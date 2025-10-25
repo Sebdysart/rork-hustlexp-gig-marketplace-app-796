@@ -55,6 +55,7 @@ export default function WelcomeMaxScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [step, setStep] = useState<'intro' | 'reveal' | 'action'>('intro');
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [floatingElements, setFloatingElements] = useState<FloatingElement[]>([]);
   
   const mainScale = useRef(new Animated.Value(0)).current;
   const mainOpacity = useRef(new Animated.Value(0)).current;
@@ -67,7 +68,7 @@ export default function WelcomeMaxScreen() {
   const buttonScale = useRef(new Animated.Value(1)).current;
   const lightRayRotation = useRef(new Animated.Value(0)).current;
 
-  const floatingElements = useRef<FloatingElement[]>([]).current;
+
 
   const panResponder = useRef(
     PanResponder.create({
@@ -130,19 +131,20 @@ export default function WelcomeMaxScreen() {
 
   const createFloatingElements = useCallback(() => {
     const icons = [
-      <Zap size={24} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />,
-      <Trophy size={24} color={premiumColors.neonAmber} />,
-      <Star size={24} color={premiumColors.neonMagenta} fill={premiumColors.neonMagenta} />,
-      <Flame size={24} color="#FF6B35" />,
-      <Crown size={24} color="#FFD700" />,
-      <Target size={24} color={premiumColors.neonGreen} />,
+      <Zap key="zap" size={24} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />,
+      <Trophy key="trophy" size={24} color={premiumColors.neonAmber} />,
+      <Star key="star" size={24} color={premiumColors.neonMagenta} fill={premiumColors.neonMagenta} />,
+      <Flame key="flame" size={24} color="#FF6B35" />,
+      <Crown key="crown" size={24} color="#FFD700" />,
+      <Target key="target" size={24} color={premiumColors.neonGreen} />,
     ];
 
+    const newElements: FloatingElement[] = [];
     for (let i = 0; i < 6; i++) {
       const startX = Math.random() * SCREEN_WIDTH;
       const startY = Math.random() * SCREEN_HEIGHT;
       
-      floatingElements.push({
+      newElements.push({
         id: i,
         x: new Animated.Value(startX),
         y: new Animated.Value(startY),
@@ -151,7 +153,8 @@ export default function WelcomeMaxScreen() {
         icon: icons[i],
       });
     }
-  }, [floatingElements]);
+    setFloatingElements(newElements);
+  }, []);
 
   const animateParticleExplosion = useCallback(() => {
     particles.forEach((particle, index) => {
