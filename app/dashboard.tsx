@@ -335,7 +335,7 @@ export default function DashboardScreen() {
         <TouchableOpacity
           onPress={() => {
             sensory.tap();
-            router.push('/(tabs)/tasks');
+            router.push('/dashboard' as any);
           }}
         >
           <GlassCard style={styles.viewAllCard}>
