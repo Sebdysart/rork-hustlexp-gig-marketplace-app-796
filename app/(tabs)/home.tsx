@@ -222,14 +222,14 @@ export default function HomeScreen() {
     if (isWorker && nearbyGigs.length > 0) {
       const gigText = (nearbyGigs.length > 1 ? t[4] : t[3]) || 'gigs';
       const hiringText = t[5] || 'hiring now';
-      return `${greetingKey}, ${currentUser.name}. ${nearbyGigs.length} ${gigText} ${hiringText}.`;
+      return `${greetingKey}, ${currentUser.name || 'there'}${nearbyGigs.length ? ` ${nearbyGigs.length} ${gigText} ${hiringText}` : ''}`;
     }
     if (isPoster && myTasks.filter(task => task.status === 'open').length > 0) {
       const questLiveText = t[6] || 'Your quests are live';
-      return `${greetingKey}, ${currentUser.name}. ${questLiveText}.`;
+      return `${greetingKey}, ${currentUser.name || 'there'}. ${questLiveText}`;
     }
     const readyText = t[7] || 'Ready to hustle?';
-    return `${greetingKey}, ${currentUser.name}. ${readyText}`;
+    return `${greetingKey}, ${currentUser.name || 'there'}. ${readyText}`;
   };
 
   const getBackgroundGradient = (): [string, string, ...string[]] => {
@@ -272,7 +272,7 @@ export default function HomeScreen() {
                 {hiringNowCount > 0 && (
                   <View style={styles.urgencyBadge}>
                     <Zap size={14} color={Colors.accent} />
-                    <Text style={styles.urgencyText}>{hiringNowCount} {t[5]}</Text>
+                    <Text style={styles.urgencyText}>{hiringNowCount} {t[5] || 'hiring now'}</Text>
                   </View>
                 )}
               </View>
