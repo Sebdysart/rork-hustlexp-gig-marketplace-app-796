@@ -224,14 +224,14 @@ export default function HomeScreen() {
       const gigText = (nearbyGigs.length > 1 ? t[4] : t[3]) || 'gigs';
       const hiringText = t[5] || 'hiring now';
       const count = nearbyGigs.length;
-      return `${greetingKey}, ${userName}. ${count} ${gigText} ${hiringText}`.trim();
+      return `${greetingKey}, ${userName} - ${count} ${gigText} ${hiringText}`;
     }
     if (isPoster && myTasks.filter(task => task.status === 'open').length > 0) {
       const questLiveText = t[6] || 'Your quests are live';
-      return `${greetingKey}, ${userName}. ${questLiveText}`.trim();
+      return `${greetingKey}, ${userName} - ${questLiveText}`;
     }
     const readyText = t[7] || 'Ready to hustle?';
-    return `${greetingKey}, ${userName}. ${readyText}`.trim();
+    return `${greetingKey}, ${userName} - ${readyText}`;
   };
 
   const getBackgroundGradient = (): [string, string, ...string[]] => {
