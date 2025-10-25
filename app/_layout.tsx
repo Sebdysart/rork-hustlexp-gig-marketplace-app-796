@@ -21,10 +21,14 @@ import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
 import { installSimpleTextNodeFix } from '@/utils/simpleTextNodeFix';
+import { installTextNodeProtection } from '@/utils/textNodeProtection';
 
 if (__DEV__) {
   installSimpleTextNodeFix();
 }
+
+// Install runtime text node protection
+installTextNodeProtection();
 
 SplashScreen.preventAutoHideAsync();
 
