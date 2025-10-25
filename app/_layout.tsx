@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider, useApp } from "@/contexts/AppContext";
+import { BackendProvider } from "@/contexts/BackendContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -77,6 +78,7 @@ function RootLayoutNav() {
         <Stack.Screen name="text-error-scanner" options={{ title: 'Text Error Scanner' }} />
         <Stack.Screen name="diagnostic-center" options={{ title: 'Diagnostic Center' }} />
         <Stack.Screen name="test-text-fix" options={{ title: 'Text Fix Test' }} />
+        <Stack.Screen name="backend-integration-test" options={{ title: 'Backend Test' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
@@ -101,13 +103,14 @@ export default function RootLayout() {
   return (
     <TextNodeErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <LanguageProvider>
-            <ThemeProvider>
-            <SettingsProvider>
-              <NotificationProvider>
-                <AnalyticsProvider>
-                  <AppProvider>
+        <BackendProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <LanguageProvider>
+              <ThemeProvider>
+              <SettingsProvider>
+                <NotificationProvider>
+                  <AnalyticsProvider>
+                    <AppProvider>
                     <AIProfileProvider>
                       <TaskLifecycleProvider>
                         <SquadContext>
@@ -118,13 +121,14 @@ export default function RootLayout() {
                         </SquadContext>
                       </TaskLifecycleProvider>
                     </AIProfileProvider>
-                  </AppProvider>
-                </AnalyticsProvider>
-              </NotificationProvider>
-            </SettingsProvider>
-            </ThemeProvider>
-          </LanguageProvider>
-        </GestureHandlerRootView>
+                    </AppProvider>
+                  </AnalyticsProvider>
+                </NotificationProvider>
+              </SettingsProvider>
+              </ThemeProvider>
+            </LanguageProvider>
+          </GestureHandlerRootView>
+        </BackendProvider>
       </QueryClientProvider>
     </TextNodeErrorBoundary>
   );
