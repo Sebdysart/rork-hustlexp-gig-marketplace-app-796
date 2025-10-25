@@ -546,20 +546,13 @@ export default function WelcomeMaxScreen() {
         >
           <View style={styles.logo3D}>
             <View style={styles.logoInner}>
-              <LinearGradient
-                colors={[
-                  premiumColors.neonCyan,
-                  premiumColors.neonBlue,
-                  premiumColors.neonMagenta,
-                ]}
-                style={StyleSheet.absoluteFill}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
               <View style={styles.logoZapContainer}>
                 <Zap size={80} color="#FFFFFF" strokeWidth={3} fill="#FFFFFF" />
-                <View style={styles.logoZapGlow}>
-                  <Zap size={80} color={premiumColors.neonCyan} strokeWidth={3} fill={premiumColors.neonCyan} />
+                <View style={styles.logoZapGlow1}>
+                  <Zap size={84} color={premiumColors.neonCyan} strokeWidth={2} fill={premiumColors.neonCyan} />
+                </View>
+                <View style={styles.logoZapGlow2}>
+                  <Zap size={88} color={premiumColors.neonMagenta} strokeWidth={1} fill="transparent" />
                 </View>
               </View>
             </View>
@@ -731,19 +724,22 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderWidth: 3,
+    borderColor: premiumColors.neonCyan,
   },
   logoZapContainer: {
     zIndex: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoZapGlow: {
+  logoZapGlow1: {
     position: 'absolute',
-    opacity: 0.5,
-    transform: [{ scale: 1.2 }],
+    opacity: 0.6,
+  },
+  logoZapGlow2: {
+    position: 'absolute',
+    opacity: 0.4,
   },
   logoGlow: {
     position: 'absolute',
