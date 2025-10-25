@@ -29,6 +29,7 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { premiumColors, spacing, borderRadius, neonGlow } from '@/constants/designTokens';
 import Confetti from '@/components/Confetti';
+import RateLimitToast from '@/components/RateLimitToast';
 import { triggerHaptic } from '@/utils/haptics';
 import { UserRole, UserMode, Task } from '@/types';
 import { TradeCategory } from '@/constants/tradesmen';
@@ -299,6 +300,8 @@ export default function AIOnboardingScreen() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [fireworkParticles, setFireworkParticles] = useState<Particle[]>([]);
   const [showFireworks, setShowFireworks] = useState(false);
+  const [showRateLimitToast, setShowRateLimitToast] = useState(false);
+  const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(60);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const avatarPulse = useRef(new Animated.Value(1)).current;
@@ -1072,6 +1075,20 @@ export default function AIOnboardingScreen() {
     showContextualBubble('Almost there!', '🎉', 2000);
   };
 
+  const handleRateLimitError = (error: any) => {
+    const errorMessage = error?.message || String(error);
+    const retryMatch = errorMessage.match(/(\d+)\s*second/i);
+    const retryAfter = retryMatch ? parseInt(retryMatch[1]) : 60;
+    
+    setRateLimitRetryAfter(retryAfter);
+    setShowRateLimitToast(true);
+    
+    // Auto hide after the retry period
+    setTimeout(() => {
+      setShowRateLimitToast(false);
+    }, (retryAfter + 2) * 1000);
+  };
+
   const confirmAndComplete = async () => {
     if (!extractedData.name) return;
 
@@ -1829,6 +1846,12 @@ export default function AIOnboardingScreen() {
 
       {showConfetti && <Confetti />}
       {renderHelpModal()}
+      
+      <RateLimitToast
+        visible={showRateLimitToast}
+        retryAfter={rateLimitRetryAfter}
+        onDismiss={() => setShowRateLimitToast(false)}
+      />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerContent}>

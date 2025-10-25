@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   Sparkles, Rocket, 
-  ArrowRight, Flame 
+  ArrowRight, Zap 
 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { premiumColors, spacing, borderRadius } from '@/constants/designTokens';
@@ -168,15 +168,22 @@ export default function WelcomeMaxScreen() {
             >
               <View style={styles.logoInner}>
                 <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                  <View style={styles.boltGlowContainer}>
-                    <View style={styles.boltGlow} />
-                    <Flame 
-                      size={84} 
-                      color="#FFFFFF" 
-                      strokeWidth={2.5} 
-                      fill={premiumColors.neonCyan}
+                  <LinearGradient
+                    colors={[
+                      premiumColors.neonCyan,
+                      premiumColors.neonBlue,
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.hexagon}
+                  >
+                    <Zap 
+                      size={64} 
+                      color="#000814" 
+                      strokeWidth={3} 
+                      fill="#000814"
                     />
-                  </View>
+                  </LinearGradient>
                 </Animated.View>
               </View>
             </LinearGradient>
@@ -184,18 +191,7 @@ export default function WelcomeMaxScreen() {
         </Animated.View>
 
         <View style={styles.titleContainer}>
-          <LinearGradient
-            colors={[
-              premiumColors.neonCyan + '60',
-              premiumColors.neonBlue + '60',
-              premiumColors.neonMagenta + '60',
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.titleGradientWrapper}
-          >
-            <Text style={styles.mainTitle}>HUSTLEXP</Text>
-          </LinearGradient>
+          <Text style={styles.mainTitle}>HUSTLEXP</Text>
         </View>
 
         <Text style={styles.tagline}>
@@ -246,9 +242,9 @@ export default function WelcomeMaxScreen() {
               style={styles.buttonGradient}
             >
               <View style={styles.buttonContent}>
-                <Rocket size={22} color="#000000" strokeWidth={2.5} />
+                <Rocket size={22} color="#FFFFFF" strokeWidth={2.5} />
                 <Text style={styles.buttonText}>Start Your Journey</Text>
-                <ArrowRight size={22} color="#000000" strokeWidth={2.5} />
+                <ArrowRight size={22} color="#FFFFFF" strokeWidth={2.5} />
               </View>
             </LinearGradient>
           </Animated.View>
@@ -324,9 +320,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 4,
     textAlign: 'center',
-    textShadowColor: premiumColors.neonCyan,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    opacity: 0.95,
   },
   tagline: {
     fontSize: 20,
@@ -395,20 +389,18 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 19,
     fontWeight: '900' as const,
-    color: '#000000',
+    color: '#FFFFFF',
     letterSpacing: 0.8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  boltGlowContainer: {
-    position: 'relative',
+  hexagon: {
+    width: 100,
+    height: 100,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  boltGlow: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: premiumColors.neonCyan,
-    opacity: 0.15,
+    transform: [{ rotate: '45deg' }],
   },
 });
