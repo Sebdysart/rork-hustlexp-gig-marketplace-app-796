@@ -235,13 +235,13 @@ export default function WelcomeMaxScreen() {
           Animated.loop(
             Animated.sequence([
               Animated.timing(element.y, {
-                toValue: element.y._value - 20,
+                toValue: -20,
                 duration: 2000 + Math.random() * 1000,
                 easing: Easing.inOut(Easing.sin),
                 useNativeDriver: true,
               }),
               Animated.timing(element.y, {
-                toValue: element.y._value + 20,
+                toValue: 20,
                 duration: 2000 + Math.random() * 1000,
                 easing: Easing.inOut(Easing.sin),
                 useNativeDriver: true,
@@ -427,9 +427,8 @@ export default function WelcomeMaxScreen() {
           style={[
             styles.floatingElement,
             {
-              left: element.x._value,
-              top: element.y._value,
               transform: [
+                { translateX: element.x },
                 { translateY: element.y },
                 { scale: element.scale },
                 { rotate: element.rotation.interpolate({
