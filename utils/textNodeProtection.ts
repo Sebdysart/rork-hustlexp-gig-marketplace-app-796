@@ -1,5 +1,5 @@
 /**
- * Runtime Text Node Protection System
+ * ULTIMATE Runtime Text Node Protection System
  * 
  * This utility prevents "Unexpected text node: X. A text node cannot be a child of a <View>" errors
  * by intercepting and wrapping bare text nodes in React Native components.
@@ -11,13 +11,11 @@ import { Text, View } from 'react-native';
 const originalCreateElement = React.createElement;
 let isPatched = false;
 
-
-
 /**
  * Checks if a component type is View-like (can't have text children)
  */
 function isViewLikeComponent(type: any): boolean {
-  if (typeof type === 'string') return false; // Native HTML elements are fine on web
+  if (typeof type === 'string') return false;
   
   const viewLikeComponents = [
     View,
@@ -31,11 +29,47 @@ function isViewLikeComponent(type: any): boolean {
     'TouchableHighlight',
     'TouchableWithoutFeedback',
     'Pressable',
+    'ImageBackground',
+    'Modal',
+    'Animated.View',
   ];
   
   return viewLikeComponents.includes(type) || 
-         (type?.displayName && viewLikeComponents.includes(type.displayName)) ||
-         (type?.name && viewLikeComponents.includes(type.name));
+         viewLikeComponents.includes(type?.displayName) ||
+         viewLikeComponents.includes(type?.name) ||
+         String(type).includes('View') ||
+         String(type?.displayName).includes('View') ||
+         String(type?.name).includes('View');
+}
+
+/**
+ * Recursively processes children to wrap text nodes
+ */
+function processChild(child: any, depth: number = 0): any {
+  if (depth > 20) return child;
+  
+  if (child === null || child === undefined || child === false || child === true) {
+    return null;
+  }
+  
+  if (typeof child === 'string') {
+    const trimmed = child.trim();
+    if (!trimmed || trimmed === '.' || /^[\.\s,;:!?…•]+$/.test(trimmed)) {
+      console.warn('[TextNodeProtection] 🚫 Blocked punctuation:', JSON.stringify(child));
+      return null;
+    }
+    return child;
+  }
+  
+  if (typeof child === 'number') {
+    return child;
+  }
+  
+  if (Array.isArray(child)) {
+    return child.map(c => processChild(c, depth + 1)).filter(c => c !== null);
+  }
+  
+  return child;
 }
 
 /**
@@ -49,36 +83,48 @@ export function installTextNodeProtection() {
 
   // @ts-ignore
   React.createElement = function patchedCreateElement(type: any, props: any, ...children: any[]) {
-    // Only intercept View-like components
     if (isViewLikeComponent(type)) {
-      const safeChildren = children.map((child) => {
-        // Handle conditional rendering that might produce strings
-        if (typeof child === 'string' || typeof child === 'number') {
-          const strValue = String(child).trim();
+      const processedChildren = children.map((child, index) => {
+        const processed = processChild(child);
+        
+        if (typeof processed === 'string' || typeof processed === 'number') {
+          const strValue = String(processed).trim();
           
-          // Block problematic strings
-          if (!strValue || /^[\.\s,;:!?…]+$/.test(strValue)) {
-            console.warn('[TextNodeProtection] Blocked bare text in View:', JSON.stringify(child));
+          if (!strValue || /^[\.\s,;:!?…•]+$/.test(strValue)) {
+            console.warn(`[TextNodeProtection] 🚫 Removed empty/punctuation at child[${index}]:`, JSON.stringify(processed));
             return null;
           }
           
-          // Auto-wrap in Text
-          console.warn('[TextNodeProtection] Auto-wrapping text in View:', JSON.stringify(child));
-          return originalCreateElement(Text, null, child);
+          console.warn(`[TextNodeProtection] ⚠️ Auto-wrapping text in ${type?.name || type}[${index}]:`, JSON.stringify(processed));
+          return originalCreateElement(Text, { style: { color: '#FFFFFF' } }, processed);
         }
         
-        return child;
-      }).filter(c => c !== null);
+        if (Array.isArray(processed)) {
+          return processed.map((item, idx) => {
+            if (typeof item === 'string' || typeof item === 'number') {
+              const strValue = String(item).trim();
+              if (!strValue || /^[\.\s,;:!?…•]+$/.test(strValue)) {
+                return null;
+              }
+              console.warn(`[TextNodeProtection] ⚠️ Auto-wrapping array item in ${type?.name || type}[${index}][${idx}]:`, JSON.stringify(item));
+              return originalCreateElement(Text, { style: { color: '#FFFFFF' } }, item);
+            }
+            return item;
+          }).filter(Boolean);
+        }
+        
+        return processed;
+      }).filter(c => c !== null && c !== undefined);
 
-      return originalCreateElement(type, props, ...safeChildren);
+      return originalCreateElement(type, props, ...processedChildren);
     }
 
-    // For all other components, pass through
     return originalCreateElement(type, props, ...children);
   };
 
   isPatched = true;
-  console.log('[TextNodeProtection] ✅ Runtime protection installed');
+  console.log('[TextNodeProtection] ✅ ULTIMATE Runtime protection installed');
+  console.log('[TextNodeProtection] Will block: empty strings, periods, commas, and other punctuation');
 }
 
 /**
