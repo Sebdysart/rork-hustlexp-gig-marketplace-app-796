@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -92,9 +92,16 @@ export default function AIOnboardingScreen() {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const waveformAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const particleAnim = useRef(new Animated.Value(0)).current;
+  const hologramAnim = useRef(new Animated.Value(0)).current;
+  const cardFlipAnim = useRef(new Animated.Value(0)).current;
+  const breatheAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     startAvatarPulse();
+    startHologramEffect();
+    startParticleSystem();
+    startBreatheAnimation();
     showWelcomeMessage();
   }, []);
 
@@ -129,6 +136,71 @@ export default function AIOnboardingScreen() {
       ])
     ).start();
   };
+
+  const startHologramEffect = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(hologramAnim, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(hologramAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const startParticleSystem = () => {
+    Animated.loop(
+      Animated.timing(particleAnim, {
+        toValue: 1,
+        duration: 8000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  };
+
+  const startBreatheAnimation = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(breatheAnim, {
+          toValue: 1.08,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sine),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breatheAnim, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.inOut(Easing.sine),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const triggerCardFlip = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(cardFlipAnim, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardFlipAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const showWelcomeMessage = async () => {
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -461,7 +533,8 @@ export default function AIOnboardingScreen() {
   };
 
   const handleRoleSelect = (roleId: string) => {
-    triggerHaptic('light');
+    triggerHaptic('medium');
+    triggerCardFlip();
     const intent = roleId as 'worker' | 'poster' | 'both';
     setExtractedData(prev => ({ ...prev, intent }));
     addUserMessage(`I choose: ${roleId.toUpperCase()}`);
@@ -605,15 +678,33 @@ export default function AIOnboardingScreen() {
           <Animated.View 
             style={[
               styles.avatarContainer,
-              { transform: [{ scale: avatarPulse }] }
+              { 
+                transform: [
+                  { scale: avatarPulse },
+                  { scale: breatheAnim }
+                ] 
+              }
             ]}
           >
             <LinearGradient
               colors={[premiumColors.neonCyan, premiumColors.neonMagenta]}
               style={styles.avatar}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             >
+              <Animated.View
+                style={{
+                  opacity: hologramAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.3, 0.8, 0.3],
+                  }),
+                }}
+              >
+                <View style={styles.hologramScanline} />
+              </Animated.View>
               <Brain size={20} color={Colors.background} />
             </LinearGradient>
+            <View style={styles.avatarGlow} />
           </Animated.View>
         )}
         
@@ -648,27 +739,17 @@ export default function AIOnboardingScreen() {
       case 'role_cards':
         return (
           <View key={index} style={styles.roleCardsContainer}>
-            {component.data.roles.map((role: any) => (
-              <TouchableOpacity
-                key={role.id}
-                style={styles.roleCard}
-                onPress={() => handleRoleSelect(role.id)}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={[premiumColors.glassDark + 'CC', premiumColors.glassDark + '99']}
-                  style={styles.roleCardGradient}
-                >
-                  <Text style={styles.roleCardIcon}>{role.icon}</Text>
-                  <Text style={styles.roleCardTitle}>{role.title}</Text>
-                  <Text style={styles.roleCardSubtitle}>{role.subtitle}</Text>
-                  <Text style={styles.roleCardDescription}>{role.description}</Text>
-                  <View style={styles.roleCardButton}>
-                    <Text style={styles.roleCardButtonText}>SELECT</Text>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
+            {component.data.roles.map((role: any, idx: number) => {
+              const delay = idx * 100;
+              return (
+                <RoleCard3D
+                  key={role.id}
+                  role={role}
+                  onSelect={handleRoleSelect}
+                  delay={delay}
+                />
+              );
+            })}
           </View>
         );
 
