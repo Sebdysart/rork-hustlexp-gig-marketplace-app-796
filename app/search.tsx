@@ -101,7 +101,10 @@ export default function SearchScreen() {
       />
 
       <View style={styles.headerContainer}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Search</Text>
+        <View style={styles.heroSection}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Find Quests</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Discover opportunities near you</Text>
+        </View>
         <View style={styles.searchContainer}>
           <View style={[styles.searchBar, { backgroundColor: theme.card }]}>
             <Search size={20} color={theme.textSecondary} />
@@ -375,13 +378,14 @@ function TaskCardItem({ task, onPress, theme }: TaskCardItemProps) {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       onPress={onPress}
-      style={[styles.taskCard, { backgroundColor: theme.card }]}
+      style={[styles.taskCard, { backgroundColor: theme.card, shadowColor: premiumColors.neonCyan }]}
     >
       <LinearGradient
         colors={[
-          premiumColors.glassWhite,
+          premiumColors.neonCyan + '15',
+          premiumColors.neonMagenta + '10',
           'transparent',
         ]}
         start={{ x: 0, y: 0 }}
@@ -449,10 +453,19 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
   },
-  headerTitle: {
-    fontSize: typography.sizes.hero,
-    fontWeight: typography.weights.bold,
+  heroSection: {
     marginBottom: spacing.md,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '800' as const,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
+    opacity: 0.8,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -599,6 +612,12 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     marginBottom: spacing.lg,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: premiumColors.glassWhite,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
   },
   taskGradient: {
     ...StyleSheet.absoluteFillObject,
@@ -623,8 +642,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   taskTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
+    fontSize: 18,
+    fontWeight: '700' as const,
+    letterSpacing: -0.3,
   },
   taskDescription: {
     fontSize: typography.sizes.sm,
