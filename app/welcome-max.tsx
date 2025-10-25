@@ -554,34 +554,95 @@ export default function WelcomeMaxScreen() {
                 },
               ]}
             />
+            
+            <Animated.View
+              style={[
+                styles.chromaticAberrationCyan,
+                {
+                  shadowRadius: glowScale.interpolate({
+                    inputRange: [0, 80],
+                    outputRange: [30, 50],
+                  }),
+                },
+              ]}
+            />
+            <Animated.View
+              style={[
+                styles.chromaticAberrationMagenta,
+                {
+                  shadowRadius: glowScale.interpolate({
+                    inputRange: [0, 80],
+                    outputRange: [30, 50],
+                  }),
+                },
+              ]}
+            />
+            
             <LinearGradient
               colors={[
-                premiumColors.neonCyan + '40',
-                premiumColors.neonMagenta + '20',
-                premiumColors.neonBlue + '30',
+                premiumColors.neonCyan + '60',
+                premiumColors.neonMagenta + '40',
+                premiumColors.neonBlue + '50',
               ]}
               style={[styles.logoInner, { position: 'absolute' }]}
             />
+            
             <View style={[styles.logoInner, { backgroundColor: 'transparent' }]}>
-              <BlurView intensity={40} tint="dark" style={styles.logoInner}>
+              <BlurView intensity={60} tint="dark" style={styles.logoInner}>
                 <View style={styles.logoZapContainer}>
+                  <View style={styles.logoZapGlow4}>
+                    <Zap size={110} color={premiumColors.neonAmber} strokeWidth={1.5} fill="transparent" />
+                  </View>
+                  <View style={styles.logoZapGlow3}>
+                    <Zap size={106} color={premiumColors.neonBlue} strokeWidth={2} fill="transparent" />
+                  </View>
                   <View style={styles.logoZapGlow2}>
-                    <Zap size={100} color={premiumColors.neonMagenta} strokeWidth={2} fill="transparent" />
+                    <Zap size={102} color={premiumColors.neonMagenta} strokeWidth={2.5} fill={premiumColors.neonMagenta + '20'} />
                   </View>
                   <View style={styles.logoZapGlow1}>
-                    <Zap size={94} color={premiumColors.neonCyan} strokeWidth={3} fill={premiumColors.neonCyan + '80'} />
+                    <Zap size={98} color={premiumColors.neonCyan} strokeWidth={3} fill={premiumColors.neonCyan + '60'} />
                   </View>
                   <LinearGradient
                     colors={[
                       '#FFFFFF',
                       premiumColors.neonCyan,
+                      premiumColors.neonMagenta,
                       '#FFFFFF',
                     ]}
+                    locations={[0, 0.3, 0.7, 1]}
                     style={{ position: 'absolute' }}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
-                    <Zap size={88} color="#FFFFFF" strokeWidth={4} fill="#FFFFFF" />
+                    <Zap size={92} color="#FFFFFF" strokeWidth={5} fill="#FFFFFF" />
                   </LinearGradient>
                 </View>
+                
+                <Animated.View
+                  style={[
+                    styles.holographicShimmer,
+                    {
+                      transform: [
+                        { translateX: hologramShift.interpolate({
+                          inputRange: [-5, 5],
+                          outputRange: [-40, 40],
+                        })},
+                        { rotate: '45deg' },
+                      ],
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[
+                      'transparent',
+                      'rgba(255, 255, 255, 0.3)',
+                      'transparent',
+                    ]}
+                    style={styles.holographicGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  />
+                </Animated.View>
               </BlurView>
             </View>
           </View>
@@ -742,15 +803,40 @@ const styles = StyleSheet.create({
     borderRadius: 90,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(5, 5, 15, 0.95)',
-    borderWidth: 4,
+    backgroundColor: 'rgba(5, 5, 15, 0.98)',
+    borderWidth: 5,
     borderColor: premiumColors.neonCyan,
     zIndex: 2,
     shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 30,
+    shadowRadius: 40,
+    shadowOpacity: 1,
+    elevation: 40,
+    overflow: 'hidden',
+  },
+  chromaticAberrationCyan: {
+    position: 'absolute',
+    width: 186,
+    height: 186,
+    borderRadius: 93,
+    borderWidth: 3,
+    borderColor: premiumColors.neonCyan,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: -3, height: -3 },
     shadowOpacity: 0.8,
-    elevation: 30,
+    zIndex: 1,
+  },
+  chromaticAberrationMagenta: {
+    position: 'absolute',
+    width: 186,
+    height: 186,
+    borderRadius: 93,
+    borderWidth: 3,
+    borderColor: premiumColors.neonMagenta,
+    shadowColor: premiumColors.neonMagenta,
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.8,
+    zIndex: 1,
   },
   logoZapContainer: {
     position: 'relative',
@@ -761,22 +847,42 @@ const styles = StyleSheet.create({
   },
   logoZapGlow1: {
     position: 'absolute',
-    top: -5,
-    left: -5,
-    opacity: 0.7,
+    top: -8,
+    left: -8,
+    opacity: 0.85,
     shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 20,
+    shadowRadius: 30,
     shadowOpacity: 1,
   },
   logoZapGlow2: {
     position: 'absolute',
-    top: -10,
-    left: -10,
-    opacity: 0.4,
+    top: -12,
+    left: -12,
+    opacity: 0.6,
     shadowColor: premiumColors.neonMagenta,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 30,
+    shadowRadius: 40,
+    shadowOpacity: 1,
+  },
+  logoZapGlow3: {
+    position: 'absolute',
+    top: -16,
+    left: -16,
+    opacity: 0.4,
+    shadowColor: premiumColors.neonBlue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 50,
+    shadowOpacity: 1,
+  },
+  logoZapGlow4: {
+    position: 'absolute',
+    top: -20,
+    left: -20,
+    opacity: 0.3,
+    shadowColor: premiumColors.neonAmber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 60,
     shadowOpacity: 1,
   },
   logoGlowBackground: {
@@ -788,6 +894,16 @@ const styles = StyleSheet.create({
     shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
     zIndex: 1,
+  },
+  holographicShimmer: {
+    position: 'absolute',
+    width: 60,
+    height: 220,
+    left: -40,
+    top: -20,
+  },
+  holographicGradient: {
+    flex: 1,
   },
   titleContainer: {
     alignItems: 'center',
