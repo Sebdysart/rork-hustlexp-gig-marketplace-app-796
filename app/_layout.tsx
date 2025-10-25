@@ -20,19 +20,10 @@ import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
-import { applyTextNodeFix } from '@/utils/textNodeFixer';
-import { enableTextNodeScanning } from '@/utils/textNodeScanner';
-import { installTextErrorInterceptor } from '@/utils/textErrorInterceptor';
-import { enableTextNodeErrorLogging } from '@/utils/textNodeDetectorRuntime';
+import { installSimpleTextNodeFix } from '@/utils/simpleTextNodeFix';
 
-// Install comprehensive text node fix
-applyTextNodeFix();
-
-// Enable runtime text node scanning in development
 if (__DEV__) {
-  enableTextNodeScanning();
-  installTextErrorInterceptor();
-  enableTextNodeErrorLogging();
+  installSimpleTextNodeFix();
 }
 
 SplashScreen.preventAutoHideAsync();
