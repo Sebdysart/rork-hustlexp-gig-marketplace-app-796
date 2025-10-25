@@ -14,11 +14,7 @@ export default function Index() {
 
     console.log('Index routing check:', { currentUser: !!currentUser, hasOnboarded, isLoading });
 
-    if (currentUser) {
-      router.replace('/(tabs)/home');
-    } else {
-      router.replace('/sign-in');
-    }
+    router.replace('/welcome-max');
   }, [currentUser, hasOnboarded, isLoading, router]);
 
   return (
