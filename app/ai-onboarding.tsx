@@ -590,18 +590,37 @@ export default function AIOnboardingScreen() {
 
   const askForName = () => {
     changeAvatarExpression('neutral');
-    addAIMessage("What should I call you?", 'name');
+    addAIMessage("What's your real name?", 'name');
     setPredictiveSuggestions([
       { text: "Use my real name", action: () => setInput('') },
-      { text: "Pick a cool username", action: () => setInput('') },
     ]);
     setProgress(10);
-    showContextualBubble('✨ Pro tip: Your name will be visible to others', 4000);
+    showContextualBubble('✨ Your name builds trust with clients', 4000);
+  };
+
+  const generateGamertag = (name: string): string => {
+    const adjectives = [
+      'Shadow', 'Neon', 'Cyber', 'Quantum', 'Turbo', 'Elite', 'Alpha', 'Omega',
+      'Phoenix', 'Storm', 'Blaze', 'Thunder', 'Frost', 'Viper', 'Steel', 'Titan',
+      'Sonic', 'Cosmic', 'Lunar', 'Solar', 'Rapid', 'Prime', 'Ultra', 'Mega',
+    ];
+    const nouns = [
+      'Hustler', 'Grinder', 'Warrior', 'Legend', 'Champion', 'Master', 'Ninja',
+      'Phantom', 'Ghost', 'Hunter', 'Striker', 'Wolf', 'Lion', 'Eagle', 'Hawk',
+      'Dragon', 'Vortex', 'Blade', 'Force', 'Spirit', 'Maverick', 'Rogue', 'Ace',
+    ];
+    
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+    const randomNumber = Math.floor(Math.random() * 99) + 1;
+    
+    return `${randomAdjective}${randomNoun}${randomNumber}`;
   };
 
   const askForRole = (name: string) => {
+    const gamertag = generateGamertag(name);
     changeAvatarExpression('happy');
-    addAIMessage(`${name} - I like it! ✨\n\nWhat brings you to HustleXP?`, 'role', [
+    addAIMessage(`${name} - I like it! ✨\n\nYour gamertag: ${gamertag}\n\nWhat brings you to HustleXP?`, 'role', [
       {
         type: 'role_cards',
         data: {
