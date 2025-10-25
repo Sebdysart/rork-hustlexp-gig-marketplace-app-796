@@ -80,7 +80,7 @@ export function TranslationLoadingOverlay() {
 
           <View style={styles.textContainer}>
             <Text style={styles.title}>
-              Translating to {selectedLang?.flag} {selectedLang?.name}
+              {selectedLang ? `Translating to ${selectedLang.flag} ${selectedLang.name}` : 'Translating...'}
             </Text>
             <Text style={styles.subtitle}>
               Optimizing your experience...
