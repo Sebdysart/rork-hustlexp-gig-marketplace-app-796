@@ -591,30 +591,32 @@ export default function WelcomeMaxScreen() {
               <BlurView intensity={60} tint="dark" style={styles.logoInner}>
                 <View style={styles.logoZapContainer}>
                   <View style={styles.logoZapGlow4}>
-                    <Zap size={110} color={premiumColors.neonAmber} strokeWidth={1.5} fill="transparent" />
+                    <Zap size={116} color={premiumColors.neonAmber} strokeWidth={2.5} fill="transparent" />
                   </View>
                   <View style={styles.logoZapGlow3}>
-                    <Zap size={106} color={premiumColors.neonBlue} strokeWidth={2} fill="transparent" />
+                    <Zap size={112} color={premiumColors.neonBlue} strokeWidth={3} fill="transparent" />
                   </View>
                   <View style={styles.logoZapGlow2}>
-                    <Zap size={102} color={premiumColors.neonMagenta} strokeWidth={2.5} fill={premiumColors.neonMagenta + '20'} />
+                    <Zap size={108} color={premiumColors.neonMagenta} strokeWidth={4} fill={premiumColors.neonMagenta + '30'} />
                   </View>
                   <View style={styles.logoZapGlow1}>
-                    <Zap size={98} color={premiumColors.neonCyan} strokeWidth={3} fill={premiumColors.neonCyan + '60'} />
+                    <Zap size={104} color={premiumColors.neonCyan} strokeWidth={4.5} fill={premiumColors.neonCyan + '50'} />
                   </View>
                   <LinearGradient
                     colors={[
                       '#FFFFFF',
                       premiumColors.neonCyan,
+                      premiumColors.neonBlue,
                       premiumColors.neonMagenta,
+                      premiumColors.neonAmber,
                       '#FFFFFF',
                     ]}
-                    locations={[0, 0.3, 0.7, 1]}
+                    locations={[0, 0.2, 0.35, 0.65, 0.8, 1]}
                     style={{ position: 'absolute' }}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Zap size={92} color="#FFFFFF" strokeWidth={5} fill="#FFFFFF" />
+                    <Zap size={100} color="#FFFFFF" strokeWidth={6} fill="#FFFFFF" />
                   </LinearGradient>
                 </View>
                 
@@ -649,13 +651,31 @@ export default function WelcomeMaxScreen() {
         </Animated.View>
 
         <View style={styles.titleContainer}>
-          <Text style={styles.mainTitle}>HUSTLEXP</Text>
           <LinearGradient
             colors={[
+              '#FFFFFF',
               premiumColors.neonCyan,
               premiumColors.neonMagenta,
               premiumColors.neonAmber,
+              '#FFFFFF',
             ]}
+            locations={[0, 0.25, 0.5, 0.75, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.titleGradientWrapper}
+          >
+            <Text style={styles.mainTitle}>HUSTLEXP</Text>
+          </LinearGradient>
+          <LinearGradient
+            colors={[
+              'transparent',
+              premiumColors.neonCyan,
+              premiumColors.neonBlue,
+              premiumColors.neonMagenta,
+              premiumColors.neonAmber,
+              'transparent',
+            ]}
+            locations={[0, 0.2, 0.4, 0.6, 0.8, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.titleUnderline}
@@ -724,7 +744,7 @@ export default function WelcomeMaxScreen() {
                   ]}
                 >
                   <Rocket size={28} color="#000000" strokeWidth={3} />
-                  <Text style={styles.buttonText}>Launch Experience</Text>
+                  <Text style={styles.buttonText}>Start Your Journey</Text>
                   <ArrowRight size={28} color="#000000" strokeWidth={3} />
                 </Animated.View>
               </LinearGradient>
@@ -847,42 +867,42 @@ const styles = StyleSheet.create({
   },
   logoZapGlow1: {
     position: 'absolute',
-    top: -8,
-    left: -8,
-    opacity: 0.85,
-    shadowColor: premiumColors.neonCyan,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 30,
-    shadowOpacity: 1,
-  },
-  logoZapGlow2: {
-    position: 'absolute',
     top: -12,
     left: -12,
-    opacity: 0.6,
-    shadowColor: premiumColors.neonMagenta,
+    opacity: 0.9,
+    shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 40,
     shadowOpacity: 1,
   },
-  logoZapGlow3: {
+  logoZapGlow2: {
     position: 'absolute',
     top: -16,
     left: -16,
-    opacity: 0.4,
-    shadowColor: premiumColors.neonBlue,
+    opacity: 0.7,
+    shadowColor: premiumColors.neonMagenta,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 50,
     shadowOpacity: 1,
   },
-  logoZapGlow4: {
+  logoZapGlow3: {
     position: 'absolute',
     top: -20,
     left: -20,
-    opacity: 0.3,
-    shadowColor: premiumColors.neonAmber,
+    opacity: 0.5,
+    shadowColor: premiumColors.neonBlue,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 60,
+    shadowOpacity: 1,
+  },
+  logoZapGlow4: {
+    position: 'absolute',
+    top: -24,
+    left: -24,
+    opacity: 0.4,
+    shadowColor: premiumColors.neonAmber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 70,
     shadowOpacity: 1,
   },
   logoGlowBackground: {
@@ -909,20 +929,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
+  titleGradientWrapper: {
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
   mainTitle: {
-    fontSize: 48,
+    fontSize: 52,
     fontWeight: '900' as const,
     color: '#FFFFFF',
-    letterSpacing: 4,
+    letterSpacing: 6,
     textShadowColor: premiumColors.neonCyan,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    textShadowRadius: 30,
+    textAlign: 'center',
   },
   titleUnderline: {
-    width: '100%',
-    height: 4,
-    marginTop: spacing.sm,
-    borderRadius: 2,
+    width: '120%',
+    height: 6,
+    marginTop: spacing.md,
+    borderRadius: 3,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 20,
+    shadowOpacity: 1,
   },
   tagline: {
     fontSize: 18,
