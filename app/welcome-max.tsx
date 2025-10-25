@@ -913,49 +913,47 @@ export default function WelcomeMaxScreen() {
               },
             ]}
           >
-            <BlurView intensity={20} tint="dark" style={styles.buttonBlur}>
-              <View style={styles.buttonGradientContainer}>
+            <View style={styles.buttonGradientContainer}>
+              <LinearGradient
+                colors={[
+                  premiumColors.neonCyan,
+                  premiumColors.neonBlue,
+                  premiumColors.neonMagenta,
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              />
+              <Animated.View
+                style={[
+                  styles.buttonWave,
+                  {
+                    transform: [{ translateX: buttonWavePosition as any }],
+                  },
+                ]}
+              >
                 <LinearGradient
                   colors={[
-                    premiumColors.neonCyan,
-                    premiumColors.neonBlue,
-                    premiumColors.neonMagenta,
+                    'transparent',
+                    'rgba(255, 255, 255, 0.6)',
+                    'transparent',
                   ]}
+                  style={styles.waveGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
                 />
-                <Animated.View
-                  style={[
-                    styles.buttonWave,
-                    {
-                      transform: [{ translateX: buttonWavePosition as any }],
-                    },
-                  ]}
-                >
-                  <LinearGradient
-                    colors={[
-                      'transparent',
-                      'rgba(255, 255, 255, 0.5)',
-                      'transparent',
-                    ]}
-                    style={styles.waveGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  />
-                </Animated.View>
-                <Animated.View
-                  style={[
-                    styles.buttonContent,
-                    { transform: [{ scale: pulseAnim }] },
-                  ]}
-                >
-                  <Rocket size={28} color="#000000" strokeWidth={3} />
-                  <Text style={styles.buttonText}>Begin Your First Quest</Text>
-                  <ArrowRight size={28} color="#000000" strokeWidth={3} />
-                </Animated.View>
-              </View>
-            </BlurView>
+              </Animated.View>
+              <Animated.View
+                style={[
+                  styles.buttonContent,
+                  { transform: [{ scale: pulseAnim }] },
+                ]}
+              >
+                <Rocket size={26} color="#0D0D0F" strokeWidth={3} fill="#0D0D0F" />
+                <Text style={styles.buttonText}>Begin Your First Quest</Text>
+                <ArrowRight size={26} color="#0D0D0F" strokeWidth={3} />
+              </Animated.View>
+            </View>
           </Animated.View>
         </TouchableOpacity>
 
@@ -1236,17 +1234,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     elevation: 20,
   },
-  buttonBlur: {
-    borderRadius: borderRadius.full,
-    overflow: 'hidden',
-  },
   buttonGradientContainer: {
     position: 'relative',
     overflow: 'hidden',
     borderRadius: borderRadius.full,
   },
   buttonGradient: {
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.xl + 4,
     paddingHorizontal: spacing.xxl,
   },
   buttonWave: {
@@ -1261,16 +1255,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonContent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.md,
   },
   buttonText: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '900' as const,
-    color: '#000000',
-    letterSpacing: 1,
+    color: '#0D0D0F',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   swipeHint: {
     fontSize: 12,
