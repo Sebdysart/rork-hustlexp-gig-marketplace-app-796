@@ -19,6 +19,7 @@ import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
 import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
+import "@/utils/textNodePermanentFix";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -75,6 +76,7 @@ function RootLayoutNav() {
         <Stack.Screen name="text-node-scanner" options={{ title: 'Text Node Scanner' }} />
         <Stack.Screen name="text-error-scanner" options={{ title: 'Text Error Scanner' }} />
         <Stack.Screen name="diagnostic-center" options={{ title: 'Diagnostic Center' }} />
+        <Stack.Screen name="test-text-fix" options={{ title: 'Text Fix Test' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
