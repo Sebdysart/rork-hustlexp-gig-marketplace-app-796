@@ -54,7 +54,9 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
           newCache[key] = translatedValue;
         } else {
-          newCache[key] = textsToTranslate[index] || ' ';
+          // Use original or a safe non-empty space
+          const fallback = textsToTranslate[index]?.trim();
+          newCache[key] = (fallback && !/^[\.\s,;:!?]*$/.test(fallback)) ? textsToTranslate[index] : '\u00A0';
         }
       });
 
@@ -107,7 +109,11 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       // Block ONLY whitespace and punctuation-only strings
       if (!trimmed || /^[\.\s,;:!?…]+$/.test(trimmed)) {
         console.warn('[Language.t] Blocked problematic translation:', JSON.stringify(text), 'for key:', key);
-        return fallback;
+        return fallback || ' ';
+      }
+      // Final safety check - never return just whitespace or punctuation
+      if (/^[\.\s,;:!?…]+$/.test(text)) {
+        return fallback || ' ';
       }
       return text;
     };
@@ -174,7 +180,9 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
             if (trimmed && !/^[\.\s,;:!?]*$/.test(trimmed)) {
               newCache[cacheKey] = translatedValue;
             } else {
-              newCache[cacheKey] = text || ' ';
+              // Use original or a safe non-empty space
+              const fallback = text?.trim();
+              newCache[cacheKey] = (fallback && !/^[\.\s,;:!?]*$/.test(fallback)) ? text : '\u00A0';
             }
           });
           
@@ -318,7 +326,9 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         setAITranslationCache(prev => ({ ...prev, [cacheKey]: translated }));
         return translated;
       } else {
-        return text || ' ';
+        // Use original or a safe non-empty space
+        const fallback = text?.trim();
+        return (fallback && !/^[\.\s,;:!?]*$/.test(fallback)) ? text : '\u00A0';
       }
     } catch (error) {
       console.error('[Language] Translation failed:', error);
