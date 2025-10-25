@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,13 @@ import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  Zap, Sparkles, Rocket, 
-  ArrowRight, Trophy, TrendingUp 
+  Sparkles, Rocket, 
+  ArrowRight, Flame 
 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { premiumColors, spacing, borderRadius } from '@/constants/designTokens';
 import { useSensory } from '@/hooks/useSensory';
 import ConfettiExplosion from '@/components/tierS/Celebrations/ConfettiExplosion';
-import React from 'react';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -171,11 +170,11 @@ export default function WelcomeMaxScreen() {
                 <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
                   <View style={styles.boltGlowContainer}>
                     <View style={styles.boltGlow} />
-                    <Zap 
+                    <Flame 
                       size={84} 
-                      color={premiumColors.neonCyan} 
+                      color="#FFFFFF" 
                       strokeWidth={2.5} 
-                      fill="#FFFFFF"
+                      fill={premiumColors.neonCyan}
                     />
                   </View>
                 </Animated.View>
@@ -187,9 +186,9 @@ export default function WelcomeMaxScreen() {
         <View style={styles.titleContainer}>
           <LinearGradient
             colors={[
-              '#40E0D0',
-              '#90E0EF',
-              '#C77DFF',
+              premiumColors.neonCyan + '60',
+              premiumColors.neonBlue + '60',
+              premiumColors.neonMagenta + '60',
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -322,9 +321,12 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 48,
     fontWeight: '900' as const,
-    color: 'rgba(0, 0, 0, 0.85)',
+    color: '#FFFFFF',
     letterSpacing: 4,
     textAlign: 'center',
+    textShadowColor: premiumColors.neonCyan,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
   tagline: {
     fontSize: 20,
@@ -393,11 +395,8 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 19,
     fontWeight: '900' as const,
-    color: 'rgba(0, 0, 0, 0.95)',
+    color: '#000000',
     letterSpacing: 0.8,
-    textShadowColor: 'rgba(255, 255, 255, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 1,
   },
   boltGlowContainer: {
     position: 'relative',
