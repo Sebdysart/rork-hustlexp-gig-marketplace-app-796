@@ -22,6 +22,7 @@ import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
 import { applyTextNodeFix } from '@/utils/textNodeFixer';
 import { enableTextNodeScanning } from '@/utils/textNodeScanner';
+import { installTextErrorInterceptor } from '@/utils/textErrorInterceptor';
 
 // Install comprehensive text node fix
 applyTextNodeFix();
@@ -29,6 +30,7 @@ applyTextNodeFix();
 // Enable runtime text node scanning in development
 if (__DEV__) {
   enableTextNodeScanning();
+  installTextErrorInterceptor();
 }
 
 SplashScreen.preventAutoHideAsync();
@@ -83,6 +85,8 @@ function RootLayoutNav() {
         <Stack.Screen name="analytics-dashboard" options={{ title: 'Analytics' }} />
         <Stack.Screen name="error-finder" options={{ title: 'Error Finder' }} />
         <Stack.Screen name="text-node-scanner" options={{ title: 'Text Node Scanner' }} />
+        <Stack.Screen name="text-error-scanner" options={{ title: 'Text Error Scanner' }} />
+        <Stack.Screen name="diagnostic-center" options={{ title: 'Diagnostic Center' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
