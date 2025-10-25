@@ -1,21 +1,30 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { Zap, Mail, Lock, Eye, EyeOff, Sparkles, TrendingUp, Star, Shield } from 'lucide-react-native';
+import { Zap, Mail, Lock, Eye, EyeOff, Sparkles, TrendingUp, Star, Shield, Users, DollarSign, Award } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
-import { triggerHaptic } from '@/utils/haptics';
+import { useSensory } from '@/hooks/useSensory';
 import { spacing, typography, borderRadius, premiumColors, neonGlow } from '@/constants/designTokens';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const ParticleIcon = ({ type }: { type: number }) => {
+  const icons = [Sparkles, Star, Zap, Award];
+  const colors = [premiumColors.neonCyan, premiumColors.neonMagenta, premiumColors.neonAmber, premiumColors.neonGreen];
+  const Icon = icons[type % icons.length];
+  const color = colors[type % colors.length];
+  return <Icon size={10 + (type % 8)} color={color} />;
+};
 
 export default function SignInScreen() {
   const router = useRouter();
   const { users, updateUser } = useApp();
   const insets = useSafeAreaInsets();
+  const sensory = useSensory();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -23,21 +32,41 @@ export default function SignInScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const slideAnim = useRef(new Animated.Value(80)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
-  const particleAnims = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
+  const logoRotate = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
+  const statsTickerAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const particleAnims = useRef(
+    Array.from({ length: 25 }, () => ({
+      translateY: new Animated.Value(SCREEN_HEIGHT + 100),
+      translateX: new Animated.Value((Math.random() - 0.5) * SCREEN_WIDTH),
+      opacity: new Animated.Value(0),
+      scale: new Animated.Value(0.5),
+      rotate: new Animated.Value(0),
+    }))
+  ).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 1200,
         useNativeDriver: true,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        tension: 50,
+        tension: 35,
         friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 60,
+        friction: 7,
         useNativeDriver: true,
       }),
     ]).start();
@@ -46,46 +75,139 @@ export default function SignInScreen() {
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 1800,
           useNativeDriver: true,
         }),
         Animated.timing(glowAnim, {
           toValue: 0,
-          duration: 2000,
+          duration: 1800,
           useNativeDriver: true,
         }),
       ])
     ).start();
 
-    particleAnims.forEach((anim, index) => {
+    Animated.loop(
+      Animated.timing(logoRotate, {
+        toValue: 1,
+        duration: 25000,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.03,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.timing(statsTickerAnim, {
+        toValue: 1,
+        duration: 20000,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    particleAnims.forEach((animSet, index) => {
+      const startDelay = index * 150;
+      const duration = 5000 + Math.random() * 3000;
+      const startX = (Math.random() - 0.5) * SCREEN_WIDTH;
+
       Animated.loop(
         Animated.sequence([
-          Animated.delay(index * 400),
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 4000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(anim, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
+          Animated.delay(startDelay),
+          Animated.parallel([
+            Animated.timing(animSet.translateY, {
+              toValue: -200,
+              duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(animSet.translateX, {
+              toValue: startX + (Math.random() - 0.5) * 150,
+              duration,
+              useNativeDriver: true,
+            }),
+            Animated.sequence([
+              Animated.timing(animSet.opacity, {
+                toValue: 0.7,
+                duration: duration * 0.15,
+                useNativeDriver: true,
+              }),
+              Animated.timing(animSet.opacity, {
+                toValue: 0,
+                duration: duration * 0.85,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.sequence([
+              Animated.spring(animSet.scale, {
+                toValue: 1,
+                tension: 80,
+                friction: 6,
+                useNativeDriver: true,
+              }),
+              Animated.timing(animSet.scale, {
+                toValue: 0.3,
+                duration: duration * 0.3,
+                useNativeDriver: true,
+              }),
+            ]),
+            Animated.timing(animSet.rotate, {
+              toValue: 360 + Math.random() * 180,
+              duration,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(animSet.translateY, { toValue: SCREEN_HEIGHT + 100, duration: 0, useNativeDriver: true }),
+            Animated.timing(animSet.translateX, { toValue: startX, duration: 0, useNativeDriver: true }),
+            Animated.timing(animSet.opacity, { toValue: 0, duration: 0, useNativeDriver: true }),
+            Animated.timing(animSet.scale, { toValue: 0.5, duration: 0, useNativeDriver: true }),
+            Animated.timing(animSet.rotate, { toValue: 0, duration: 0, useNativeDriver: true }),
+          ]),
         ])
       ).start();
     });
-  }, [fadeAnim, slideAnim, glowAnim, particleAnims]);
+  }, [fadeAnim, slideAnim, glowAnim, logoRotate, logoScale, statsTickerAnim, pulseAnim, particleAnims]);
+
+  const handleButtonPressIn = useCallback(() => {
+    sensory.tap();
+    Animated.spring(buttonScale, {
+      toValue: 0.94,
+      tension: 250,
+      friction: 15,
+      useNativeDriver: true,
+    }).start();
+  }, [buttonScale, sensory]);
+
+  const handleButtonPressOut = useCallback(() => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      tension: 250,
+      friction: 15,
+      useNativeDriver: true,
+    }).start();
+  }, [buttonScale]);
 
   const handleStartHustle = async () => {
     if (!email.trim()) {
       setError('Please enter your email address');
-      triggerHaptic('error');
+      sensory.error();
       return;
     }
 
     setIsLoading(true);
     setError('');
-    triggerHaptic('medium');
+    sensory.buttonPress();
 
     await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -95,18 +217,18 @@ export default function SignInScreen() {
       if (!password.trim()) {
         setError('Password required for existing account');
         setIsLoading(false);
-        triggerHaptic('error');
+        sensory.error();
         return;
       }
 
       if (existingUser.password !== password) {
         setError('Incorrect password');
         setIsLoading(false);
-        triggerHaptic('error');
+        sensory.error();
         return;
       }
 
-      triggerHaptic('success');
+      sensory.success();
       
       const updatedUser = {
         ...existingUser,
@@ -117,33 +239,60 @@ export default function SignInScreen() {
       await updateUser(updatedUser);
       router.replace('/(tabs)/home');
     } else {
-      triggerHaptic('success');
+      sensory.success();
       router.push(`/ai-onboarding?email=${encodeURIComponent(email.trim())}`);
     }
   };
 
   const glowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.3, 0.8],
+    outputRange: [0.6, 1],
   });
+
+  const glowScale = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.08],
+  });
+
+  const logoRotation = logoRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const statsTranslateX = statsTickerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -SCREEN_WIDTH],
+  });
+
+  const liveStats = [
+    { icon: Users, text: '47K+ Hustlers Active', color: premiumColors.neonCyan },
+    { icon: DollarSign, text: '$2.3M Earned This Week', color: premiumColors.neonGreen },
+    { icon: Award, text: '12K Tasks Today', color: premiumColors.neonAmber },
+    { icon: Zap, text: 'Avg $85/task', color: premiumColors.neonMagenta },
+  ];
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[premiumColors.deepBlack, premiumColors.richBlack, premiumColors.charcoal]}
+        colors={['#050507', '#0A0A0F', '#0D0D14', '#0F0F18']}
         style={StyleSheet.absoluteFill}
+        locations={[0, 0.3, 0.7, 1]}
       />
 
-      {particleAnims.map((anim, index) => {
-        const translateY = anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [SCREEN_HEIGHT, -100],
+      <View style={styles.gradientOverlay}>
+        <LinearGradient
+          colors={[premiumColors.neonCyan + '15', 'transparent', premiumColors.neonMagenta + '15']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </View>
+
+      {particleAnims.map((animSet, index) => {
+        const rotationDeg = animSet.rotate.interpolate({
+          inputRange: [0, 360],
+          outputRange: ['0deg', '360deg'],
         });
-        const opacity = anim.interpolate({
-          inputRange: [0, 0.2, 0.8, 1],
-          outputRange: [0, 0.6, 0.6, 0],
-        });
-        const left = (index * SCREEN_WIDTH) / 8;
 
         return (
           <Animated.View
@@ -151,13 +300,17 @@ export default function SignInScreen() {
             style={[
               styles.particle,
               {
-                left,
-                transform: [{ translateY }],
-                opacity,
+                transform: [
+                  { translateX: animSet.translateX },
+                  { translateY: animSet.translateY },
+                  { scale: animSet.scale },
+                  { rotate: rotationDeg },
+                ],
+                opacity: animSet.opacity,
               },
             ]}
           >
-            <Sparkles size={12} color={premiumColors.neonCyan} />
+            <ParticleIcon type={index} />
           </Animated.View>
         );
       })}
@@ -167,182 +320,224 @@ export default function SignInScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-          <Animated.View 
-            style={[
-              styles.content, 
-              { 
-                opacity: fadeAnim, 
-                transform: [{ translateY: slideAnim }],
-                paddingTop: insets.top + 20, 
-                paddingBottom: Math.max(insets.bottom + 20, 20)
-              }
-            ]}
-          >
-            <View style={styles.header}>
-              <Animated.View style={[styles.iconContainer, { opacity: glowOpacity }]}>
-                <LinearGradient
-                  colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
-                  style={styles.iconGradientBg}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <BlurView intensity={40} tint="dark" style={styles.iconBlur}>
-                    <View style={styles.iconGlow}>
-                      <Zap size={48} color={premiumColors.neonCyan} strokeWidth={3} />
+        <Animated.View 
+          style={[
+            styles.content, 
+            { 
+              opacity: fadeAnim, 
+              transform: [{ translateY: slideAnim }],
+              paddingTop: insets.top + 40, 
+              paddingBottom: Math.max(insets.bottom + 20, 20)
+            }
+          ]}
+        >
+          <View style={styles.header}>
+            <View style={styles.liveStatsContainer}>
+              <Animated.View style={[styles.liveStatsTicker, { transform: [{ translateX: statsTranslateX }] }]}>
+                {[...liveStats, ...liveStats].map((stat, index) => (
+                  <View key={index} style={styles.liveStatItem}>
+                    <View style={[styles.liveStatIcon, { backgroundColor: stat.color + '20', borderColor: stat.color + '50' }]}>
+                      <stat.icon size={12} color={stat.color} strokeWidth={2.5} />
                     </View>
-                  </BlurView>
-                </LinearGradient>
+                    <Text style={styles.liveStatText}>{stat.text}</Text>
+                  </View>
+                ))}
               </Animated.View>
-              
-              <View style={styles.titleContainer}>
-                <Text style={styles.title}>Welcome Back, Hustler</Text>
-                <Text style={styles.subtitle}>Your journey starts here</Text>
-              </View>
-              
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <View style={styles.statIconBg}>
-                    <TrendingUp size={14} color={premiumColors.neonGreen} strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.statText}>Level Up</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <View style={styles.statIconBg}>
-                    <Star size={14} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.statText}>Earn Rewards</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <View style={styles.statIconBg}>
-                    <Sparkles size={14} color={premiumColors.neonMagenta} strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.statText}>Get Paid</Text>
-                </View>
-              </View>
             </View>
 
-            <View style={styles.form}>
+            <Animated.View 
+              style={[
+                styles.iconContainer, 
+                { 
+                  opacity: glowOpacity,
+                  transform: [
+                    { scale: Animated.multiply(logoScale, pulseAnim) },
+                    { rotate: logoRotation },
+                  ]
+                }
+              ]}
+            >
+              <Animated.View style={[styles.iconGlowRing, { transform: [{ scale: glowScale }] }]}>
+                <LinearGradient
+                  colors={[premiumColors.neonCyan + '40', premiumColors.neonMagenta + '40', premiumColors.neonCyan + '40']}
+                  style={styles.iconGlowRingInner}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+              </Animated.View>
+              
+              <LinearGradient
+                colors={[premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta]}
+                style={styles.iconGradientBg}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <BlurView intensity={50} tint="dark" style={styles.iconBlur}>
+                  <View style={styles.iconGlow}>
+                    <Zap size={54} color={premiumColors.neonCyan} strokeWidth={3.5} />
+                  </View>
+                </BlurView>
+              </LinearGradient>
+            </Animated.View>
+            
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>Welcome Back, Hustler</Text>
+              <Text style={styles.subtitle}>Your journey starts here</Text>
+            </View>
+            
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: premiumColors.neonGreen + '20' }]}>
+                  <TrendingUp size={16} color={premiumColors.neonGreen} strokeWidth={2.5} />
+                </View>
+                <Text style={styles.statText}>Level Up</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: premiumColors.neonAmber + '20' }]}>
+                  <Star size={16} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} strokeWidth={2.5} />
+                </View>
+                <Text style={styles.statText}>Earn Rewards</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: premiumColors.neonMagenta + '20' }]}>
+                  <Sparkles size={16} color={premiumColors.neonMagenta} strokeWidth={2.5} />
+                </View>
+                <Text style={styles.statText}>Get Paid</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email Address</Text>
+              <BlurView intensity={40} tint="dark" style={styles.inputBlur}>
+                <View style={styles.inputWrapper}>
+                  <View style={[styles.inputIconContainer, { backgroundColor: premiumColors.neonCyan + '20' }]}>
+                    <Mail size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="your.email@example.com"
+                    placeholderTextColor={premiumColors.glassWhiteStrong}
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setError('');
+                    }}
+                    onFocus={() => sensory.tap()}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    returnKeyType="next"
+                    autoComplete="email"
+                  />
+                </View>
+              </BlurView>
+            </View>
+
+            {email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) && (
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email Address</Text>
-                <BlurView intensity={30} tint="dark" style={styles.inputBlur}>
+                <Text style={styles.label}>Password</Text>
+                <BlurView intensity={40} tint="dark" style={styles.inputBlur}>
                   <View style={styles.inputWrapper}>
-                    <View style={styles.inputIconContainer}>
-                      <Mail size={18} color={premiumColors.neonCyan} strokeWidth={2} />
+                    <View style={[styles.inputIconContainer, { backgroundColor: premiumColors.neonCyan + '20' }]}>
+                      <Lock size={20} color={premiumColors.neonCyan} strokeWidth={2.5} />
                     </View>
                     <TextInput
                       style={styles.input}
-                      placeholder="your.email@example.com"
+                      placeholder="Enter your password"
                       placeholderTextColor={premiumColors.glassWhiteStrong}
-                      value={email}
+                      value={password}
                       onChangeText={(text) => {
-                        setEmail(text);
+                        setPassword(text);
                         setError('');
                       }}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      returnKeyType="next"
-                      autoComplete="email"
+                      onFocus={() => sensory.tap()}
+                      secureTextEntry={!showPassword}
+                      returnKeyType="go"
+                      onSubmitEditing={handleStartHustle}
+                      autoComplete="password"
                     />
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowPassword(!showPassword);
+                        sensory.tap();
+                      }}
+                      style={styles.eyeIcon}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={20} color={premiumColors.glassWhiteStrong} strokeWidth={2.5} />
+                      ) : (
+                        <Eye size={20} color={premiumColors.glassWhiteStrong} strokeWidth={2.5} />
+                      )}
+                    </TouchableOpacity>
                   </View>
                 </BlurView>
               </View>
+            )}
 
-              {email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim()) && (
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Password</Text>
-                  <BlurView intensity={30} tint="dark" style={styles.inputBlur}>
-                    <View style={styles.inputWrapper}>
-                      <View style={styles.inputIconContainer}>
-                        <Lock size={18} color={premiumColors.neonCyan} strokeWidth={2} />
-                      </View>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter your password"
-                        placeholderTextColor={premiumColors.glassWhiteStrong}
-                        value={password}
-                        onChangeText={(text) => {
-                          setPassword(text);
-                          setError('');
-                        }}
-                        secureTextEntry={!showPassword}
-                        returnKeyType="go"
-                        onSubmitEditing={handleStartHustle}
-                        autoComplete="password"
-                      />
-                      <TouchableOpacity
-                        onPress={() => {
-                          setShowPassword(!showPassword);
-                          triggerHaptic('light');
-                        }}
-                        style={styles.eyeIcon}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={18} color={premiumColors.glassWhiteStrong} strokeWidth={2} />
-                        ) : (
-                          <Eye size={18} color={premiumColors.glassWhiteStrong} strokeWidth={2} />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </BlurView>
-                </View>
-              )}
+            {error ? (
+              <Animated.View style={styles.errorContainer}>
+                <BlurView intensity={50} tint="dark" style={styles.errorBlur}>
+                  <Text style={styles.errorText}>⚠️ {error}</Text>
+                </BlurView>
+              </Animated.View>
+            ) : null}
 
-              {error ? (
-                <Animated.View style={styles.errorContainer}>
-                  <BlurView intensity={40} tint="dark" style={styles.errorBlur}>
-                    <Text style={styles.errorText}>⚠️ {error}</Text>
-                  </BlurView>
-                </Animated.View>
-              ) : null}
+            <View style={styles.securityNote}>
+              <Shield size={15} color={premiumColors.neonGreen} strokeWidth={2.5} />
+              <Text style={styles.securityText}>256-bit encrypted - Your data is secure</Text>
+            </View>
 
-              <View style={styles.securityNote}>
-                <Shield size={14} color={premiumColors.neonGreen} strokeWidth={2} />
-                <Text style={styles.securityText}>256-bit encrypted - Your data is secure</Text>
-              </View>
-
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
               <TouchableOpacity
                 style={[styles.button, (!email.trim() || isLoading) && styles.buttonDisabled]}
                 onPress={handleStartHustle}
+                onPressIn={handleButtonPressIn}
+                onPressOut={handleButtonPressOut}
                 disabled={!email.trim() || isLoading}
-                activeOpacity={0.85}
+                activeOpacity={0.95}
               >
                 <LinearGradient
-                  colors={email.trim() && !isLoading ? [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta] : ['#2D2D2D', '#1A1A1A']}
+                  colors={email.trim() && !isLoading ? 
+                    [premiumColors.neonCyan, premiumColors.neonBlue, premiumColors.neonMagenta, premiumColors.neonCyan] : 
+                    ['#2A2A2D', '#1F1F22', '#1A1A1D']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
+                  locations={[0, 0.4, 0.7, 1]}
                   style={styles.buttonGradient}
                 >
-                  {!isLoading && <Sparkles size={22} color={email.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={2.5} />}
+                  {!isLoading && <Sparkles size={24} color={email.trim() ? premiumColors.deepBlack : premiumColors.glassWhiteStrong} strokeWidth={3} />}
                   <Text style={[styles.buttonText, (!email.trim() || isLoading) && styles.buttonTextDisabled]}>
                     {isLoading ? 'Loading...' : 'Start Your Hustle'}
                   </Text>
-                  {!isLoading && email.trim() && <Zap size={22} color={premiumColors.deepBlack} strokeWidth={2.5} fill={premiumColors.deepBlack} />}
+                  {!isLoading && email.trim() && <Zap size={24} color={premiumColors.deepBlack} strokeWidth={3} fill={premiumColors.deepBlack} />}
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
+          </View>
 
-            <View style={styles.footer}>
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>How it works</Text>
-                <View style={styles.dividerLine} />
-              </View>
-              <Text style={styles.infoText}>Enter your email to get started. We will sign you in if you have an account, or guide you through creating one!</Text>
-
-              {(email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim())) ? (
-                <TouchableOpacity
-                  style={styles.forgotPassword}
-                  onPress={() => {
-                    triggerHaptic('light');
-                  }}
-                >
-                  <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-                </TouchableOpacity>
-              ) : null}
+          <View style={styles.footer}>
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>How it works</Text>
+              <View style={styles.dividerLine} />
             </View>
-          </Animated.View>
+            <Text style={styles.infoText}>
+              Enter your email to get started. We will sign you in if you have an account, or guide you through creating one!
+            </Text>
+
+            {(email.trim() && users.find(u => u.email.toLowerCase() === email.toLowerCase().trim())) ? (
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => sensory.tap()}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -353,12 +548,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: premiumColors.deepBlack,
   },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
   particle: {
     position: 'absolute',
-    zIndex: 0,
+    zIndex: 1,
   },
   keyboardView: {
     flex: 1,
+    zIndex: 2,
   },
   content: {
     flex: 1,
@@ -367,33 +567,86 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  iconContainer: {
     marginBottom: spacing.md,
   },
-  iconGradientBg: {
-    width: 100,
-    height: 100,
+  liveStatsContainer: {
+    width: SCREEN_WIDTH,
+    height: 32,
+    marginLeft: -spacing.xl,
+    marginBottom: spacing.xl,
+    overflow: 'hidden',
+  },
+  liveStatsTicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xl,
+  },
+  liveStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: premiumColors.glassDark + '80',
     borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: premiumColors.glassWhite,
+  },
+  liveStatIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+  },
+  liveStatText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: Colors.text,
+    letterSpacing: 0.5,
+  },
+  iconContainer: {
+    marginBottom: spacing.lg,
+    position: 'relative',
+  },
+  iconGlowRing: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    top: -20,
+    left: -20,
+    zIndex: -1,
+  },
+  iconGlowRingInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 70,
+  },
+  iconGradientBg: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
     ...neonGlow.cyan,
-    shadowRadius: 30,
+    shadowRadius: 40,
+    shadowOpacity: 0.8,
   },
   iconBlur: {
-    width: 100,
-    height: 100,
-    borderRadius: borderRadius.full,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   iconGlow: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.full,
-    backgroundColor: premiumColors.glassDark,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: premiumColors.glassDark + 'CC',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -401,19 +654,22 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900' as const,
     color: Colors.text,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
     textAlign: 'center',
-    letterSpacing: -1,
+    letterSpacing: -1.2,
+    textShadowColor: premiumColors.neonCyan + '40',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
   },
   subtitle: {
     fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.medium,
+    fontWeight: typography.weights.semibold,
     color: premiumColors.glassWhiteStrong,
     textAlign: 'center',
     lineHeight: typography.sizes.lg * 1.4,
@@ -422,10 +678,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    backgroundColor: premiumColors.glassDark,
+    paddingVertical: spacing.md + 2,
+    backgroundColor: premiumColors.glassDark + 'CC',
     borderRadius: borderRadius.full,
     borderWidth: 2,
     borderColor: premiumColors.glassWhiteStrong,
@@ -433,90 +689,89 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   statIconBg: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: premiumColors.glassDark,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: premiumColors.glassWhite,
   },
   statText: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.xs + 1,
     fontWeight: typography.weights.bold,
     color: Colors.text,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
   statDivider: {
-    width: 1.5,
-    height: 20,
+    width: 2,
+    height: 22,
     backgroundColor: premiumColors.glassWhiteStrong,
+    borderRadius: 1,
   },
   form: {
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   inputContainer: {
     gap: spacing.sm,
   },
   label: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.sm + 1,
     fontWeight: typography.weights.bold,
     color: Colors.text,
     marginLeft: spacing.sm,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     textTransform: 'uppercase' as const,
   },
   inputBlur: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xl + 2,
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: premiumColors.glassWhiteStrong,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg - 2,
   },
   inputIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: premiumColors.glassDark,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: premiumColors.glassWhite,
   },
   input: {
     flex: 1,
-    fontSize: typography.sizes.lg,
+    fontSize: typography.sizes.lg + 1,
     fontWeight: typography.weights.semibold,
     color: Colors.text,
     paddingVertical: spacing.xs,
   },
   eyeIcon: {
-    padding: spacing.xs,
+    padding: spacing.sm,
   },
   errorContainer: {
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     overflow: 'hidden',
   },
   errorBlur: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg + spacing.sm,
+    paddingVertical: spacing.md + 2,
     borderRadius: borderRadius.xl,
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: '#FF3B3080',
   },
   errorText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.sizes.base + 1,
+    fontWeight: typography.weights.bold,
     color: '#FF6B6B',
     textAlign: 'center',
   },
@@ -524,25 +779,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingVertical: spacing.sm,
   },
   securityText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
     color: premiumColors.glassWhiteStrong,
-  },
-  securityDot: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
-    color: premiumColors.glassWhiteStrong,
-    marginHorizontal: spacing.xs / 2,
+    letterSpacing: 0.3,
   },
   button: {
     borderRadius: borderRadius.full,
     overflow: 'hidden',
     ...neonGlow.cyan,
-    shadowRadius: 25,
+    shadowRadius: 30,
+    shadowOpacity: 1,
     marginTop: spacing.sm,
   },
   buttonDisabled: {
@@ -550,24 +801,28 @@ const styles = StyleSheet.create({
   },
   buttonGradient: {
     flexDirection: 'row',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.xl + 4,
+    paddingHorizontal: spacing.xxxl + spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing.md + 2,
   },
   buttonText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900' as const,
     color: premiumColors.deepBlack,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    textShadowColor: premiumColors.neonCyan + '40',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   buttonTextDisabled: {
     color: premiumColors.glassWhiteStrong,
+    textShadowColor: 'transparent',
   },
   footer: {
-    gap: spacing.md,
-    paddingTop: spacing.md,
+    gap: spacing.md + 2,
+    paddingTop: spacing.lg,
   },
   divider: {
     flexDirection: 'row',
@@ -576,52 +831,33 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 1,
+    height: 1.5,
     backgroundColor: premiumColors.glassWhite,
   },
   dividerText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.sizes.sm + 1,
+    fontWeight: typography.weights.bold,
     color: premiumColors.glassWhiteStrong,
-    letterSpacing: 0.3,
-  },
-  secondaryButton: {
-    borderRadius: borderRadius.full,
-    overflow: 'hidden',
-    ...neonGlow.cyan,
-    shadowRadius: 30,
-    shadowOpacity: 0.8,
-  },
-  secondaryButtonGradient: {
-    flexDirection: 'row',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.xxxl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-  },
-  secondaryButtonText: {
-    fontSize: 20,
-    fontWeight: '900' as const,
-    color: premiumColors.deepBlack,
     letterSpacing: 0.5,
   },
   forgotPassword: {
     alignSelf: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
   },
   forgotPasswordText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.sizes.sm + 1,
+    fontWeight: typography.weights.bold,
     color: premiumColors.neonCyan,
     textDecorationLine: 'underline' as const,
+    letterSpacing: 0.3,
   },
   infoText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.sm + 1,
     fontWeight: typography.weights.medium,
     color: premiumColors.glassWhiteStrong,
     textAlign: 'center',
-    lineHeight: typography.sizes.sm * 1.5,
+    lineHeight: typography.sizes.sm * 1.6,
     paddingHorizontal: spacing.lg,
+    letterSpacing: 0.2,
   },
 });
