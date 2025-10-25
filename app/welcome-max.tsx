@@ -554,16 +554,35 @@ export default function WelcomeMaxScreen() {
                 },
               ]}
             />
-            <View style={styles.logoInner}>
-              <View style={styles.logoZapContainer}>
-                <View style={styles.logoZapGlow2}>
-                  <Zap size={92} color={premiumColors.neonMagenta} strokeWidth={1} fill="transparent" />
+            <LinearGradient
+              colors={[
+                premiumColors.neonCyan + '40',
+                premiumColors.neonMagenta + '20',
+                premiumColors.neonBlue + '30',
+              ]}
+              style={[styles.logoInner, { position: 'absolute' }]}
+            />
+            <View style={[styles.logoInner, { backgroundColor: 'transparent' }]}>
+              <BlurView intensity={40} tint="dark" style={styles.logoInner}>
+                <View style={styles.logoZapContainer}>
+                  <View style={styles.logoZapGlow2}>
+                    <Zap size={100} color={premiumColors.neonMagenta} strokeWidth={2} fill="transparent" />
+                  </View>
+                  <View style={styles.logoZapGlow1}>
+                    <Zap size={94} color={premiumColors.neonCyan} strokeWidth={3} fill={premiumColors.neonCyan + '80'} />
+                  </View>
+                  <LinearGradient
+                    colors={[
+                      '#FFFFFF',
+                      premiumColors.neonCyan,
+                      '#FFFFFF',
+                    ]}
+                    style={{ position: 'absolute' }}
+                  >
+                    <Zap size={88} color="#FFFFFF" strokeWidth={4} fill="#FFFFFF" />
+                  </LinearGradient>
                 </View>
-                <View style={styles.logoZapGlow1}>
-                  <Zap size={86} color={premiumColors.neonCyan} strokeWidth={2} fill={premiumColors.neonCyan} />
-                </View>
-                <Zap size={80} color="#FFFFFF" strokeWidth={3} fill="#FFFFFF" />
-              </View>
+              </BlurView>
             </View>
           </View>
         </Animated.View>
@@ -713,45 +732,58 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   logo3D: {
-    width: 160,
-    height: 160,
+    width: 180,
+    height: 180,
     position: 'relative',
   },
   logoInner: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(10, 10, 20, 0.8)',
-    borderWidth: 3,
+    backgroundColor: 'rgba(5, 5, 15, 0.95)',
+    borderWidth: 4,
     borderColor: premiumColors.neonCyan,
     zIndex: 2,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 30,
+    shadowOpacity: 0.8,
+    elevation: 30,
   },
   logoZapContainer: {
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 100,
-    height: 100,
+    width: 110,
+    height: 110,
   },
   logoZapGlow1: {
     position: 'absolute',
-    top: -3,
-    left: -3,
-    opacity: 0.5,
+    top: -5,
+    left: -5,
+    opacity: 0.7,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 20,
+    shadowOpacity: 1,
   },
   logoZapGlow2: {
     position: 'absolute',
-    top: -6,
-    left: -6,
-    opacity: 0.3,
+    top: -10,
+    left: -10,
+    opacity: 0.4,
+    shadowColor: premiumColors.neonMagenta,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 30,
+    shadowOpacity: 1,
   },
   logoGlowBackground: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     backgroundColor: premiumColors.neonCyan,
     shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
