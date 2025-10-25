@@ -169,7 +169,15 @@ export default function WelcomeMaxScreen() {
             >
               <View style={styles.logoInner}>
                 <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                  <Zap size={100} color="#FFFFFF" strokeWidth={4} fill={premiumColors.neonCyan + '40'} />
+                  <View style={styles.boltGlowContainer}>
+                    <View style={styles.boltGlow} />
+                    <Zap 
+                      size={84} 
+                      color={premiumColors.neonCyan} 
+                      strokeWidth={2.5} 
+                      fill="#FFFFFF"
+                    />
+                  </View>
                 </Animated.View>
               </View>
             </LinearGradient>
@@ -179,9 +187,9 @@ export default function WelcomeMaxScreen() {
         <View style={styles.titleContainer}>
           <LinearGradient
             colors={[
-              premiumColors.neonCyan,
-              '#FFFFFF',
-              premiumColors.neonMagenta,
+              '#40E0D0',
+              '#90E0EF',
+              '#C77DFF',
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -314,7 +322,7 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 48,
     fontWeight: '900' as const,
-    color: '#000000',
+    color: 'rgba(0, 0, 0, 0.85)',
     letterSpacing: 4,
     textAlign: 'center',
   },
@@ -379,13 +387,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.lg + 2,
+    paddingVertical: spacing.lg + 4,
     paddingHorizontal: spacing.xxl,
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '900' as const,
-    color: '#000000',
-    letterSpacing: 0.5,
+    color: 'rgba(0, 0, 0, 0.95)',
+    letterSpacing: 0.8,
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 1,
+  },
+  boltGlowContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  boltGlow: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: premiumColors.neonCyan,
+    opacity: 0.15,
   },
 });
