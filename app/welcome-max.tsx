@@ -542,18 +542,24 @@ export default function WelcomeMaxScreen() {
           ]}
         >
           <View style={styles.logo3D}>
-            <LinearGradient
-              colors={[
-                premiumColors.neonCyan,
-                premiumColors.neonBlue,
-                premiumColors.neonMagenta,
-              ]}
-              style={styles.logoInner}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Zap size={80} color="#000000" strokeWidth={3} fill="#000000" />
-            </LinearGradient>
+            <View style={styles.logoInner}>
+              <LinearGradient
+                colors={[
+                  premiumColors.neonCyan,
+                  premiumColors.neonBlue,
+                  premiumColors.neonMagenta,
+                ]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={styles.logoZapContainer}>
+                <Zap size={80} color="#FFFFFF" strokeWidth={3} fill="#FFFFFF" />
+                <View style={styles.logoZapGlow}>
+                  <Zap size={80} color={premiumColors.neonCyan} strokeWidth={3} fill={premiumColors.neonCyan} />
+                </View>
+              </View>
+            </View>
             
             <Animated.View
               style={[
@@ -724,6 +730,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 4,
     borderColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  logoZapContainer: {
+    zIndex: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoZapGlow: {
+    position: 'absolute',
+    opacity: 0.5,
+    transform: [{ scale: 1.2 }],
   },
   logoGlow: {
     position: 'absolute',
