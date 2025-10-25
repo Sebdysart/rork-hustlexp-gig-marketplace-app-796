@@ -184,25 +184,96 @@ export interface SquadSuggestionResponse {
   projectTimeline: string;
 }
 
+interface RequestQueueItem {
+  endpoint: string;
+  method: 'GET' | 'POST' | 'PATCH';
+  body?: any;
+  resolve: (value: any) => void;
+  reject: (error: any) => void;
+  timestamp: number;
+  retryCount: number;
+}
+
 class HustleAIClient {
   private baseURL: string;
+  private requestQueue: RequestQueueItem[] = [];
+  private isProcessingQueue = false;
+  private requestCache: Map<string, { data: any; timestamp: number }> = new Map();
+  private lastRequestTime = 0;
+  private minRequestInterval = 1000; // Minimum 1 second between requests
+  private maxRetries = 3;
+  private rateLimitResetTime = 0;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
     console.log('[HUSTLEAI] Client initialized with base URL:', this.baseURL);
   }
 
+  private getCacheKey(endpoint: string, method: string, body?: any): string {
+    return `${method}:${endpoint}:${body ? JSON.stringify(body) : ''}`;
+  }
+
+  private getFromCache(key: string, maxAge: number = 30000): any | null {
+    const cached = this.requestCache.get(key);
+    if (cached && Date.now() - cached.timestamp < maxAge) {
+      console.log('[HUSTLEAI] Using cached response');
+      return cached.data;
+    }
+    return null;
+  }
+
+  private setCache(key: string, data: any): void {
+    this.requestCache.set(key, { data, timestamp: Date.now() });
+    
+    // Clear old cache entries
+    if (this.requestCache.size > 50) {
+      const oldestKey = Array.from(this.requestCache.keys())[0];
+      this.requestCache.delete(oldestKey);
+    }
+  }
+
+  private async waitForRateLimit(): Promise<void> {
+    const now = Date.now();
+    
+    // If we're in a rate limit period, wait
+    if (now < this.rateLimitResetTime) {
+      const waitTime = this.rateLimitResetTime - now;
+      console.log(`[HUSTLEAI] Rate limited. Waiting ${Math.ceil(waitTime / 1000)}s`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    // Ensure minimum interval between requests
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    this.lastRequestTime = Date.now();
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     method: 'GET' | 'POST' | 'PATCH' = 'GET',
-    body?: any
+    body?: any,
+    useCache: boolean = true
   ): Promise<T> {
+    // Check cache first for GET requests
+    if (method === 'GET' && useCache) {
+      const cacheKey = this.getCacheKey(endpoint, method, body);
+      const cached = this.getFromCache(cacheKey);
+      if (cached) return cached;
+    }
+
+    // Wait for rate limit
+    await this.waitForRateLimit();
+
     const url = `${this.baseURL}${endpoint}`;
     console.log(`[HUSTLEAI] ${method} ${url}`);
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const options: RequestInit = {
         method,
@@ -220,24 +291,45 @@ class HustleAIClient {
       const response = await fetch(url, options);
       clearTimeout(timeoutId);
 
+      if (response.status === 429) {
+        // Handle rate limit
+        const errorData = await response.json().catch(() => ({}));
+        const retryAfter = errorData.retryAfter || 60;
+        
+        console.warn(`[HUSTLEAI] Rate limit hit. Retry after ${retryAfter}s`);
+        this.rateLimitResetTime = Date.now() + (retryAfter * 1000);
+        
+        throw new Error(
+          `Rate limit exceeded. Please wait ${retryAfter} seconds before trying again.`
+        );
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[HUSTLEAI] Error ${response.status}:`, errorText);
-        throw new Error(`API request failed: ${response.status} ${errorText}`);
+        throw new Error(`API request failed: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('[HUSTLEAI] Response received');
+      
+      // Cache GET requests
+      if (method === 'GET' && useCache) {
+        const cacheKey = this.getCacheKey(endpoint, method, body);
+        this.setCache(cacheKey, data);
+      }
+      
       return data;
     } catch (error) {
-      console.warn('[HUSTLEAI] Backend unavailable, using mock response');
-      
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error('Request timeout - backend not responding');
         }
+        if (error.message.includes('Rate limit')) {
+          throw error; // Re-throw rate limit errors
+        }
         if (error.message.includes('Failed to fetch')) {
-          console.warn('[HUSTLEAI] Replit backend not reachable - ensure it is published and running');
+          console.warn('[HUSTLEAI] Backend not reachable');
           throw new Error('Backend unavailable');
         }
       }
@@ -256,8 +348,16 @@ class HustleAIClient {
       return await this.makeRequest<ChatResponse>('/agent/chat', 'POST', {
         userId,
         message,
-      });
-    } catch (error) {
+      }, false); // Don't cache chat responses
+    } catch (error: any) {
+      if (error?.message?.includes('Rate limit')) {
+        console.warn('[HUSTLEAI] Rate limited, using mock response');
+        return {
+          response: "I'm getting a lot of requests right now! Let me help you with a quick response. What would you like to do?",
+          suggestions: ['Find tasks', 'Post a task', 'Check my profile'],
+          confidence: 60,
+        };
+      }
       console.warn('[HUSTLEAI] Falling back to mock chat response');
       return this.mockChat(message);
     }
@@ -294,7 +394,7 @@ class HustleAIClient {
       const response = await this.makeRequest<any>('/tasks/parse', 'POST', {
         userId,
         input,
-      });
+      }, false); // Don't cache task parsing
       
       if (response.success && response.task) {
         return {
@@ -314,8 +414,12 @@ class HustleAIClient {
       }
       
       return response as TaskParseResponse;
-    } catch (error) {
-      console.warn('[HUSTLEAI] Falling back to mock task parsing');
+    } catch (error: any) {
+      if (error?.message?.includes('Rate limit')) {
+        console.warn('[HUSTLEAI] Rate limited, using smart parsing');
+      } else {
+        console.warn('[HUSTLEAI] Falling back to mock task parsing');
+      }
       return this.mockParseTask(input);
     }
   }
