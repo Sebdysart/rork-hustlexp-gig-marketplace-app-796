@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 export const API_URL = Constants.expoConfig?.extra?.apiUrl || 
   process.env.EXPO_PUBLIC_API_URL || 
-  'https://your-backend-url.com/api';
+  'https://LunchGarden.dycejr.repl.co/api';
 
 export const WS_URL = API_URL.replace('http', 'ws').replace('/api', '');
 
