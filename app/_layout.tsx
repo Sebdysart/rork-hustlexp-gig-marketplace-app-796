@@ -22,13 +22,44 @@ import Colors from "@/constants/colors";
 import '@/utils/errorDebugger';
 import { installSimpleTextNodeFix } from '@/utils/simpleTextNodeFix';
 import { installTextNodeProtection } from '@/utils/textNodeProtection';
+import { installFinalTextNodeFix } from '@/utils/finalTextNodeFix';
+import { ErrorUtils } from 'react-native';
+
+// Install all layers of text node protection
+console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('🛑 Installing Text Node Protection');
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
 if (__DEV__) {
   installSimpleTextNodeFix();
 }
-
-// Install runtime text node protection
 installTextNodeProtection();
+installFinalTextNodeFix();
+
+console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('✅ Text Node Protection ACTIVE');
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+// Global error handler for text node errors
+const originalErrorHandler = ErrorUtils.getGlobalHandler();
+ErrorUtils.setGlobalHandler((error, isFatal) => {
+  if (error.message && (error.message.includes('text node') || error.message.includes('child of a <View>'))) {
+    console.error('\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('🚨 GLOBAL TEXT NODE ERROR CAUGHT');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Is Fatal:', isFatal);
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n');
+    
+    // Don't propagate text node errors in production - just log them
+    if (!__DEV__ && !isFatal) {
+      return;
+    }
+  }
+  
+  originalErrorHandler(error, isFatal);
+});
 
 SplashScreen.preventAutoHideAsync();
 
