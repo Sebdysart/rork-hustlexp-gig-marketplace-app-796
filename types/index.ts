@@ -3,7 +3,51 @@ export type UserMode = 'everyday' | 'tradesmen' | 'business';
 
 export type TaskStatus = 'open' | 'in_progress' | 'completed' | 'cancelled';
 
-export type TaskCategory = 'cleaning' | 'errands' | 'delivery' | 'moving' | 'handyman' | 'tech' | 'creative' | 'other' | 'home_repair' | 'babysitting' | 'pet_care' | 'tutoring' | 'nursing' | 'virtual' | 'ai_automation';
+export type TaskCategory = 
+  | 'cleaning'
+  | 'errands'
+  | 'delivery'
+  | 'moving'
+  | 'handyman'
+  | 'tech'
+  | 'creative'
+  | 'other'
+  | 'home_repair'
+  | 'babysitting'
+  | 'pet_care'
+  | 'tutoring'
+  | 'nursing'
+  | 'virtual'
+  | 'ai_automation'
+  | 'photography'
+  | 'data_entry'
+  | 'virtual_assistant'
+  | 'content_creation'
+  | 'electrical'
+  | 'plumbing'
+  | 'hvac'
+  | 'carpentry'
+  | 'painting'
+  | 'landscaping'
+  | 'roofing'
+  | 'lawn_care'
+  | 'grocery_shopping'
+  | 'furniture_assembly'
+  | 'car_wash'
+  | 'event_help'
+  | 'packing'
+  | 'organizing'
+  | 'tech_support'
+  | 'meal_prep'
+  | 'laundry'
+  | 'graphic_design'
+  | 'video_editing'
+  | 'music_lessons'
+  | 'fitness_training'
+  | 'massage'
+  | 'hair_styling'
+  | 'makeup'
+  | 'tailoring';
 
 export type PayType = 'fixed' | 'hourly';
 
