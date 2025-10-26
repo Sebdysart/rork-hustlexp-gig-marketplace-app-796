@@ -1560,62 +1560,160 @@ export default function AIOnboardingScreen() {
           { label: 'Week 4', value: potentialEarnings.weekly.max },
         ];
 
+        const hourlyRate = Math.round(potentialEarnings.weekly.max / 20);
+        const monthlyMax = potentialEarnings.monthly.max;
+        const yearlyPotential = monthlyMax * 12;
+
         return (
           <View key={index} style={styles.earningsPreview}>
-            <BlurView intensity={60} tint="dark" style={styles.earningsBlur}>
-              <View style={styles.earningsContent}>
-                <View style={styles.skillsList}>
-                  {skills.map((skill: string, idx: number) => (
-                    <View key={idx} style={styles.skillTag}>
-                      <Check size={14} color={premiumColors.neonGreen} />
-                      <Text style={styles.skillTagText}>{skill}</Text>
-                    </View>
-                  ))}
-                </View>
+            <BlurView intensity={70} tint="dark" style={styles.earningsBlur}>
+              <LinearGradient
+                colors={[
+                  premiumColors.neonGreen + '30',
+                  premiumColors.neonCyan + '20',
+                  'transparent'
+                ]}
+                style={styles.earningsGradientBg}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.earningsContent}>
+                  {/* Header with sparkle effect */}
+                  <View style={styles.earningsHeader}>
+                    <Animated.View
+                      style={[styles.sparkleIcon, {
+                        transform: [{
+                          rotate: chartBarAnims[0].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '360deg'],
+                          })
+                        }]
+                      }]}
+                    >
+                      <Sparkles size={24} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                    </Animated.View>
+                    <Text style={styles.earningsHeaderTitle}>Your Earning Potential</Text>
+                    <Animated.View
+                      style={[styles.sparkleIcon, {
+                        transform: [{
+                          rotate: chartBarAnims[1].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['360deg', '0deg'],
+                          })
+                        }]
+                      }]}
+                    >
+                      <Sparkles size={24} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                    </Animated.View>
+                  </View>
 
-                <View style={styles.earningsDivider} />
+                  {/* Skills with checkmarks */}
+                  <View style={styles.skillsList}>
+                    {skills.map((skill: string, idx: number) => (
+                      <View key={idx} style={styles.skillTag}>
+                        <Check size={14} color={premiumColors.neonGreen} />
+                        <Text style={styles.skillTagText}>{skill}</Text>
+                      </View>
+                    ))}
+                  </View>
 
-                <View style={styles.earningsSection}>
-                  <TrendingUp size={20} color={premiumColors.neonGreen} />
-                  <Text style={styles.earningsTitle}>Your Growth Potential:</Text>
-                </View>
+                  <View style={styles.earningsDivider} />
 
-                <View style={styles.earningsChart}>
-                  {weeklyEarnings.map((week, idx) => (
-                    <View key={idx} style={styles.chartColumn}>
-                      <Animated.View
-                        style={[
-                          styles.chartBar,
-                          {
-                            height: chartBarAnims[idx].interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [0, (week.value / potentialEarnings.weekly.max) * 100],
-                            }),
-                          },
-                        ]}
+                  {/* BIG NUMBER - Monthly Potential */}
+                  <View style={styles.bigEarningsContainer}>
+                    <Text style={styles.bigEarningsLabel}>Monthly Potential</Text>
+                    <Animated.View
+                      style={{
+                        transform: [{
+                          scale: chartBarAnims[0].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.8, 1],
+                          })
+                        }]
+                      }}
+                    >
+                      <LinearGradient
+                        colors={[premiumColors.neonGreen, premiumColors.neonCyan, premiumColors.neonAmber]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.bigEarningsValueContainer}
                       >
-                        <LinearGradient
-                          colors={[premiumColors.neonGreen, premiumColors.neonCyan]}
-                          style={StyleSheet.absoluteFill}
-                        />
-                      </Animated.View>
-                      <Text style={styles.chartLabel}>{week.label}</Text>
-                      <Text style={styles.chartValue}>${week.value}</Text>
+                        <Text style={styles.bigEarningsValue}>
+                          ${potentialEarnings.monthly.min.toLocaleString()}-${potentialEarnings.monthly.max.toLocaleString()}
+                        </Text>
+                      </LinearGradient>
+                    </Animated.View>
+                    <Text style={styles.bigEarningsSubtext}>
+                      💰 ~${hourlyRate}/hr • 📈 ${yearlyPotential.toLocaleString()}/year potential
+                    </Text>
+                  </View>
+
+                  {/* Animated Growth Chart */}
+                  <View style={styles.earningsSection}>
+                    <TrendingUp size={20} color={premiumColors.neonGreen} />
+                    <Text style={styles.earningsTitle}>Your 30-Day Trajectory:</Text>
+                  </View>
+
+                  <View style={styles.earningsChart}>
+                    {weeklyEarnings.map((week, idx) => (
+                      <View key={idx} style={styles.chartColumn}>
+                        <Animated.View
+                          style={[
+                            styles.chartBar,
+                            {
+                              height: chartBarAnims[idx].interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, (week.value / potentialEarnings.weekly.max) * 100],
+                              }),
+                            },
+                          ]}
+                        >
+                          <LinearGradient
+                            colors={[premiumColors.neonGreen, premiumColors.neonCyan]}
+                            style={StyleSheet.absoluteFill}
+                          />
+                        </Animated.View>
+                        <Text style={styles.chartLabel}>{week.label}</Text>
+                        <Text style={styles.chartValue}>${week.value}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Value Props */}
+                  <View style={styles.earningsValueProps}>
+                    <View style={styles.valuePropRow}>
+                      <View style={styles.valuePropIcon}>
+                        <Zap size={16} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                      </View>
+                      <Text style={styles.valuePropText}>Get paid instantly after tasks</Text>
                     </View>
-                  ))}
-                </View>
+                    <View style={styles.valuePropRow}>
+                      <View style={styles.valuePropIcon}>
+                        <Star size={16} color={premiumColors.neonAmber} fill={premiumColors.neonAmber} />
+                      </View>
+                      <Text style={styles.valuePropText}>Earn bonuses as you level up</Text>
+                    </View>
+                    <View style={styles.valuePropRow}>
+                      <View style={styles.valuePropIcon}>
+                        <TrendingUp size={16} color={premiumColors.neonGreen} />
+                      </View>
+                      <Text style={styles.valuePropText}>Top hustlers earn 3x average</Text>
+                    </View>
+                  </View>
 
-                <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>Monthly Potential:</Text>
-                  <Text style={styles.earningsValue}>
-                    ${potentialEarnings.monthly.min.toLocaleString()}-${potentialEarnings.monthly.max.toLocaleString()}
-                  </Text>
+                  {/* Footer note with animation */}
+                  <Animated.View
+                    style={[styles.earningsFooter, {
+                      opacity: chartBarAnims[3],
+                    }]}
+                  >
+                    <Rocket size={18} color={premiumColors.neonMagenta} />
+                    <Text style={styles.earningsNote}>
+                      As you build trust and level up, your earning potential grows!
+                    </Text>
+                  </Animated.View>
                 </View>
-
-                <Text style={styles.earningsNote}>
-                  📈 As you level up and build trust!
-                </Text>
-              </View>
+              </LinearGradient>
             </BlurView>
           </View>
         );
@@ -2433,15 +2531,108 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: borderRadius.xxl,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: premiumColors.neonGreen + '60',
+    borderWidth: 3,
+    borderColor: premiumColors.neonGreen,
     ...neonGlow.green,
+    shadowRadius: 30,
+    shadowOpacity: 1,
   },
   earningsBlur: {
+    borderRadius: borderRadius.xxl,
+    overflow: 'hidden',
+  },
+  earningsGradientBg: {
     borderRadius: borderRadius.xxl,
   },
   earningsContent: {
     padding: spacing.xl,
+  },
+  earningsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  earningsHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '900' as const,
+    color: Colors.text,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  sparkleIcon: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bigEarningsContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    gap: spacing.sm,
+  },
+  bigEarningsLabel: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: premiumColors.glassWhiteStrong,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
+  },
+  bigEarningsValueContainer: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.xl,
+  },
+  bigEarningsValue: {
+    fontSize: 32,
+    fontWeight: '900' as const,
+    color: premiumColors.deepBlack,
+    letterSpacing: -1,
+    textAlign: 'center',
+  },
+  bigEarningsSubtext: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: premiumColors.neonAmber,
+    textAlign: 'center',
+  },
+  earningsValueProps: {
+    marginTop: spacing.xl,
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  valuePropRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  valuePropIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: premiumColors.glassDark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: premiumColors.neonAmber + '60',
+  },
+  valuePropText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    lineHeight: 20,
+  },
+  earningsFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: premiumColors.glassWhiteStrong,
   },
   skillsList: {
     flexDirection: 'row',
@@ -2528,11 +2719,12 @@ const styles = StyleSheet.create({
     color: premiumColors.neonGreen,
   },
   earningsNote: {
+    flex: 1,
     fontSize: 13,
-    fontWeight: '600' as const,
-    color: premiumColors.glassWhiteStrong,
-    marginTop: spacing.md,
+    fontWeight: '700' as const,
+    color: premiumColors.neonMagenta,
     textAlign: 'center',
+    lineHeight: 18,
   },
   availabilityPicker: {
     width: '100%',
