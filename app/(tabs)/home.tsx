@@ -752,7 +752,7 @@ export default function HomeScreen() {
             style={styles.aiCoachBanner}
             onPress={() => {
               triggerHaptic('medium');
-              router.push('/ai-coach');
+              router.push('/max-potential-ai');
             }}
             activeOpacity={0.9}
           >
@@ -766,8 +766,8 @@ export default function HomeScreen() {
                 <View style={styles.aiCoachContent}>
                   <Brain size={32} color={premiumColors.neonViolet} />
                   <View style={styles.aiCoachText}>
-                    <Text style={styles.aiCoachTitle}>{t[32]}</Text>
-                    <Text style={styles.aiCoachSubtitle}>{t[33]}</Text>
+                    <Text style={styles.aiCoachTitle}>MAX POTENTIAL AI</Text>
+                    <Text style={styles.aiCoachSubtitle}>Your AI assistant for everything</Text>
                   </View>
                   <Sparkles size={24} color={premiumColors.neonCyan} />
                 </View>
