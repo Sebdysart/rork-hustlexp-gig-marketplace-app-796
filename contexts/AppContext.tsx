@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Task, Message, UserRole, UserMode, Rating, Report, Purchase, PowerUp, ActivePowerUp, UnlockedFeature, RoleStats, ModeStats } from '@/types';
 import { SEED_USERS, SEED_TASKS } from '@/mocks/seedData';
 import { calculateLevel } from '@/utils/gamification';
+import { generateGamertag } from '@/utils/gamertagGenerator';
 import { checkDailyStreak, updateUserStreak } from '@/utils/dailyStreak';
 import { GRIT_REWARDS } from '@/constants/economy';
 import { useNotifications } from './NotificationContext';
@@ -132,6 +133,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
       password: password || 'password123',
       role,
       name,
+      gamertag: generateGamertag(),
+      gamertagGeneratedAt: new Date().toISOString(),
       location,
       bio: 'Ready to hustle! 💪',
       profilePic: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,

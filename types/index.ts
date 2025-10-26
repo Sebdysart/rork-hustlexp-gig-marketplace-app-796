@@ -77,6 +77,8 @@ export interface User {
   password: string;
   role: UserRole;
   name: string;
+  gamertag?: string;
+  gamertagGeneratedAt?: string;
   location: {
     lat: number;
     lng: number;
@@ -91,7 +93,17 @@ export interface User {
   showcasedBadges?: string[];
   genreTasksCompleted?: Record<string, number>;
   showcasedTrophies?: string[];
+  achievements?: string[];
   tasksCompleted: number;
+  speedAccepts?: number;
+  maxTasksInDay?: number;
+  fastResponseStreak?: number;
+  perfectReviewStreak?: number;
+  highTrustDays?: number;
+  disputes?: number;
+  categoryLeaderDays?: number;
+  lifetimeGritCoins?: number;
+  rankOneDays?: number;
   earnings: number;
   reputationScore: number;
   streaks: {
