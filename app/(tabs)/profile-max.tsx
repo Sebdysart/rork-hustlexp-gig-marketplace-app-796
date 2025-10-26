@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Shield, Sparkles, TrendingUp, Eye, Target, ChevronRight, Zap, Crown, Brain, Lock, Award } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import { getTierForLevel } from '@/constants/ascensionTiers';
+import { getTierForLevel, getNextTier } from '@/constants/ascensionTiers';
 import { getAllCategoryBadges } from '@/constants/categoryBadges';
 import { getUnlockedAchievements } from '@/constants/achievements';
 import { premiumColors } from '@/constants/designTokens';
@@ -54,6 +54,7 @@ export default function MaxPotentialProfileScreen() {
   if (!currentUser) return null;
 
   const tier = getTierForLevel(currentUser.level);
+  const nextTier = getNextTier(currentUser.level);
   const categoryBadges = getAllCategoryBadges(currentUser.genreTasksCompleted || {});
   const achievements = getUnlockedAchievements(currentUser);
   const legendaryCount = categoryBadges.filter(b => b?.currentTier?.tier === 'legendary').length;
@@ -161,7 +162,7 @@ export default function MaxPotentialProfileScreen() {
 
                 <View style={styles.progressSection}>
                   <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>Progress to {tier.nextTier || 'Prestige'}</Text>
+                    <Text style={styles.progressLabel}>Progress to {nextTier?.name || 'Max Level'}</Text>
                     <Text style={styles.progressPercent}>{progressPercent.toFixed(0)}%</Text>
                   </View>
                   <View style={styles.progressBarContainer}>
