@@ -425,6 +425,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 16,
     marginBottom: 4,
+    flexShrink: 1,
   },
   messageBubbleLeft: {
     backgroundColor: Colors.card,
@@ -438,6 +439,7 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 20,
+    flexWrap: 'wrap' as const,
   },
   messageTextLeft: {
     color: Colors.text,
