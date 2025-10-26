@@ -265,8 +265,7 @@ function RoleCard3D({ role, onSelect, flipAnim, index }: { role: RoleData; onSel
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={[styles.roleCardButtonText, { color: role.color }]}>SELECT</Text>
-                <Zap size={12} color={role.color} fill={role.color} />
+                <Text style={[styles.roleCardButtonText, { color: role.color }]}>Choose This</Text>
               </LinearGradient>
             </View>
           </LinearGradient>
@@ -1888,18 +1887,20 @@ export default function AIOnboardingScreen() {
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
-            <Sparkles size={24} color={premiumColors.neonCyan} fill={premiumColors.neonCyan} />
-            <Text style={styles.headerTitle}>HustleXP AI Coach</Text>
-            <Animated.View style={{
-              transform: [{
-                rotate: hologramAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0deg', '360deg'],
-                })
-              }]
-            }}>
-              <Rocket size={20} color={premiumColors.neonAmber} />
-            </Animated.View>
+            <View style={styles.logoIconWrapper}>
+              <LinearGradient
+                colors={[premiumColors.neonCyan, premiumColors.neonViolet]}
+                style={styles.logoIconBg}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Zap size={20} color={Colors.background} fill={Colors.background} />
+              </LinearGradient>
+            </View>
+            <Text style={styles.headerTitle}>HustleXP</Text>
+            <View style={styles.aiCoachBadge}>
+              <Text style={styles.aiCoachText}>AI COACH</Text>
+            </View>
           </View>
           <TouchableOpacity
             style={styles.helpButton}
@@ -2122,10 +2123,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  logoIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...neonGlow.subtle,
+  },
+  logoIconBg: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800' as const,
     color: Colors.text,
+  },
+  aiCoachBadge: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    backgroundColor: premiumColors.neonCyan + '20',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '40',
+  },
+  aiCoachText: {
+    fontSize: 10,
+    fontWeight: '800' as const,
+    color: premiumColors.neonCyan,
+    letterSpacing: 0.5,
   },
   helpButton: {
     padding: spacing.xs,
@@ -2324,8 +2352,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   roleCardButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800' as const,
+    letterSpacing: 0.3,
   },
   
   skillChipsContainer: {
