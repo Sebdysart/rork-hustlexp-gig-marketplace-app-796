@@ -38,8 +38,8 @@ export default function HustlerDiscoveryScreen() {
     }
 
     const tier = getTierForLevel(user.level);
-    const tierLevels = { 'side_hustler': 0, 'the_operator': 1, 'rainmaker': 2, 'the_architect': 3, 'prestige': 4 };
-    if (tierLevels[tier.id] < filters.minTier) {
+    const tierLevels: Record<string, number> = { 'side_hustler': 0, 'the_operator': 1, 'rainmaker': 2, 'the_architect': 3, 'prestige': 4 };
+    if ((tierLevels[tier.id] ?? 0) < filters.minTier) {
       return false;
     }
 
@@ -49,7 +49,7 @@ export default function HustlerDiscoveryScreen() {
 
     if (filters.legendaryOnly) {
       const badges = getAllCategoryBadges(user.genreTasksCompleted || {});
-      const hasLegendary = badges.some(b => b.currentTier?.tier === 'legendary');
+      const hasLegendary = badges.some(b => b && b.currentTier && b.currentTier.tier === 'legendary');
       if (!hasLegendary) return false;
     }
 
@@ -214,7 +214,7 @@ function HustlerCard({ user, onPress }: HustlerCardProps) {
   const tier = getTierForLevel(user.level);
   const displayName = user.gamertag || user.name;
   const categoryBadges = getAllCategoryBadges(user.genreTasksCompleted || {});
-  const topBadge = categoryBadges.find(b => b.currentTier?.tier === 'legendary') || categoryBadges[0];
+  const topBadge = categoryBadges.find(b => b && b.currentTier && b.currentTier.tier === 'legendary') || categoryBadges[0];
   const trustScore = user.trustScore?.overall || 0;
   const responseTime = user.responseTime || 0;
   const completionRate = user.tasksCompleted > 0 
