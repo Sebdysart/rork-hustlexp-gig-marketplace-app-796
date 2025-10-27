@@ -5,9 +5,11 @@ import UnifiedProfile from '@/components/UnifiedProfile';
 import Confetti from '@/components/Confetti';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
 import RoleStatsCard from '@/components/RoleStatsCard';
+import AIPerformanceInsights from '@/components/AIPerformanceInsights';
 import { useState, useEffect } from 'react';
 import { Analytics } from '@/utils/analytics';
 import { RoleStats } from '@/types';
+import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const { currentUser, updateUser, myAcceptedTasks, fetchRoleStats } = useApp();
@@ -21,6 +23,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     Analytics.trackEvent({ type: 'page_view', data: { page: 'profile' } });
     loadRoleStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -49,6 +52,16 @@ export default function ProfileScreen() {
     setIsLoadingStats(false);
   };
 
+  const handleInsightAction = (insight: any) => {
+    if (insight.type === 'opportunity' && insight.title.includes('Expand')) {
+      router.push('/(tabs)/tasks');
+    } else if (insight.type === 'weakness' && insight.title.includes('Response')) {
+      router.push('/settings');
+    } else {
+      router.push('/ai-coach');
+    }
+  };
+
   useEffect(() => {
     if (currentUser && currentUser.level > previousLevel) {
       setShowConfetti(true);
@@ -74,7 +87,18 @@ export default function ProfileScreen() {
         isOwnProfile={true}
         onUpdateUser={updateUser}
         myAcceptedTasks={myAcceptedTasks}
-        roleStatsCard={<RoleStatsCard roleStats={roleStats} isLoading={isLoadingStats} />}
+        roleStatsCard={
+          <>
+            <RoleStatsCard roleStats={roleStats} isLoading={isLoadingStats} />
+            {currentUser.tasksCompleted > 0 && (
+              <AIPerformanceInsights
+                user={currentUser}
+                completedTasks={myAcceptedTasks.filter(t => t.status === 'completed')}
+                onActionPress={handleInsightAction}
+              />
+            )}
+          </>
+        }
       />
       {showConfetti && <Confetti />}
       {showLevelUp && (
