@@ -365,7 +365,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     try {
       const translatedMessage = content;
       let aiResponse = await generateAIResponse(translatedMessage);
-      aiResponse = await translateText(aiResponse);
+      aiResponse = await translateText(aiResponse, currentLanguage);
 
       const actions = parseAIActions(aiResponse);
 
@@ -444,7 +444,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   }, [settings]);
 
   const updateContext = useCallback((context: any) => {
-    setCurrentContext((prev: any) => ({ ...prev, ...context }));
+    setCurrentContext(prev => ({ ...prev, ...context }));
   }, []);
 
   return useMemo(() => ({
