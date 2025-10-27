@@ -17,6 +17,7 @@ import TaskBundleSuggestions from '@/components/TaskBundleSuggestions';
 import AIPersonalityCard from '@/components/AIPersonalityCard';
 import EarningsBreakdown from '@/components/EarningsBreakdown';
 import ImpactPreview from '@/components/ImpactPreview';
+import { predictTaskMatches, PredictiveMatch, getPredictionLabel } from '@/utils/aiPredictiveMatching';
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,6 +31,8 @@ export default function TaskDetailScreen() {
   const [showSafetyDetails, setShowSafetyDetails] = useState<boolean>(false);
   const [taskBundles, setTaskBundles] = useState<TaskBundle[]>([]);
   const [viewerCount] = useState<number>(Math.floor(Math.random() * 25) + 5);
+  const [aiMatchPrediction, setAiMatchPrediction] = useState<PredictiveMatch | null>(null);
+  const [showMatchDetails, setShowMatchDetails] = useState<boolean>(false);
   
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -81,6 +84,22 @@ export default function TaskDetailScreen() {
           setTaskBundles(bundles);
         };
         suggestBundles();
+
+        const predictMatch = async () => {
+          const completedTasks = tasks.filter(t => t.workerId === currentUser.id && t.status === 'completed');
+          const acceptedTasks = tasks.filter(t => t.workerId === currentUser.id);
+          const predictions = await predictTaskMatches(
+            [task],
+            currentUser,
+            completedTasks,
+            acceptedTasks,
+            true
+          );
+          if (predictions.length > 0) {
+            setAiMatchPrediction(predictions[0]);
+          }
+        };
+        predictMatch();
       }
     }
   }, [task, tasks, currentUser]);
@@ -235,6 +254,116 @@ export default function TaskDetailScreen() {
 
           <Text style={styles.title}>{task.title}</Text>
           <Text style={styles.description}>{task.description}</Text>
+
+          {aiMatchPrediction && canAccept && (
+            <TouchableOpacity
+              onPress={() => {
+                setShowMatchDetails(!showMatchDetails);
+                triggerHaptic('light');
+              }}
+            >
+              <GlassCard
+                variant="darkStrong"
+                neonBorder
+                glowColor="neonCyan"
+                style={styles.aiMatchCard}
+              >
+                <View style={styles.aiMatchHeader}>
+                  <View style={styles.aiMatchScoreContainer}>
+                    <LinearGradient
+                      colors={[
+                        aiMatchPrediction.score >= 90 ? premiumColors.neonGreen : 
+                        aiMatchPrediction.score >= 80 ? premiumColors.neonCyan :
+                        aiMatchPrediction.score >= 70 ? premiumColors.neonBlue : premiumColors.neonAmber,
+                        aiMatchPrediction.score >= 90 ? premiumColors.neonGreen + '80' : 
+                        aiMatchPrediction.score >= 80 ? premiumColors.neonCyan + '80' :
+                        aiMatchPrediction.score >= 70 ? premiumColors.neonBlue + '80' : premiumColors.neonAmber + '80',
+                      ]}
+                      style={styles.aiMatchScoreBadge}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Zap size={20} color={premiumColors.deepBlack} fill={premiumColors.deepBlack} />
+                      <Text style={styles.aiMatchScoreText}>{aiMatchPrediction.score}%</Text>
+                    </LinearGradient>
+                    <View style={styles.aiMatchLabelContainer}>
+                      <Text style={styles.aiMatchLabel}>AI Match Score</Text>
+                      <Text style={styles.aiMatchSubLabel}>{getPredictionLabel(aiMatchPrediction.score)}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.aiMatchReasoning}>
+                  <Text style={styles.aiMatchReasoningText}>{aiMatchPrediction.reasoning}</Text>
+                </View>
+
+                {showMatchDetails && (
+                  <View style={styles.aiMatchDetails}>
+                    <View style={styles.aiInsightsSection}>
+                      <Text style={styles.aiInsightsTitle}>🤖 AI Insights:</Text>
+                      {aiMatchPrediction.aiInsights.map((insight, index) => (
+                        <View key={index} style={styles.aiInsightItem}>
+                          <View style={styles.aiInsightDot} />
+                          <Text style={styles.aiInsightText}>{insight}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <View style={styles.aiPredictionsGrid}>
+                      <View style={styles.aiPredictionCard}>
+                        <Text style={styles.aiPredictionLabel}>Will Accept</Text>
+                        <Text style={styles.aiPredictionValue}>
+                          {Math.round(aiMatchPrediction.predictions.willAccept * 100)}%
+                        </Text>
+                      </View>
+                      <View style={styles.aiPredictionCard}>
+                        <Text style={styles.aiPredictionLabel}>Will Complete</Text>
+                        <Text style={styles.aiPredictionValue}>
+                          {Math.round(aiMatchPrediction.predictions.willComplete * 100)}%
+                        </Text>
+                      </View>
+                      <View style={styles.aiPredictionCard}>
+                        <Text style={styles.aiPredictionLabel}>Will Enjoy</Text>
+                        <Text style={styles.aiPredictionValue}>
+                          {Math.round(aiMatchPrediction.predictions.willEnjoy * 100)}%
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.aiMetaInfo}>
+                      <View style={styles.aiMetaItem}>
+                        <Text style={styles.aiMetaLabel}>Confidence: </Text>
+                        <Text style={[styles.aiMetaValue, { 
+                          color: aiMatchPrediction.confidence >= 80 ? premiumColors.neonGreen : 
+                                aiMatchPrediction.confidence >= 60 ? premiumColors.neonCyan : premiumColors.neonAmber 
+                        }]}>
+                          {aiMatchPrediction.confidence}%
+                        </Text>
+                      </View>
+                      <View style={styles.aiMetaItem}>
+                        <Text style={styles.aiMetaLabel}>Best Time: </Text>
+                        <Text style={styles.aiMetaValue}>{aiMatchPrediction.bestTimeToOffer}</Text>
+                      </View>
+                      <View style={styles.aiMetaItem}>
+                        <Text style={styles.aiMetaLabel}>Urgency: </Text>
+                        <Text style={[styles.aiMetaValue, {
+                          color: aiMatchPrediction.urgencyLevel === 'critical' ? premiumColors.neonMagenta :
+                                aiMatchPrediction.urgencyLevel === 'high' ? premiumColors.neonOrange :
+                                aiMatchPrediction.urgencyLevel === 'medium' ? premiumColors.neonAmber : premiumColors.neonCyan
+                        }]}>
+                          {aiMatchPrediction.urgencyLevel.toUpperCase()}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                <Text style={styles.aiMatchTapHint}>
+                  {showMatchDetails ? 'Tap to hide AI analysis' : 'Tap to see full AI analysis'}
+                </Text>
+              </GlassCard>
+            </TouchableOpacity>
+          )}
 
           {canAccept && (
             <AIPersonalityCard
@@ -927,6 +1056,144 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: 12,
+    fontStyle: 'italic' as const,
+  },
+  aiMatchCard: {
+    padding: 20,
+    marginBottom: 20,
+    overflow: 'visible',
+  },
+  aiMatchHeader: {
+    marginBottom: 16,
+  },
+  aiMatchScoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  aiMatchScoreBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  aiMatchScoreText: {
+    fontSize: 28,
+    fontWeight: '900' as const,
+    color: premiumColors.deepBlack,
+    letterSpacing: -1,
+  },
+  aiMatchLabelContainer: {
+    flex: 1,
+  },
+  aiMatchLabel: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  aiMatchSubLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: premiumColors.neonCyan,
+  },
+  aiMatchReasoning: {
+    backgroundColor: Colors.card + '60',
+    borderRadius: 12,
+    padding: 14,
+    borderLeftWidth: 3,
+    borderLeftColor: premiumColors.neonCyan,
+  },
+  aiMatchReasoningText: {
+    fontSize: 14,
+    color: Colors.text,
+    lineHeight: 21,
+    fontStyle: 'italic' as const,
+  },
+  aiMatchDetails: {
+    marginTop: 16,
+    gap: 16,
+  },
+  aiInsightsSection: {
+    gap: 10,
+  },
+  aiInsightsTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  aiInsightItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  aiInsightDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: premiumColors.neonCyan,
+    marginTop: 7,
+  },
+  aiInsightText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.text,
+    lineHeight: 20,
+  },
+  aiPredictionsGrid: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  aiPredictionCard: {
+    flex: 1,
+    backgroundColor: Colors.card + '80',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: premiumColors.neonCyan + '20',
+  },
+  aiPredictionLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginBottom: 6,
+    fontWeight: '600' as const,
+  },
+  aiPredictionValue: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: premiumColors.neonCyan,
+  },
+  aiMetaInfo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.card + '80',
+  },
+  aiMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  aiMetaLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+  },
+  aiMetaValue: {
+    fontSize: 12,
+    color: Colors.text,
+    fontWeight: '700' as const,
+  },
+  aiMatchTapHint: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 16,
     fontStyle: 'italic' as const,
   },
 });
