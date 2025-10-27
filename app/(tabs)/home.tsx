@@ -21,6 +21,7 @@ import UnifiedModeSwitcher from '@/components/UnifiedModeSwitcher';
 import FloatingChatIcon from '@/components/FloatingChatIcon';
 import InviteFriendsWidget from '@/components/InviteFriendsWidget';
 import SocialProofBanner from '@/components/SocialProofBanner';
+import { AIPerfectMatches } from '@/components/AIPerfectMatches';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH > 768;
@@ -653,7 +654,19 @@ export default function HomeScreen() {
             </GlassCard>
           </Animated.View>
 
-
+          {isWorker && availableTasks.length > 0 && (
+            <AIPerfectMatches
+              availableTasks={availableTasks}
+              currentUser={currentUser}
+              completedTasks={myTasks.filter(t => t.status === 'completed')}
+              acceptedTasks={myTasks.filter(t => t.status === 'in_progress')}
+              onAccept={(taskId) => {
+                triggerHaptic('success');
+                console.log('Accept task from AI:', taskId);
+                router.push(`/task/${taskId}`);
+              }}
+            />
+          )}
 
           <View 
             style={[styles.statsRow, isTablet && styles.statsRowTablet]}
