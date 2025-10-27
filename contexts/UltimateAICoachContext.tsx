@@ -44,8 +44,30 @@ export interface UserPattern {
 }
 
 export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook(() => {
-  const { currentUser, tasks, availableTasks, myAcceptedTasks } = useApp();
-  const { currentLanguage, translateText } = useLanguage();
+  let currentUser: any = null;
+  let tasks: any[] = [];
+  let availableTasks: any[] = [];
+  let myAcceptedTasks: any[] = [];
+  let currentLanguage = 'en';
+  let translateText = async (text: string) => text;
+
+  try {
+    const appContext = useApp();
+    currentUser = appContext.currentUser;
+    tasks = appContext.tasks;
+    availableTasks = appContext.availableTasks;
+    myAcceptedTasks = appContext.myAcceptedTasks;
+  } catch (error) {
+    console.log('[UltimateAI] AppContext not available yet (guest mode)');
+  }
+
+  try {
+    const langContext = useLanguage();
+    currentLanguage = langContext.currentLanguage;
+    translateText = langContext.translateText;
+  } catch (error) {
+    console.log('[UltimateAI] LanguageContext not available yet');
+  }
   
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<AIMessage[]>([]);
@@ -113,7 +135,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   };
 
   const analyzeUserPatterns = useCallback(async () => {
-    if (!currentUser || !tasks.length) return;
+    if (!currentUser || !tasks || tasks.length === 0) return;
 
     const completedTasks = tasks.filter(t => t.status === 'completed' && t.workerId === currentUser.id);
     
@@ -157,7 +179,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   }, [currentUser, tasks]);
 
   const checkProactiveAlerts = useCallback(async () => {
-    if (!currentUser || !userPatterns) return;
+    if (!currentUser || !userPatterns || !availableTasks) return;
 
     const streakExpiryHours = 24;
     if (currentUser.streaks.lastTaskDate) {
@@ -341,9 +363,9 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     setIsLoading(true);
 
     try {
-      const translatedMessage = await translateText(content, 'en');
+      const translatedMessage = content;
       let aiResponse = await generateAIResponse(translatedMessage);
-      aiResponse = await translateText(aiResponse, currentLanguage);
+      aiResponse = await translateText(aiResponse);
 
       const actions = parseAIActions(aiResponse);
 

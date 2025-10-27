@@ -19,7 +19,7 @@ import { Sparkles, X, Send, Mic, Settings as SettingsIcon, Trash2 } from 'lucide
 import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { COLORS } from '@/constants/designTokens';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -31,6 +31,7 @@ export default function UltimateAICoach() {
   const { isOpen, open, close, messages, isLoading, sendMessage, clearHistory, settings, updateSettings } = useUltimateAICoach();
   const { t } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [inputText, setInputText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -129,6 +130,13 @@ export default function UltimateAICoach() {
     inputRange: [0, 1],
     outputRange: ['rgba(138, 43, 226, 0.3)', 'rgba(138, 43, 226, 0.8)'],
   });
+
+  const hiddenScreens = ['/', '/index', '/welcome', '/onboarding', '/ai-onboarding', '/sign-in'];
+  const shouldHide = hiddenScreens.includes(pathname);
+
+  if (shouldHide) {
+    return null;
+  }
 
   return (
     <>
