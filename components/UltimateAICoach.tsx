@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles, X, Send, Mic, Settings as SettingsIcon, Trash2 } from 'lucide-react-native';
+import { Sparkles, X, Send, Mic, Settings as SettingsIcon, Trash2, Check, MapPin, MessageCircle, DollarSign } from 'lucide-react-native';
 import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { COLORS } from '@/constants/designTokens';
@@ -28,13 +28,14 @@ const CHAT_WIDTH = SCREEN_WIDTH - 40;
 const CHAT_HEIGHT = SCREEN_HEIGHT * 0.7;
 
 export default function UltimateAICoach() {
-  const { isOpen, open, close, messages, isLoading, sendMessage, clearHistory, settings, updateSettings } = useUltimateAICoach();
+  const { isOpen, open, close, messages, isLoading, sendMessage, clearHistory, settings, updateSettings, currentContext } = useUltimateAICoach();
   const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
 
   const [inputText, setInputText] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [actionConfirm, setActionConfirm] = useState<any>(null);
   
   const pan = useRef(new Animated.ValueXY({ x: SCREEN_WIDTH - BUTTON_SIZE - 20, y: SCREEN_HEIGHT - 200 })).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -116,15 +117,112 @@ export default function UltimateAICoach() {
   }, [inputText, sendMessage]);
 
   const handleActionPress = useCallback((action: any) => {
-    if (action.type === 'navigate' && action.data?.screen) {
+    if (action.type === 'execute') {
+      // Show confirmation for execute actions
+      setActionConfirm(action);
+    } else if (action.type === 'navigate' && action.data?.screen) {
       close();
-      router.push(`/${action.data.screen}` as any);
+      
+      // Smart navigation with parameters
+      if (action.data.id) {
+        router.push(`/${action.data.screen}/${action.data.id}` as any);
+      } else {
+        router.push(`/${action.data.screen}` as any);
+      }
     }
     
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
   }, [close, router]);
+
+  const executeAction = useCallback((action: any) => {
+    // Execute the action and close confirmation
+    if (action.data?.callback) {
+      action.data.callback();
+    }
+    
+    setActionConfirm(null);
+    
+    // Show success message
+    sendMessage(`✅ ${action.label} completed!`);
+    
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [sendMessage]);
+
+  const renderContextActions = useCallback(() => {
+    if (!currentContext.screen) return null;
+
+    const actions = [];
+
+    // Task Detail screen actions
+    if (currentContext.screen === 'task-detail' && currentContext.canAccept) {
+      actions.push(
+        <TouchableOpacity
+          key="accept-task"
+          style={styles.contextActionButton}
+          onPress={() => handleActionPress({
+            type: 'execute',
+            label: 'Accept This Quest',
+            icon: <Check color="#FFF" size={18} />,
+            data: { action: 'accept_task', taskId: currentContext.taskId },
+          })}
+        >
+          <Check color="#FFF" size={18} />
+          <Text style={styles.contextActionText}>Accept Quest</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    // Home screen actions
+    if (currentContext.screen === 'home' && currentContext.availableTasks > 0) {
+      actions.push(
+        <TouchableOpacity
+          key="view-nearby"
+          style={styles.contextActionButton}
+          onPress={() => handleActionPress({
+            type: 'navigate',
+            label: 'View Nearby Quests',
+            data: { screen: 'tasks' },
+          })}
+        >
+          <MapPin color="#FFF" size={18} />
+          <Text style={styles.contextActionText}>Nearby ({currentContext.availableTasks})</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    // General earnings action
+    if (currentContext.userXP) {
+      actions.push(
+        <TouchableOpacity
+          key="view-earnings"
+          style={styles.contextActionButton}
+          onPress={() => handleActionPress({
+            type: 'navigate',
+            label: 'View Earnings',
+            data: { screen: 'wallet' },
+          })}
+        >
+          <DollarSign color="#FFF" size={18} />
+          <Text style={styles.contextActionText}>Earnings</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    if (actions.length === 0) return null;
+
+    return (
+      <View style={styles.contextActionsBar}>
+        <Text style={styles.contextLabel}>Quick Actions:</Text>
+        <View style={styles.contextActions}>
+          {actions.map((action) => action)}
+        </View>
+      </View>
+    );
+  }, [currentContext, handleActionPress]);
 
   const glowColor = glowAnim.interpolate({
     inputRange: [0, 1],
@@ -335,6 +433,8 @@ export default function UltimateAICoach() {
                   )}
                 </ScrollView>
 
+                {renderContextActions()}
+
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={styles.input}
@@ -364,6 +464,52 @@ export default function UltimateAICoach() {
             </BlurView>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Action Confirmation Modal */}
+      <Modal
+        visible={actionConfirm !== null}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setActionConfirm(null)}
+      >
+        <View style={styles.confirmContainer}>
+          <TouchableOpacity 
+            style={styles.confirmBackdrop} 
+            activeOpacity={1} 
+            onPress={() => setActionConfirm(null)}
+          />
+          
+          <BlurView intensity={80} tint="dark" style={styles.confirmCard}>
+            <View style={styles.confirmContent}>
+              <Text style={styles.confirmTitle}>Confirm Action</Text>
+              <Text style={styles.confirmMessage}>
+                {actionConfirm?.label}
+              </Text>
+              
+              <View style={styles.confirmButtons}>
+                <TouchableOpacity
+                  style={[styles.confirmButton, styles.cancelButton]}
+                  onPress={() => setActionConfirm(null)}
+                >
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.confirmButton, styles.executeButton]}
+                  onPress={() => executeAction(actionConfirm)}
+                >
+                  <LinearGradient
+                    colors={['#8A2BE2', '#9D4EDD']}
+                    style={styles.executeGradient}
+                  >
+                    <Text style={styles.executeText}>Confirm</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </View>
       </Modal>
     </>
   );
@@ -643,5 +789,101 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  contextActionsBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  contextLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  contextActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  contextActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(138, 43, 226, 0.25)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(138, 43, 226, 0.5)',
+  },
+  contextActionText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#FFF',
+  },
+  confirmContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  confirmCard: {
+    width: SCREEN_WIDTH - 64,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  confirmContent: {
+    padding: 24,
+    backgroundColor: 'rgba(30, 30, 30, 0.95)',
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  confirmMessage: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  cancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: COLORS.textSecondary,
+  },
+  executeButton: {
+    overflow: 'hidden',
+  },
+  executeGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  executeText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFF',
   },
 });

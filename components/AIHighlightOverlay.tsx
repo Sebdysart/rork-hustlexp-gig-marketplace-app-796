@@ -1,175 +1,173 @@
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions } from 'react-native';
-import { useEffect, useRef } from 'react';
-import { BlurView } from 'expo-blur';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Text, Dimensions, TouchableOpacity } from 'react-native';
 import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
-import { premiumColors, spacing, borderRadius } from '@/constants/designTokens';
-import Colors from '@/constants/colors';
+import { premiumColors } from '@/constants/designTokens';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react-native';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+export interface HighlightConfig {
+  elementId: string;
+  position?: { x: number; y: number; width: number; height: number };
+  message?: string;
+  arrowDirection?: 'up' | 'down' | 'left' | 'right';
+  onTap?: () => void;
+  allowDismiss?: boolean;
+}
 
 export default function AIHighlightOverlay() {
-  const { highlightedElement } = useUltimateAICoach();
-  
+  const { highlightConfig, dismissHighlight } = useUltimateAICoach();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   const arrowAnim = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
-    if (highlightedElement) {
-      // Fade in animation
+    if (highlightConfig) {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 300,
           useNativeDriver: true,
         }),
-        // Pulsing glow animation
         Animated.loop(
           Animated.sequence([
-            Animated.timing(glowAnim, {
-              toValue: 1,
-              duration: 1000,
+            Animated.timing(pulseAnim, {
+              toValue: 1.08,
+              duration: 800,
               useNativeDriver: true,
             }),
-            Animated.timing(glowAnim, {
-              toValue: 0,
-              duration: 1000,
+            Animated.timing(pulseAnim, {
+              toValue: 1,
+              duration: 800,
               useNativeDriver: true,
             }),
           ])
         ),
-        // Arrow bounce animation
         Animated.loop(
           Animated.sequence([
             Animated.timing(arrowAnim, {
-              toValue: -10,
-              duration: 500,
+              toValue: -12,
+              duration: 600,
               useNativeDriver: true,
             }),
             Animated.timing(arrowAnim, {
               toValue: 0,
-              duration: 500,
+              duration: 600,
               useNativeDriver: true,
             }),
           ])
         ),
       ]).start();
     } else {
-      // Fade out animation
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 200,
         useNativeDriver: true,
       }).start();
     }
-  }, [highlightedElement]);
-  
-  if (!highlightedElement) return null;
-  
-  // TODO: In future, use highlightedElement ID to position spotlight dynamically
-  // For now, center it as a proof of concept
-  const spotlightX = SCREEN_WIDTH / 2 - 100;
-  const spotlightY = SCREEN_HEIGHT / 2 - 50;
-  const spotlightWidth = 200;
-  const spotlightHeight = 100;
-  
+  }, [highlightConfig, fadeAnim, pulseAnim, arrowAnim]);
+
+  if (!highlightConfig) return null;
+
+  const position = highlightConfig.position || {
+    x: width / 2 - 100,
+    y: height / 2 - 50,
+    width: 200,
+    height: 100,
+  };
+
+  const message = highlightConfig.message || 'Tap here to continue!';
+  const arrowDirection = highlightConfig.arrowDirection || 'up';
+
+  const getArrowIcon = () => {
+    switch (arrowDirection) {
+      case 'down': return <ChevronDown size={32} color={premiumColors.neonCyan} />;
+      case 'left': return <ChevronLeft size={32} color={premiumColors.neonCyan} />;
+      case 'right': return <ChevronRight size={32} color={premiumColors.neonCyan} />;
+      default: return <ChevronUp size={32} color={premiumColors.neonCyan} />;
+    }
+  };
+
+  const getTooltipPosition = () => {
+    const padding = 20;
+    switch (arrowDirection) {
+      case 'down':
+        return { top: position.y - 80, left: 0, right: 0 };
+      case 'up':
+        return { top: position.y + position.height + padding, left: 0, right: 0 };
+      case 'left':
+        return { top: position.y + position.height / 2 - 30, left: position.x + position.width + padding };
+      case 'right':
+        return { top: position.y + position.height / 2 - 30, right: width - position.x + padding };
+      default:
+        return { top: position.y + position.height + padding, left: 0, right: 0 };
+    }
+  };
+
+  const getArrowTransform = () => {
+    switch (arrowDirection) {
+      case 'down': return [{ translateY: arrowAnim }];
+      case 'up': return [{ translateY: Animated.multiply(arrowAnim, -1) }];
+      case 'left': return [{ translateX: arrowAnim }];
+      case 'right': return [{ translateX: Animated.multiply(arrowAnim, -1) }];
+      default: return [{ translateY: Animated.multiply(arrowAnim, -1) }];
+    }
+  };
+
+  const handleTap = () => {
+    if (highlightConfig.onTap) {
+      highlightConfig.onTap();
+    }
+  };
+
+  const handleDismiss = () => {
+    if (highlightConfig.allowDismiss !== false) {
+      dismissHighlight?.();
+    }
+  };
+
   return (
-    <Animated.View 
-      style={[
-        styles.overlay,
-        {
-          opacity: fadeAnim,
-          pointerEvents: highlightedElement ? 'auto' : 'none',
-        }
-      ]}
-    >
-      {/* Dim background - tappable to dismiss */}
+    <Animated.View style={[styles.overlay, { opacity: fadeAnim }]} pointerEvents="box-none">
       <TouchableOpacity 
-        style={StyleSheet.absoluteFill}
-        onPress={() => {
-          // Dismiss on tap - handled by timeout in context
-        }}
+        style={styles.dimBackground}
         activeOpacity={1}
-      >
-        <BlurView intensity={40} tint="dark" style={styles.dimBackground} />
-      </TouchableOpacity>
+        onPress={handleDismiss}
+      />
       
-      {/* Spotlight hole with glow */}
-      <View style={styles.spotlightContainer}>
-        {/* Outer glow rings */}
-        <Animated.View
-          style={[
-            styles.glowRing,
-            {
-              left: spotlightX - 20,
-              top: spotlightY - 20,
-              width: spotlightWidth + 40,
-              height: spotlightHeight + 40,
-              opacity: glowAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.3, 0.6],
-              }),
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.glowRing,
-            {
-              left: spotlightX - 10,
-              top: spotlightY - 10,
-              width: spotlightWidth + 20,
-              height: spotlightHeight + 20,
-              opacity: glowAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.5, 0.8],
-              }),
-            },
-          ]}
-        />
-        
-        {/* Clear spotlight area */}
-        <View
-          style={[
-            styles.spotlight,
-            {
-              left: spotlightX,
-              top: spotlightY,
-              width: spotlightWidth,
-              height: spotlightHeight,
-            },
-          ]}
-        />
-      </View>
-      
-      {/* Animated arrow + tooltip */}
-      <Animated.View
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onPress={handleTap}
         style={[
-          styles.tooltipContainer,
+          styles.spotlightContainer,
           {
-            left: spotlightX + spotlightWidth / 2 - 60,
-            top: spotlightY + spotlightHeight + 20,
-            transform: [{ translateY: arrowAnim }],
-          },
+            left: position.x,
+            top: position.y,
+            width: position.width,
+            height: position.height,
+          }
         ]}
       >
-        <BlurView intensity={60} tint="dark" style={styles.tooltip}>
-          <Text style={styles.arrow}>👆</Text>
-          <Text style={styles.instruction}>Tap here!</Text>
-        </BlurView>
+        <Animated.View 
+          style={[
+            styles.spotlight,
+            { transform: [{ scale: pulseAnim }] }
+          ]}
+        />
+      </TouchableOpacity>
+
+      <Animated.View 
+        style={[
+          styles.tooltipContainer,
+          getTooltipPosition(),
+          { transform: getArrowTransform() }
+        ]}
+        pointerEvents="none"
+      >
+        <View style={styles.tooltip}>
+          {getArrowIcon()}
+          <Text style={styles.instruction}>{message}</Text>
+        </View>
       </Animated.View>
-      
-      {/* Instruction text at bottom */}
-      <View style={styles.bottomInstruction}>
-        <BlurView intensity={60} tint="dark" style={styles.instructionBlur}>
-          <Text style={styles.instructionText}>
-            The AI Coach is guiding you
-          </Text>
-          <Text style={styles.instructionSubtext}>
-            Tap anywhere to dismiss
-          </Text>
-        </BlurView>
-      </View>
     </Animated.View>
   );
 }
@@ -185,79 +183,49 @@ const styles = StyleSheet.create({
   },
   dimBackground: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.88)',
   },
   spotlightContainer: {
-    ...StyleSheet.absoluteFillObject,
-    pointerEvents: 'none',
-  },
-  glowRing: {
     position: 'absolute',
-    borderRadius: borderRadius.xxl,
-    borderWidth: 2,
-    borderColor: premiumColors.neonCyan,
-    shadowColor: premiumColors.neonCyan,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 20,
-    shadowOpacity: 1,
+    zIndex: 10000,
   },
   spotlight: {
-    position: 'absolute',
-    borderRadius: borderRadius.xxl,
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
     borderWidth: 3,
     borderColor: premiumColors.neonCyan,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0, 255, 255, 0.05)',
     shadowColor: premiumColors.neonCyan,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 30,
-    shadowOpacity: 1,
+    shadowOpacity: 0.9,
+    shadowRadius: 24,
   },
   tooltipContainer: {
     position: 'absolute',
     alignItems: 'center',
-    pointerEvents: 'none',
+    justifyContent: 'center',
+    zIndex: 10001,
   },
   tooltip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    borderRadius: borderRadius.xl,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 16,
     borderWidth: 2,
-    borderColor: premiumColors.neonCyan + '80',
-  },
-  arrow: {
-    fontSize: 24,
+    borderColor: premiumColors.neonCyan,
+    alignItems: 'center',
+    maxWidth: width - 80,
+    shadowColor: premiumColors.neonCyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
   },
   instruction: {
     fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  bottomInstruction: {
-    position: 'absolute',
-    bottom: spacing.xxl * 2,
-    left: spacing.xl,
-    right: spacing.xl,
-    alignItems: 'center',
-  },
-  instructionBlur: {
-    paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.lg,
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    borderColor: premiumColors.glassWhiteStrong,
-    alignItems: 'center',
-  },
-  instructionText: {
-    fontSize: 15,
-    fontWeight: '700' as const,
+    fontWeight: '700',
     color: premiumColors.neonCyan,
-    marginBottom: spacing.xs,
-  },
-  instructionSubtext: {
-    fontSize: 13,
-    fontWeight: '500' as const,
-    color: premiumColors.glassWhiteStrong,
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
