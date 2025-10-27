@@ -281,15 +281,15 @@ export default function AIOnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { completeOnboarding, tasks: allTasks } = useApp();
   
-  const aiCoach = useUltimateAICoach();
+  const { updateContext, sendMessage: sendAIMessage, isLoading: isAILoading } = useUltimateAICoach();
   
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [input, setInput] = useState('');
   const [extractedData, setExtractedData] = useState<ExtractedData>({});
   
-  // Use AI Coach's messages and processing state
-  const messages = aiCoach.messages;
-  const isProcessing = aiCoach.isLoading;
+  // Use local messages for the scripted onboarding flow (not AI-powered, pre-scripted)
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -1169,15 +1169,27 @@ export default function AIOnboardingScreen() {
   };
 
   const addAIMessage = async (content: string, step: OnboardingStep, uiComponents?: UIComponent[]) => {
-    // Send message to Ultimate AI Coach
-    await aiCoach.sendMessage(content);
+    console.log('[AI_ONBOARDING] addAIMessage called:', content, step);
     
-    // Update onboarding context
-    aiCoach.updateContext({
+    // Create a local assistant message (this is pre-scripted, not AI-generated)
+    const newMessage: Message = {
+      id: `ai-${Date.now()}-${Math.random()}`,
+      role: 'assistant',
+      content,
+      timestamp: new Date(),
+      uiComponents,
+    };
+    
+    // Add message to local state
+    setMessages(prev => [...prev, newMessage]);
+    
+    // Update UltimateAICoach context for awareness
+    updateContext({
       screen: 'onboarding',
       step: step,
       extractedData: extractedData,
       progress: progress,
+      lastAIMessage: content,
     });
     
     setCurrentStep(step);
@@ -1185,11 +1197,19 @@ export default function AIOnboardingScreen() {
   };
 
   const addUserMessage = async (content: string) => {
-    // User messages go through AI Coach
-    await aiCoach.sendMessage(content);
+    // Create user message locally
+    const userMessage: Message = {
+      id: `user-${Date.now()}-${Math.random()}`,
+      role: 'user',
+      content,
+      timestamp: new Date(),
+    };
     
-    // Update context with latest user input
-    aiCoach.updateContext({
+    // Add to local state
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Update UltimateAICoach context with latest user input
+    updateContext({
       screen: 'onboarding',
       step: currentStep,
       extractedData: extractedData,
