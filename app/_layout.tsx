@@ -21,6 +21,7 @@ import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
 import UltimateAICoach from "@/components/UltimateAICoach";
 import AIHighlightOverlay from "@/components/AIHighlightOverlay";
 import AIVisualGuidance from "@/components/AIVisualGuidance";
+import AIQuickActions from "@/components/AIQuickActions";
 import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
@@ -85,6 +86,7 @@ function RootLayoutNav() {
         <Stack.Screen name="diagnostic-center" options={{ title: 'Diagnostic Center' }} />
         <Stack.Screen name="test-text-fix" options={{ title: 'Text Fix Test' }} />
         <Stack.Screen name="backend-integration-test" options={{ title: 'Backend Test' }} />
+        <Stack.Screen name="test-option-a-complete" options={{ presentation: 'modal', title: 'Option A Tests' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
@@ -93,6 +95,7 @@ function RootLayoutNav() {
       <UltimateAICoach />
       <AIHighlightOverlay />
       <AIVisualGuidance />
+      <AIQuickActions />
     </>
   );
 }
