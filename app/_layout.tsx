@@ -109,12 +109,12 @@ export default function RootLayout() {
         <BackendProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <LanguageProvider>
-              <ThemeProvider>
-                <SettingsProvider>
-                  <NotificationProvider>
-                    <AnalyticsProvider>
-                      <AppProvider>
-                        <UltimateAICoachProvider>
+              <UltimateAICoachProvider>
+                <ThemeProvider>
+                  <SettingsProvider>
+                    <NotificationProvider>
+                      <AnalyticsProvider>
+                        <AppProvider>
                           <AIProfileProvider>
                             <TaskLifecycleProvider>
                               <SquadContext>
@@ -125,12 +125,12 @@ export default function RootLayout() {
                               </SquadContext>
                             </TaskLifecycleProvider>
                           </AIProfileProvider>
-                        </UltimateAICoachProvider>
-                      </AppProvider>
-                    </AnalyticsProvider>
-                  </NotificationProvider>
-                </SettingsProvider>
-              </ThemeProvider>
+                        </AppProvider>
+                      </AnalyticsProvider>
+                    </NotificationProvider>
+                  </SettingsProvider>
+                </ThemeProvider>
+              </UltimateAICoachProvider>
             </LanguageProvider>
           </GestureHandlerRootView>
         </BackendProvider>
