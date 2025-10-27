@@ -19,6 +19,7 @@ import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
 import UltimateAICoach from "@/components/UltimateAICoach";
+import AIHighlightOverlay from "@/components/AIHighlightOverlay";
 import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
@@ -89,6 +90,7 @@ function RootLayoutNav() {
       <TranslationLoadingOverlay />
       
       <UltimateAICoach />
+      <AIHighlightOverlay />
     </>
   );
 }

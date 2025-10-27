@@ -7,6 +7,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAIProfile } from '@/contexts/AIProfileContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import Colors from '@/constants/colors';
 import { TaskCardSkeleton, StatCardSkeleton } from '@/components/SkeletonLoader';
@@ -43,6 +44,7 @@ export default function HomeScreen() {
   const { settings, canAcceptMoreQuests, getRemainingQuests } = useSettings();
   const { fetchProfile } = useAIProfile();
   const { translateText } = useLanguage();
+  const aiCoach = useUltimateAICoach();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
@@ -92,6 +94,22 @@ export default function HomeScreen() {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+
+  // Update AI context when screen data changes
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    aiCoach.updateContext({
+      screen: 'home',
+      userMode: currentUser.activeMode,
+      availableTasks: availableTasks.length,
+      currentStreak: currentUser.streaks.current,
+      isAvailable: isAvailable,
+      userLevel: currentUser.level,
+      userXP: currentUser.xp,
+      tasksInProgress: myTasks.filter(t => t.status === 'in_progress').length,
+    });
+  }, [availableTasks, currentUser, isAvailable, myTasks, aiCoach]);
 
   useEffect(() => {
     if (settings.reducedMotion) {
