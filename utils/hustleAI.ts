@@ -3,7 +3,7 @@
  * Connects to your Replit-hosted AI engine
  */
 
-const HUSTLEAI_PROD_URL = 'https://lunch-garden-dycejr.replit.app/api';
+const HUSTLEAI_PROD_URL = process.env.EXPO_PUBLIC_API_URL || 'https://LunchGarden.dycejr.replit.dev/api';
 const HUSTLEAI_DEV_URL = process.env.EXPO_PUBLIC_HUSTLEAI_URL || HUSTLEAI_PROD_URL;
 
 const API_BASE_URL = HUSTLEAI_PROD_URL;
@@ -273,7 +273,7 @@ class HustleAIClient {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const options: RequestInit = {
         method,
@@ -323,14 +323,15 @@ class HustleAIClient {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Request timeout - backend not responding');
+          console.warn('[HUSTLEAI] Request timeout after 8s');
+          throw new Error('TIMEOUT');
         }
         if (error.message.includes('Rate limit')) {
           throw error; // Re-throw rate limit errors
         }
         if (error.message.includes('Failed to fetch')) {
           console.warn('[HUSTLEAI] Backend not reachable');
-          throw new Error('Backend unavailable');
+          throw new Error('BACKEND_OFFLINE');
         }
       }
       throw error;
@@ -350,7 +351,19 @@ class HustleAIClient {
         message,
       }, false); // Don't cache chat responses
     } catch (error: any) {
-      if (error?.message?.includes('Rate limit')) {
+      const errorMsg = error?.message || String(error);
+      
+      if (errorMsg === 'TIMEOUT' || error?.name === 'AbortError') {
+        console.log('[HUSTLEAI] ⚡ Quick response mode (backend slow)');
+        return this.mockChat(message);
+      }
+      
+      if (errorMsg === 'BACKEND_OFFLINE') {
+        console.log('[HUSTLEAI] 🔌 Offline mode (backend unavailable)');
+        return this.mockChat(message);
+      }
+      
+      if (errorMsg.includes('Rate limit')) {
         console.warn('[HUSTLEAI] Rate limited, using mock response');
         return {
           response: "I'm getting a lot of requests right now! Let me help you with a quick response. What would you like to do?",
@@ -358,7 +371,8 @@ class HustleAIClient {
           confidence: 60,
         };
       }
-      console.warn('[HUSTLEAI] Falling back to mock chat response');
+      
+      console.warn('[HUSTLEAI] Falling back to mock chat response:', errorMsg);
       return this.mockChat(message);
     }
   }
