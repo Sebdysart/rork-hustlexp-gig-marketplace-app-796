@@ -88,7 +88,7 @@ function RootLayoutNav() {
       <PWAInstallPrompt />
       <TranslationLoadingOverlay />
       
-      {currentUser && <UltimateAICoach />}
+      <UltimateAICoach />
     </>
   );
 }
