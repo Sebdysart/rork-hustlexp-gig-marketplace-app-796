@@ -25,6 +25,7 @@ import {
   Rocket
 } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 
 import Colors from '@/constants/colors';
 import { premiumColors, spacing, borderRadius, neonGlow } from '@/constants/designTokens';
@@ -41,7 +42,7 @@ interface Message {
   id: string;
   role: 'assistant' | 'user';
   content: string;
-  timestamp: Date;
+  timestamp: Date | string;
   uiComponents?: UIComponent[];
 }
 
@@ -280,11 +281,15 @@ export default function AIOnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { completeOnboarding, tasks: allTasks } = useApp();
   
+  const aiCoach = useUltimateAICoach();
+  
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData>({});
+  
+  // Use AI Coach's messages and processing state
+  const messages = aiCoach.messages;
+  const isProcessing = aiCoach.isLoading;
   const [showConfetti, setShowConfetti] = useState(false);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -1163,29 +1168,33 @@ export default function AIOnboardingScreen() {
     router.replace('/welcome-tutorial?fromOnboarding=true');
   };
 
-  const addAIMessage = (content: string, step: OnboardingStep, uiComponents?: UIComponent[]) => {
-    const newMessage: Message = {
-      id: `ai-${Date.now()}`,
-      role: 'assistant',
-      content,
-      timestamp: new Date(),
-      uiComponents,
-    };
+  const addAIMessage = async (content: string, step: OnboardingStep, uiComponents?: UIComponent[]) => {
+    // Send message to Ultimate AI Coach
+    await aiCoach.sendMessage(content);
     
-    setMessages(prev => [...prev, newMessage]);
+    // Update onboarding context
+    aiCoach.updateContext({
+      screen: 'onboarding',
+      step: step,
+      extractedData: extractedData,
+      progress: progress,
+    });
+    
     setCurrentStep(step);
     startMessageAnimation();
   };
 
-  const addUserMessage = (content: string) => {
-    const newMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content,
-      timestamp: new Date(),
-    };
+  const addUserMessage = async (content: string) => {
+    // User messages go through AI Coach
+    await aiCoach.sendMessage(content);
     
-    setMessages(prev => [...prev, newMessage]);
+    // Update context with latest user input
+    aiCoach.updateContext({
+      screen: 'onboarding',
+      step: currentStep,
+      extractedData: extractedData,
+      lastUserInput: content,
+    });
   };
 
   const handleSend = async () => {
@@ -1194,18 +1203,14 @@ export default function AIOnboardingScreen() {
     const userMessage = input.trim();
     setInput('');
     setTypingPrediction('');
-    addUserMessage(userMessage);
+    await addUserMessage(userMessage);
     playHapticSymphony('success');
-
-    setIsProcessing(true);
 
     try {
       await processUserInput(userMessage);
     } catch (error) {
       console.error('[AI_ONBOARDING] Error processing message:', error);
-      addAIMessage("I'm having trouble processing that. Could you rephrase?", currentStep);
-    } finally {
-      setIsProcessing(false);
+      await addAIMessage("I'm having trouble processing that. Could you rephrase?", currentStep);
     }
   };
 
