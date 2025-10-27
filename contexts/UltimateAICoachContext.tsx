@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from './AppContext';
 import { useLanguage } from './LanguageContext';
 import { hustleAI } from '@/utils/hustleAI';
+import { backendHealth, type HealthStatus } from '@/utils/backendHealth';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import type { HighlightConfig } from '@/components/AIHighlightOverlay';
@@ -85,6 +86,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   const [userPatterns, setUserPatterns] = useState<UserPattern | null>(null);
   const [highlightConfig, setHighlightConfig] = useState<HighlightConfig | null>(null);
   const [activeTutorial, setActiveTutorial] = useState<Tutorial | null>(null);
+  const [backendStatus, setBackendStatus] = useState<HealthStatus>(backendHealth.getStatus());
   const proactiveCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastProactiveCheck = useRef<number>(Date.now());
 
@@ -92,6 +94,17 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     loadHistory();
     loadSettings();
     analyzeUserPatterns();
+    
+    backendHealth.initialize();
+    const unsubscribe = backendHealth.subscribe(status => {
+      setBackendStatus(status);
+      console.log('[AICoach] Backend status:', status.message);
+    });
+    
+    return () => {
+      unsubscribe();
+      backendHealth.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -629,6 +642,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     startTutorial,
     dismissTutorial,
     navigateWithFilters,
+    backendStatus,
   }), [
     isOpen,
     open,
@@ -649,5 +663,6 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     startTutorial,
     dismissTutorial,
     navigateWithFilters,
+    backendStatus,
   ]);
 });
