@@ -20,7 +20,6 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
 import UltimateAICoach from "@/components/UltimateAICoach";
 import AIHighlightOverlay from "@/components/AIHighlightOverlay";
-import AIVisualGuidance from "@/components/AIVisualGuidance";
 import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
@@ -92,7 +91,6 @@ function RootLayoutNav() {
       
       <UltimateAICoach />
       <AIHighlightOverlay />
-      <AIVisualGuidance />
     </>
   );
 }
