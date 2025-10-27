@@ -422,7 +422,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   }, [settings]);
 
   const updateContext = useCallback((context: any) => {
-    setCurrentContext(prev => ({ ...prev, ...context }));
+    setCurrentContext((prev: any) => ({ ...prev, ...context }));
   }, []);
 
   return useMemo(() => ({
