@@ -30,6 +30,8 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
+  const { currentUser } = useApp();
+  
   return (
     <>
       <Stack screenOptions={{
@@ -85,7 +87,8 @@ function RootLayoutNav() {
       <NotificationCenter />
       <PWAInstallPrompt />
       <TranslationLoadingOverlay />
-      <UltimateAICoach />
+      
+      {currentUser && <UltimateAICoach />}
     </>
   );
 }
