@@ -4,7 +4,6 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, DollarSign, Calendar, Clock, User, Star, Zap, CheckCircle, Shield, Award, MessageCircle, AlertTriangle, ShieldCheck } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 import { useAILearning } from '@/utils/aiLearningIntegration';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
@@ -21,7 +20,6 @@ import ImpactPreview from '@/components/ImpactPreview';
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { tasks, users, currentUser, acceptTask } = useApp();
-  const aiCoach = useUltimateAICoach();
   const { submitMatchRejection } = useAILearning();
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
@@ -39,20 +37,7 @@ export default function TaskDetailScreen() {
   const worker = task?.workerId ? users.find(u => u.id === task.workerId) : null;
 
   useEffect(() => {
-    if (task && poster && currentUser) {
-      aiCoach.updateContext({
-        screen: 'task-detail',
-        taskId: task.id,
-        taskTitle: task.title,
-        taskPay: task.payAmount,
-        taskCategory: task.category,
-        taskStatus: task.status,
-        posterRating: poster.reputationScore,
-        posterTrust: poster.trustScore,
-        canAccept: task.status === 'open' && task.posterId !== currentUser.id,
-        isWorkerRole: currentUser.role === 'worker' || currentUser.role === 'both',
-      });
-
+    if (task && poster) {
       const performScan = async () => {
         const posterHistory = poster.posterProfile ? {
           tasksPosted: poster.posterProfile.tasksPosted,
@@ -66,7 +51,7 @@ export default function TaskDetailScreen() {
       };
       performScan();
     }
-  }, [task, poster, currentUser, aiCoach]);
+  }, [task, poster]);
 
   useEffect(() => {
     if (task && currentUser) {

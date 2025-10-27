@@ -1,6 +1,5 @@
 import { View, StyleSheet } from 'react-native';
 import { useApp } from '@/contexts/AppContext';
-import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 import UnifiedProfile from '@/components/UnifiedProfile';
 import Confetti from '@/components/Confetti';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
@@ -11,7 +10,6 @@ import { RoleStats } from '@/types';
 
 export default function ProfileScreen() {
   const { currentUser, updateUser, myAcceptedTasks, fetchRoleStats } = useApp();
-  const aiCoach = useUltimateAICoach();
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [showLevelUp, setShowLevelUp] = useState<boolean>(false);
   const [previousLevel, setPreviousLevel] = useState<number>(currentUser?.level || 1);
@@ -22,25 +20,6 @@ export default function ProfileScreen() {
     Analytics.trackEvent({ type: 'page_view', data: { page: 'profile' } });
     loadRoleStats();
   }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      aiCoach.updateContext({
-        screen: 'profile',
-        userLevel: currentUser.level,
-        userXP: currentUser.xp,
-
-        badges: currentUser.badges.length,
-        totalEarnings: currentUser.earnings,
-        tasksCompleted: currentUser.tasksCompleted,
-        currentRating: currentUser.reputationScore,
-        currentStreak: currentUser.streaks.current,
-        bestStreak: currentUser.streaks.longest,
-        userRole: currentUser.role,
-        activeMode: currentUser.activeMode,
-      });
-    }
-  }, [currentUser, aiCoach]);
 
   const loadRoleStats = async () => {
     setIsLoadingStats(true);
