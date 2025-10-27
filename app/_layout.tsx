@@ -15,6 +15,7 @@ import { OfferContext } from "@/contexts/OfferContext";
 import { AIProfileProvider } from "@/contexts/AIProfileContext";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { UltimateAICoachProvider } from "@/contexts/UltimateAICoachContext";
+import { UnifiedAIProvider } from "@/contexts/UnifiedAIContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
@@ -124,18 +125,20 @@ export default function RootLayout() {
                   <NotificationProvider>
                     <AnalyticsProvider>
                       <AppProvider>
-                        <UltimateAICoachProvider>
-                          <AIProfileProvider>
-                            <TaskLifecycleProvider>
-                              <SquadContext>
-                                <OfferContext>
-                                  <SplashScreenManager />
-                                  <RootLayoutNav />
-                                </OfferContext>
-                              </SquadContext>
-                            </TaskLifecycleProvider>
-                          </AIProfileProvider>
-                        </UltimateAICoachProvider>
+                        <UnifiedAIProvider>
+                          <UltimateAICoachProvider>
+                            <AIProfileProvider>
+                              <TaskLifecycleProvider>
+                                <SquadContext>
+                                  <OfferContext>
+                                    <SplashScreenManager />
+                                    <RootLayoutNav />
+                                  </OfferContext>
+                                </SquadContext>
+                              </TaskLifecycleProvider>
+                            </AIProfileProvider>
+                          </UltimateAICoachProvider>
+                        </UnifiedAIProvider>
                       </AppProvider>
                     </AnalyticsProvider>
                   </NotificationProvider>
