@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
-import { Send, Smile, Zap, Sparkles, Check, X, Clock, MapPin, DollarSign, Languages, Bot } from 'lucide-react-native';
+import { Send, Smile, Zap, Sparkles, Check, X, Clock, MapPin, DollarSign, Languages } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
@@ -22,7 +22,6 @@ import { premiumColors } from '@/constants/designTokens';
 import { translateMessage, generateSmartReply, detectSpamOrScam } from '@/utils/aiChatAssistant';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { aiTranslationService } from '@/utils/aiTranslation';
-import AIChatSuggestions from '@/components/AIChatSuggestions';
 
 const QUICK_COMMANDS = [
   { id: '/extend', label: 'Extend Time', icon: '⏰' },
@@ -45,7 +44,6 @@ export default function ChatDetailScreen() {
   const [showSmartReplies, setShowSmartReplies] = useState<boolean>(false);
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [translatingMessageIds, setTranslatingMessageIds] = useState<Set<string>>(new Set());
-  const [showAISuggestions, setShowAISuggestions] = useState<boolean>(false);
   const flatListRef = useRef<FlatList>(null);
   const { currentLanguage, useAITranslation } = useLanguage();
 
@@ -579,29 +577,6 @@ Return only the improved message, nothing else. Keep it concise (1-3 sentences).
           </View>
         )}
 
-        {showAISuggestions && messages.length > 0 && (
-          <AIChatSuggestions
-            messages={messages.map(m => ({
-              senderId: m.senderId,
-              text: m.text,
-              timestamp: m.timestamp,
-            }))}
-            currentUserId={currentUser?.id || ''}
-            taskContext={{
-              title: task.title,
-              category: task.category,
-              payAmount: task.payAmount,
-              negotiable: true,
-            }}
-            onSuggestionSelect={(text) => {
-              setMessage(text);
-              setShowAISuggestions(false);
-              triggerHaptic('medium');
-            }}
-            onDismiss={() => setShowAISuggestions(false)}
-          />
-        )}
-
         <View style={styles.aiAssistBar}>
           <TouchableOpacity
             style={styles.aiAssistButton}
@@ -617,21 +592,16 @@ Return only the improved message, nothing else. Keep it concise (1-3 sentences).
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.aiAssistButton, showAISuggestions && styles.aiAssistButtonActive]}
-            onPress={() => {
-              setShowAISuggestions(!showAISuggestions);
-              triggerHaptic('medium');
-            }}
+            style={styles.aiAssistButton}
+            onPress={handleAISuggestReply}
             disabled={isAIProcessing}
           >
             {isAIProcessing ? (
               <ActivityIndicator size="small" color={premiumColors.neonCyan} />
             ) : (
-              <Bot size={16} color={showAISuggestions ? premiumColors.neonGreen : premiumColors.neonCyan} />
+              <Sparkles size={16} color={premiumColors.neonCyan} />
             )}
-            <Text style={[styles.aiAssistButtonText, showAISuggestions && { color: premiumColors.neonGreen }]}>
-              AI Suggestions
-            </Text>
+            <Text style={styles.aiAssistButtonText}>AI Suggest Reply</Text>
           </TouchableOpacity>
         </View>
 
@@ -863,10 +833,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: premiumColors.glassWhiteStrong,
-  },
-  aiAssistButtonActive: {
-    backgroundColor: premiumColors.neonGreen + '20',
-    borderColor: premiumColors.neonGreen,
   },
   aiAssistButtonText: {
     fontSize: 13,
