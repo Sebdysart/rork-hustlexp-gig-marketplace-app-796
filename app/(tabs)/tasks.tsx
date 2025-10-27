@@ -5,6 +5,7 @@ import { Zap, MapPin, Clock, DollarSign, TrendingUp, Filter, Sparkles, Target, C
 import { useApp } from '@/contexts/AppContext';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUltimateAICoach } from '@/contexts/UltimateAICoachContext';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import { premiumColors } from '@/constants/designTokens';
@@ -232,6 +233,7 @@ function SwipeableTaskCard({ task, onSwipeLeft, onSwipeRight, distance, poster }
 export default function TasksScreen() {
   const { currentUser, availableTasks, myAcceptedTasks, myTasks, acceptTask, users } = useApp();
   const { t } = useLanguage();
+  const { updateContext } = useUltimateAICoach();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [sortBy, setSortBy] = useState<SortType>('ai');
@@ -243,6 +245,21 @@ export default function TasksScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showInstantMatch, setShowInstantMatch] = useState<boolean>(false);
   const [matchTaskIndex, setMatchTaskIndex] = useState<number>(0);
+
+  // Update AI context when screen data changes
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    updateContext({
+      screen: 'tasks',
+      activeFilter,
+      sortBy,
+      availableTasksCount: availableTasks.length,
+      activeTasksCount: myAcceptedTasks.filter(t => t.status === 'in_progress').length,
+      currentTaskIndex,
+      isPoster: currentUser.role === 'poster',
+    });
+  }, [currentUser, activeFilter, sortBy, availableTasks, myAcceptedTasks, currentTaskIndex, updateContext]);
 
   const filteredTasks = useMemo(() => {
     if (!currentUser) return [];
