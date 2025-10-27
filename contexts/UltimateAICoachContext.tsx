@@ -622,6 +622,11 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     setCurrentContext((prev: any) => ({ ...prev, ...context }));
   }, []);
 
+  const proactiveAlerts = useMemo(() => 
+    messages.filter(m => m.proactive),
+    [messages]
+  );
+
   return useMemo(() => ({
     isOpen,
     open,
@@ -643,6 +648,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     dismissTutorial,
     navigateWithFilters,
     backendStatus,
+    proactiveAlerts,
   }), [
     isOpen,
     open,
