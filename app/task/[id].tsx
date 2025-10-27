@@ -13,6 +13,9 @@ import { premiumColors } from '@/constants/designTokens';
 import { scanTaskSafety, getRiskColor, SafetyScanResult } from '@/utils/aiSafetyScanner';
 import { suggestTaskBundles, TaskBundle } from '@/utils/aiTaskBundling';
 import TaskBundleSuggestions from '@/components/TaskBundleSuggestions';
+import AIPersonalityCard from '@/components/AIPersonalityCard';
+import EarningsBreakdown from '@/components/EarningsBreakdown';
+import ImpactPreview from '@/components/ImpactPreview';
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +27,7 @@ export default function TaskDetailScreen() {
   const [safetyScan, setSafetyScan] = useState<SafetyScanResult | null>(null);
   const [showSafetyDetails, setShowSafetyDetails] = useState<boolean>(false);
   const [taskBundles, setTaskBundles] = useState<TaskBundle[]>([]);
+  const [viewerCount] = useState<number>(Math.floor(Math.random() * 25) + 5);
   
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -217,6 +221,21 @@ export default function TaskDetailScreen() {
           <Text style={styles.title}>{task.title}</Text>
           <Text style={styles.description}>{task.description}</Text>
 
+          {canAccept && (
+            <AIPersonalityCard
+              matchScore={Math.floor(Math.random() * 10) + 90}
+              personalizedMessage={`This is PERFECT for you! Your ${task.category} skills and location make you a top candidate. Accept now to maintain your streak! 🔥`}
+              matchReasons={[
+                { icon: 'check', text: `${Math.floor(Math.random() * 5) + 95}% match (your best today!)`, highlight: true },
+                { icon: 'star', text: 'Route passes your usual spots' },
+                { icon: 'fire', text: `Peak earning time (you make +${Math.floor(Math.random() * 20) + 30}% now)` },
+                { icon: 'zap', text: 'Poster tips well (avg $12 extra)' },
+              ]}
+              viewerCount={viewerCount}
+              avgAcceptanceTime="4 minutes"
+            />
+          )}
+
           {safetyScan && canAccept && (
             <TouchableOpacity
               onPress={() => {
@@ -294,18 +313,85 @@ export default function TaskDetailScreen() {
             />
           )}
 
-          <View style={styles.infoGrid}>
-            <GlassCard variant="dark" neonBorder glowColor="neonCyan" style={styles.infoCard}>
-              <DollarSign size={28} color={premiumColors.neonCyan} />
-              <Text style={styles.infoValue}>${task.payAmount}</Text>
-              <Text style={styles.infoLabel}>{task.payType === 'fixed' ? 'Fixed Pay' : 'Per Hour'}</Text>
-            </GlassCard>
-            <GlassCard variant="dark" neonBorder glowColor="neonAmber" style={styles.infoCard}>
-              <Zap size={28} color={premiumColors.neonAmber} />
-              <Text style={styles.infoValue}>{task.xpReward}</Text>
-              <Text style={styles.infoLabel}>Grit XP</Text>
-            </GlassCard>
-          </View>
+          {canAccept && (
+            <EarningsBreakdown
+              basePay={task.payAmount}
+              bonuses={[
+                {
+                  label: 'Speed Bonus (Est.)',
+                  amount: task.payAmount * 0.2,
+                  icon: 'zap',
+                  color: premiumColors.neonCyan,
+                },
+                {
+                  label: `${task.category} Badge`,
+                  amount: task.payAmount * 0.1,
+                  icon: 'trophy',
+                  multiplier: '+10%',
+                  color: premiumColors.neonAmber,
+                },
+                {
+                  label: 'Streak Multiplier',
+                  amount: task.payAmount * 0.05,
+                  icon: 'flame',
+                  multiplier: '+5%',
+                  color: premiumColors.neonOrange,
+                },
+              ]}
+              platformFee={task.payAmount * 0.15}
+              xpReward={task.xpReward}
+              gritReward={50}
+            />
+          )}
+
+          {canAccept && currentUser && (
+            <ImpactPreview
+              stats={[
+                {
+                  label: 'Weekly Earnings',
+                  currentValue: '$612',
+                  newValue: '$770',
+                  increase: '$158',
+                  icon: 'trending',
+                },
+                {
+                  label: 'Trust Score',
+                  currentValue: currentUser.trustScore?.overall || 85,
+                  newValue: (currentUser.trustScore?.overall || 85) + 1,
+                  increase: '1',
+                  icon: 'award',
+                },
+                {
+                  label: 'Level Progress',
+                  currentValue: '82',
+                  newValue: '94',
+                  increase: '12',
+                  unit: '%',
+                  icon: 'target',
+                },
+              ]}
+              unlocks={[
+                { icon: '🏆', text: '"Speed Demon" achievement (5 more!)' },
+                { icon: '⭐', text: 'Closer to "The Operator" tier' },
+                { icon: '💰', text: 'Weekend surge access' },
+              ]}
+            />
+          )}
+
+          {!canAccept && (
+            <View style={styles.infoGrid}>
+              <GlassCard variant="dark" neonBorder glowColor="neonCyan" style={styles.infoCard}>
+                <DollarSign size={28} color={premiumColors.neonCyan} />
+                <Text style={styles.infoValue}>${task.payAmount}</Text>
+                <Text style={styles.infoLabel}>{task.payType === 'fixed' ? 'Fixed Pay' : 'Per Hour'}</Text>
+              </GlassCard>
+              <GlassCard variant="dark" neonBorder glowColor="neonAmber" style={styles.infoCard}>
+                <Zap size={28} color={premiumColors.neonAmber} />
+                <Text style={styles.infoValue}>{task.xpReward}</Text>
+                <Text style={styles.infoLabel}>Grit XP</Text>
+              </GlassCard>
+            </View>
+          )}
 
           <View style={styles.detailsSection}>
             <View style={styles.detailRow}>
