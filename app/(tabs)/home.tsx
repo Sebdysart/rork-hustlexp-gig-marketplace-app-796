@@ -110,7 +110,7 @@ export default function HomeScreen() {
       userXP: currentUser.xp,
       tasksInProgress: myTasks.filter(t => t.status === 'in_progress').length,
     });
-  }, [availableTasks, currentUser, isAvailable, myTasks, aiCoach]);
+  }, [availableTasks, currentUser, isAvailable, myTasks]);
 
   useEffect(() => {
     if (settings.reducedMotion) {
