@@ -575,26 +575,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
     console.log('Verification badge added:', newBadge);
   }, [users, currentUser]);
 
-  const updateAvailabilityStatus = useCallback(async (status: 'offline' | 'online' | 'available_now' | 'busy') => {
-    if (!currentUser) return;
-
-    const updatedUser: User = {
-      ...currentUser,
-      availabilityStatus: status,
-      currentLocation: status === 'available_now' ? {
-        lat: currentUser.location.lat,
-        lng: currentUser.location.lng,
-        lastUpdated: new Date().toISOString(),
-      } : currentUser.currentLocation,
-    };
-
-    await updateUser(updatedUser);
-    console.log('Availability status updated to:', status);
-
-    if (status === 'available_now') {
-      sendHustleAITaskOffers();
-    }
-  }, [currentUser, updateUser]);
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   const sendHustleAITaskOffers = useCallback(async () => {
     if (!currentUser) return;
@@ -654,24 +645,37 @@ export const [AppProvider, useApp] = createContextHook(() => {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    const updatedMessages = [...messages, ...newMessages];
-    setMessages(updatedMessages);
-    await AsyncStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updatedMessages));
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages, ...newMessages];
+      AsyncStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updatedMessages));
+      return updatedMessages;
+    });
 
     console.log(`📬 HustleAI sent ${newMessages.length} task offer(s) via DM`);
-  }, [currentUser, tasks, messages]);
+  }, [currentUser, tasks]);
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
+  const updateAvailabilityStatus = useCallback(async (status: 'offline' | 'online' | 'available_now' | 'busy') => {
+    if (!currentUser) return;
+
+    const updatedUser: User = {
+      ...currentUser,
+      availabilityStatus: status,
+      currentLocation: status === 'available_now' ? {
+        lat: currentUser.location.lat,
+        lng: currentUser.location.lng,
+        lastUpdated: new Date().toISOString(),
+      } : currentUser.currentLocation,
+    };
+
+    await updateUser(updatedUser);
+    console.log('Availability status updated to:', status);
+
+    if (status === 'available_now') {
+      setTimeout(() => {
+        sendHustleAITaskOffers();
+      }, 100);
+    }
+  }, [currentUser, updateUser, sendHustleAITaskOffers]);
 
   const respondToTaskOffer = useCallback(async (messageId: string, response: 'accepted' | 'declined' | 'snoozed') => {
     const message = messages.find(m => m.id === messageId);
