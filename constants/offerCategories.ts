@@ -13,14 +13,30 @@ export interface OfferCategory {
 
 export const OFFER_CATEGORIES: OfferCategory[] = [
   {
+    id: 'food_delivery',
+    name: 'Food Delivery',
+    icon: '🍕',
+    subcategories: ['Restaurant', 'Fast Food', 'Groceries', 'Catering', 'Hot Food'],
+    exampleTitles: [
+      'Fast Food Delivery Driver',
+      'Restaurant & Catering Delivery',
+      'Grocery & Meal Delivery',
+    ],
+    exampleScopes: {
+      starter: 'Single restaurant pickup & delivery (up to 5 miles). Keep food hot.',
+      standard: 'Multiple deliveries per shift (up to 15 miles). Insulated bag provided.',
+      pro: 'Priority delivery with real-time tracking. Catering orders welcome.',
+    },
+  },
+  {
     id: 'delivery',
-    name: 'Delivery',
+    name: 'Package Delivery',
     icon: '📦',
-    subcategories: ['Package', 'Food', 'Groceries', 'Documents', 'Same-Day'],
+    subcategories: ['Package', 'Documents', 'Same-Day', 'Courier', 'Express'],
     exampleTitles: [
       'Fast Package Delivery',
-      'Food & Grocery Delivery',
       'Same-Day Document Courier',
+      'Express Courier Service',
     ],
     exampleScopes: {
       starter: 'Local delivery (up to 5 miles). Basic pickup & dropoff.',
@@ -282,22 +298,6 @@ export const OFFER_CATEGORIES: OfferCategory[] = [
       starter: 'Minor leak repair or shingle replacement. Up to 10 sq ft.',
       standard: 'Roof inspection + repair (up to 50 sq ft). Report included.',
       pro: 'Full roof replacement or major repair. Permit + warranty + insurance claim help.',
-    },
-  },
-  {
-    id: 'food_delivery',
-    name: 'Food Delivery',
-    icon: '🍕',
-    subcategories: ['Restaurant', 'Fast Food', 'Groceries', 'Catering', 'Hot Food'],
-    exampleTitles: [
-      'Fast Food Delivery Driver',
-      'Restaurant & Catering Delivery',
-      'Grocery & Meal Delivery',
-    ],
-    exampleScopes: {
-      starter: 'Single restaurant pickup & delivery (up to 5 miles). Keep food hot.',
-      standard: 'Multiple deliveries per shift (up to 15 miles). Insulated bag provided.',
-      pro: 'Priority delivery with real-time tracking. Catering orders welcome.',
     },
   },
   {
