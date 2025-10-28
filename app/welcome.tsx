@@ -18,6 +18,7 @@ export default function WelcomeScreen() {
   const { currentUser } = useApp();
 
   const [showConfetti, setShowConfetti] = useState(true);
+  const hasRedirectedRef = useRef(false);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -47,7 +48,10 @@ export default function WelcomeScreen() {
   }, [fadeAnim, scaleAnim, slideAnim]);
 
   if (!currentUser) {
-    router.replace('/onboarding');
+    if (!hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
+      router.replace('/onboarding');
+    }
     return null;
   }
 

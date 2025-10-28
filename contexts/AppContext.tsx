@@ -152,6 +152,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       checkStreak();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id]);
 
   const completeOnboarding = useCallback(async (name: string, role: UserRole, location: { lat: number; lng: number; address: string }, email?: string, password?: string, mode?: UserMode, trades?: string[]) => {
