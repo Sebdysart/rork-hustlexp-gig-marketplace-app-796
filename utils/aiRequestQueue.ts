@@ -37,7 +37,7 @@ class AIRequestQueue {
   private processing: boolean = false;
   private handlers: Map<string, RequestHandler> = new Map();
   private listeners: Map<string, (result: QueueResult) => void> = new Map();
-  private batchTimer: NodeJS.Timeout | null = null;
+  private batchTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.loadQueue();
