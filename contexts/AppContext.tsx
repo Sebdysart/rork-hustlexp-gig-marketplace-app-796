@@ -113,36 +113,46 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await Promise.all(promises);
   }, [users, currentUser]);
 
-  const checkAndUpdateStreak = useCallback(async () => {
-    if (!currentUser) return;
-
-    const streakResult = checkDailyStreak(currentUser);
-    
-    if (streakResult.isNewDay) {
-      const updatedUser = updateUserStreak(currentUser, streakResult);
-      await updateUser(updatedUser);
-
-      if (streakResult.gritReward > 0 && addNotification) {
-        addNotification(currentUser.id, 'quest_completed', {
-          taskTitle: 'Daily Login',
-          xpReward: 0,
-          message: streakResult.message,
-        });
-      }
-    }
-  }, [currentUser, updateUser, addNotification]);
-
   useEffect(() => {
-    if (currentUser && currentUser.id !== lastCheckedUserIdRef.current) {
+    if (!currentUser) return;
+    
+    if (currentUser.id !== lastCheckedUserIdRef.current) {
       lastCheckedUserIdRef.current = currentUser.id;
       hasCheckedStreakRef.current = false;
     }
 
-    if (currentUser && !hasCheckedStreakRef.current) {
+    if (!hasCheckedStreakRef.current) {
       hasCheckedStreakRef.current = true;
-      checkAndUpdateStreak();
+      
+      const checkStreak = async () => {
+        const user = currentUser;
+        const streakResult = checkDailyStreak(user);
+        
+        if (streakResult.isNewDay) {
+          const updatedUser = updateUserStreak(user, streakResult);
+          
+          setUsers(prevUsers => {
+            const updated = prevUsers.map(u => u.id === updatedUser.id ? updatedUser : u);
+            AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+            return updated;
+          });
+          
+          setCurrentUser(updatedUser);
+          await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedUser));
+
+          if (streakResult.gritReward > 0 && addNotification) {
+            addNotification(user.id, 'quest_completed', {
+              taskTitle: 'Daily Login',
+              xpReward: 0,
+              message: streakResult.message,
+            });
+          }
+        }
+      };
+      
+      checkStreak();
     }
-  }, [currentUser, checkAndUpdateStreak]);
+  }, [currentUser?.id]);
 
   const completeOnboarding = useCallback(async (name: string, role: UserRole, location: { lat: number; lng: number; address: string }, email?: string, password?: string, mode?: UserMode, trades?: string[]) => {
     const initialMode = mode || (role === 'poster' ? 'business' : 'everyday');
