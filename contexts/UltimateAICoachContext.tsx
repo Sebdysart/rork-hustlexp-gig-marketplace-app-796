@@ -62,10 +62,11 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     console.log('[UltimateAI] LanguageContext not available yet');
   }
 
+  const currentUserId = appContext?.currentUser?.id || null;
   const currentUser = appContext?.currentUser || null;
-  const tasks = useMemo(() => appContext?.tasks || [], [appContext?.tasks]);
-  const availableTasks = useMemo(() => appContext?.availableTasks || [], [appContext?.availableTasks]);
-  const myAcceptedTasks = useMemo(() => appContext?.myAcceptedTasks || [], [appContext?.myAcceptedTasks]);
+  const tasks = appContext?.tasks || [];
+  const availableTasks = appContext?.availableTasks || [];
+  const myAcceptedTasks = appContext?.myAcceptedTasks || [];
   const currentLanguage = langContext?.currentLanguage || 'en';
   const translateText = useCallback(
     async (text: string) => langContext?.translateText ? langContext.translateText(text) : text,
@@ -88,8 +89,15 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   const [activeTutorial, setActiveTutorial] = useState<Tutorial | null>(null);
   const [backendStatus, setBackendStatus] = useState<HealthStatus>(backendHealth.getStatus());
   const proactiveCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastProactiveCheck = useRef<number>(Date.now());
+  const lastProactiveCheck = useRef<number>(0);
   const sendProactiveAlertRef = useRef<((type: string, data: any) => Promise<void>) | null>(null);
+  const appContextRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (appContext) {
+      appContextRef.current = appContext;
+    }
+  }, [appContext]);
 
   useEffect(() => {
     loadHistory();
@@ -108,53 +116,67 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   }, []);
 
   const userPatternsRef = useRef<UserPattern | null>(null);
+  const settingsRef = useRef(settings);
 
   useEffect(() => {
     userPatternsRef.current = userPatterns;
   }, [userPatterns]);
 
   useEffect(() => {
-    if (!currentUser || !settings.proactiveAlertsEnabled || !settings.learningMode) {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  useEffect(() => {
+    const currentSettings = settingsRef.current;
+    if (!currentUserId || !currentSettings.proactiveAlertsEnabled || !currentSettings.learningMode) {
+      if (proactiveCheckInterval.current) {
+        clearInterval(proactiveCheckInterval.current);
+        proactiveCheckInterval.current = null;
+      }
       return;
     }
 
     const runProactiveChecks = async () => {
-      if (!currentUser || !availableTasks || !sendProactiveAlertRef.current) return;
+      const user = appContextRef.current?.currentUser;
+      const tasks = appContextRef.current?.availableTasks || [];
+      if (!user || !tasks || !sendProactiveAlertRef.current) return;
 
       console.log('[AICoach] Checking proactive alerts...');
 
       // 1. Streak Warning (2 hours before expiry)
       const streakExpiryHours = 24;
-      if (currentUser.streaks.lastTaskDate && currentUser.streaks.current > 0) {
-        const lastTask = new Date(currentUser.streaks.lastTaskDate);
+      if (user.streaks?.lastTaskDate && user.streaks?.current > 0) {
+        const lastTask = new Date(user.streaks.lastTaskDate);
         const now = new Date();
         const hoursSinceLastTask = (now.getTime() - lastTask.getTime()) / (1000 * 60 * 60);
         const hoursRemaining = streakExpiryHours - hoursSinceLastTask;
 
         if (hoursRemaining <= 2 && hoursRemaining > 0) {
           await sendProactiveAlertRef.current('streak_warning', {
-            streakCount: currentUser.streaks.current,
+            streakCount: user.streaks.current,
             hoursRemaining,
           });
         }
       }
 
       // 2. Level Up Progress (80%+ to next level)
-      const xpProgress = (currentUser.xp / currentUser.nextLevelXP) * 100;
-      if (xpProgress >= 80 && xpProgress < 100) {
-        const xpNeeded = currentUser.nextLevelXP - currentUser.xp;
-        await sendProactiveAlertRef.current('level_up_soon', {
-          currentLevel: currentUser.level,
-          nextLevel: currentUser.level + 1,
-          xpNeeded,
-          progress: Math.round(xpProgress),
-        });
+      if (user.nextLevelXP && user.xp) {
+        const xpProgress = (user.xp / user.nextLevelXP) * 100;
+        if (xpProgress >= 80 && xpProgress < 100) {
+          const xpNeeded = user.nextLevelXP - user.xp;
+          await sendProactiveAlertRef.current('level_up_soon', {
+            currentLevel: user.level,
+            nextLevel: user.level + 1,
+            xpNeeded,
+            progress: Math.round(xpProgress),
+          });
+        }
       }
 
       // 3. Perfect Task Matches (95%+ match score)
       const patterns = userPatternsRef.current;
-      if (patterns) {
-        const matchedTasks = availableTasks.filter((task: any) => {
+      if (patterns && patterns.favoriteCategories.length > 0) {
+        const matchedTasks = tasks.filter((task: any) => {
           let score = 0;
           if (patterns.favoriteCategories.includes(task.category)) score += 40;
           if (task.payAmount >= patterns.averageTaskValue * 0.9) score += 30;
@@ -176,30 +198,34 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
       }
     };
 
-    runProactiveChecks();
-
-    // Start proactive polling every 30 minutes
-    if (proactiveCheckInterval.current) {
-      clearInterval(proactiveCheckInterval.current);
+    // Only run checks on mount, not on every dependency change
+    const hasRun = lastProactiveCheck.current > 0;
+    if (!hasRun) {
+      runProactiveChecks();
+      lastProactiveCheck.current = Date.now();
     }
 
-    proactiveCheckInterval.current = setInterval(() => {
-      const now = Date.now();
-      const timeSinceLastCheck = now - lastProactiveCheck.current;
+    // Start proactive polling every 30 minutes
+    if (!proactiveCheckInterval.current) {
+      proactiveCheckInterval.current = setInterval(() => {
+        const now = Date.now();
+        const timeSinceLastCheck = now - lastProactiveCheck.current;
 
-      if (timeSinceLastCheck >= 30 * 60 * 1000) {
-        console.log('[AICoach] Running scheduled proactive check...');
-        lastProactiveCheck.current = now;
-        runProactiveChecks();
-      }
-    }, 5 * 60 * 1000);
+        if (timeSinceLastCheck >= 30 * 60 * 1000) {
+          console.log('[AICoach] Running scheduled proactive check...');
+          lastProactiveCheck.current = now;
+          runProactiveChecks();
+        }
+      }, 5 * 60 * 1000);
+    }
 
     return () => {
       if (proactiveCheckInterval.current) {
         clearInterval(proactiveCheckInterval.current);
+        proactiveCheckInterval.current = null;
       }
     };
-  }, [currentUser, availableTasks, settings.proactiveAlertsEnabled, settings.learningMode]);
+  }, [currentUserId]);
 
   const loadHistory = async () => {
     try {
@@ -242,9 +268,11 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
 
   useEffect(() => {
     const analyzePatterns = async () => {
-      if (!currentUser || !tasks || tasks.length === 0) return;
+      const user = appContextRef.current?.currentUser;
+      const allTasks = appContextRef.current?.tasks || [];
+      if (!user || !allTasks || allTasks.length === 0) return;
 
-      const completedTasks = tasks.filter((t: any) => t.status === 'completed' && t.workerId === currentUser.id);
+      const completedTasks = allTasks.filter((t: any) => t.status === 'completed' && t.workerId === user.id);
       
       if (completedTasks.length === 0) return;
 
@@ -273,23 +301,22 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
         .slice(0, 5)
         .map(([hour]) => parseInt(hour));
 
-      const streakConsciousness = currentUser.streaks.current > 7 ? 'high' : 
-                                   currentUser.streaks.current > 3 ? 'medium' : 'low';
+      const streakConsciousness = user.streaks.current > 7 ? 'high' : 
+                                   user.streaks.current > 3 ? 'medium' : 'low';
 
       setUserPatterns({
         preferredWorkTimes,
         favoriteCategories,
         averageTaskValue: avgValue,
-        completionSpeed: currentUser.tasksCompleted > 50 ? 'fast' : 'medium',
+        completionSpeed: user.tasksCompleted > 50 ? 'fast' : 'medium',
         streakConsciousness,
       });
     };
 
-    if (currentUser?.id && tasks.length > 0) {
+    if (currentUserId) {
       analyzePatterns();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser?.id, tasks.length]);
+  }, [currentUserId]);
 
 
 
@@ -312,7 +339,7 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
 
       case 'perfect_match':
         content = await translateText(
-          `🎯 Perfect Match! I found a quest that's 95% match for you: "${data.task.title}" - $${data.task.payAmount}`
+          `🎯 Perfect Match! I found a quest that's 95% match for you: "${data.task.title}" - ${data.task.payAmount}`
         );
         actions = [{
           type: 'navigate',
@@ -380,13 +407,14 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
       const updated = [...prev, newMessage];
       saveHistory(updated);
 
-      if (settings.hapticFeedback && Platform.OS !== 'web') {
+      const currentSettings = settingsRef.current;
+      if (currentSettings.hapticFeedback && Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
 
       return updated;
     });
-  }, [settings, translateText]);
+  }, [translateText]);
 
   useEffect(() => {
     sendProactiveAlertRef.current = sendProactiveAlert;
