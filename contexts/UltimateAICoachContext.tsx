@@ -47,30 +47,33 @@ export interface UserPattern {
 }
 
 export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook(() => {
-  let appContext: any = null;
-  let langContext: any = null;
+  const appContext = useApp();
+  const langContext = useLanguage();
+  
+  const appContextRef = useRef<any>(null);
+  const langContextRef = useRef<any>(null);
 
-  try {
-    appContext = useApp();
-  } catch {
-    console.log('[UltimateAI] AppContext not available yet (guest mode)');
-  }
+  useEffect(() => {
+    if (appContext) {
+      appContextRef.current = appContext;
+    }
+  }, [appContext]);
 
-  try {
-    langContext = useLanguage();
-  } catch {
-    console.log('[UltimateAI] LanguageContext not available yet');
-  }
+  useEffect(() => {
+    if (langContext) {
+      langContextRef.current = langContext;
+    }
+  }, [langContext]);
 
-  const currentUserId = appContext?.currentUser?.id || null;
-  const currentUser = appContext?.currentUser || null;
-  const tasks = appContext?.tasks || [];
-  const availableTasks = appContext?.availableTasks || [];
-  const myAcceptedTasks = appContext?.myAcceptedTasks || [];
-  const currentLanguage = langContext?.currentLanguage || 'en';
+  const currentUserId = appContextRef.current?.currentUser?.id || null;
+  const currentUser = appContextRef.current?.currentUser || null;
+  const tasks = appContextRef.current?.tasks || [];
+  const availableTasks = appContextRef.current?.availableTasks || [];
+  const myAcceptedTasks = appContextRef.current?.myAcceptedTasks || [];
+  const currentLanguage = langContextRef.current?.currentLanguage || 'en';
   const translateText = useCallback(
-    async (text: string) => langContext?.translateText ? langContext.translateText(text) : text,
-    [langContext?.translateText]
+    async (text: string) => langContextRef.current?.translateText ? langContextRef.current.translateText(text) : text,
+    []
   );
   
   const [isOpen, setIsOpen] = useState(false);
@@ -91,13 +94,6 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   const proactiveCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastProactiveCheck = useRef<number>(0);
   const sendProactiveAlertRef = useRef<((type: string, data: any) => Promise<void>) | null>(null);
-  const appContextRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (appContext) {
-      appContextRef.current = appContext;
-    }
-  }, [appContext]);
 
   useEffect(() => {
     loadHistory();
