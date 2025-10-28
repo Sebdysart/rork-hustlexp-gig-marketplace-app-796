@@ -55,6 +55,7 @@ export default function WelcomeScreen() {
   const lightRayRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const newParticles: Particle[] = [];
     const colors = [
       premiumColors.neonCyan,
@@ -113,9 +114,9 @@ export default function WelcomeScreen() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
       
-      particles.forEach((particle, index) => {
+      newParticles.forEach((particle, index) => {
         const delay = index * 8;
-        const angle = (Math.PI * 2 * index) / particles.length;
+        const angle = (Math.PI * 2 * index) / newParticles.length;
         const distance = 100 + Math.random() * 250;
         const targetX = SCREEN_WIDTH / 2 + Math.cos(angle) * distance;
         const targetY = SCREEN_HEIGHT / 2 - 100 + Math.sin(angle) * distance;
