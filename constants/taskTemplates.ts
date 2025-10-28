@@ -24,6 +24,13 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     xpReward: 75,
   },
   {
+    title: 'Food Delivery Sprint',
+    description: 'Deliver delicious meals while they\'re hot! Speed and care required.',
+    category: 'food_delivery',
+    suggestedPay: 25,
+    xpReward: 60,
+  },
+  {
     title: 'Errand Adventure',
     description: 'Embark on a quest to gather supplies from various merchants.',
     category: 'errands',

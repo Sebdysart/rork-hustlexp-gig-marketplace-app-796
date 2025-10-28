@@ -7,6 +7,7 @@ export type TaskCategory =
   | 'cleaning'
   | 'errands'
   | 'delivery'
+  | 'food_delivery'
   | 'moving'
   | 'handyman'
   | 'tech'

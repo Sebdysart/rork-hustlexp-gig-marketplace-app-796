@@ -285,6 +285,22 @@ export const OFFER_CATEGORIES: OfferCategory[] = [
     },
   },
   {
+    id: 'food_delivery',
+    name: 'Food Delivery',
+    icon: '🍕',
+    subcategories: ['Restaurant', 'Fast Food', 'Groceries', 'Catering', 'Hot Food'],
+    exampleTitles: [
+      'Fast Food Delivery Driver',
+      'Restaurant & Catering Delivery',
+      'Grocery & Meal Delivery',
+    ],
+    exampleScopes: {
+      starter: 'Single restaurant pickup & delivery (up to 5 miles). Keep food hot.',
+      standard: 'Multiple deliveries per shift (up to 15 miles). Insulated bag provided.',
+      pro: 'Priority delivery with real-time tracking. Catering orders welcome.',
+    },
+  },
+  {
     id: 'cleaning',
     name: 'Cleaning',
     icon: '🧹',
