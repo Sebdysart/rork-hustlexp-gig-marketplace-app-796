@@ -296,8 +296,8 @@ export default function UltimateAICoach() {
                       <Sparkles color={COLORS.accent} size={24} />
                     </View>
                     <View>
-                      <Text style={styles.headerTitle}>{t('ai_coach_title')}</Text>
-                      <Text style={styles.headerSubtitle}>{t('ai_coach_subtitle')}</Text>
+                      <Text style={styles.headerTitle}>{t('ai_coach.ai_coach_title')}</Text>
+                      <Text style={styles.headerSubtitle}>{t('ai_coach.ai_coach_subtitle')}</Text>
                     </View>
                   </View>
                   
@@ -323,7 +323,7 @@ export default function UltimateAICoach() {
                       style={styles.settingItem}
                       onPress={() => updateSettings({ proactiveAlertsEnabled: !settings.proactiveAlertsEnabled })}
                     >
-                      <Text style={styles.settingLabel}>{t('proactive_alerts')}</Text>
+                      <Text style={styles.settingLabel}>{t('ai_coach.proactive_alerts')}</Text>
                       <View style={[styles.toggle, settings.proactiveAlertsEnabled && styles.toggleActive]} />
                     </TouchableOpacity>
                     
@@ -331,7 +331,7 @@ export default function UltimateAICoach() {
                       style={styles.settingItem}
                       onPress={() => updateSettings({ hapticFeedback: !settings.hapticFeedback })}
                     >
-                      <Text style={styles.settingLabel}>{t('haptic_feedback')}</Text>
+                      <Text style={styles.settingLabel}>{t('ai_coach.haptic_feedback')}</Text>
                       <View style={[styles.toggle, settings.hapticFeedback && styles.toggleActive]} />
                     </TouchableOpacity>
 
@@ -339,7 +339,7 @@ export default function UltimateAICoach() {
                       style={styles.settingItem}
                       onPress={() => updateSettings({ autoHighlight: !settings.autoHighlight })}
                     >
-                      <Text style={styles.settingLabel}>{t('auto_highlight')}</Text>
+                      <Text style={styles.settingLabel}>{t('ai_coach.auto_highlight')}</Text>
                       <View style={[styles.toggle, settings.autoHighlight && styles.toggleActive]} />
                     </TouchableOpacity>
 
@@ -348,7 +348,7 @@ export default function UltimateAICoach() {
                       onPress={clearHistory}
                     >
                       <Trash2 color="#FF4444" size={18} />
-                      <Text style={styles.dangerLabel}>{t('clear_history')}</Text>
+                      <Text style={styles.dangerLabel}>{t('ai_coach.clear_history')}</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -361,27 +361,27 @@ export default function UltimateAICoach() {
                   {messages.length === 0 && (
                     <View style={styles.emptyState}>
                       <Sparkles color={COLORS.accent} size={48} />
-                      <Text style={styles.emptyTitle}>{t('ai_coach_welcome')}</Text>
-                      <Text style={styles.emptySubtitle}>{t('ai_coach_welcome_subtitle')}</Text>
+                      <Text style={styles.emptyTitle}>{t('ai_coach.ai_coach_welcome')}</Text>
+                      <Text style={styles.emptySubtitle}>{t('ai_coach.ai_coach_welcome_subtitle')}</Text>
                       
                       <View style={styles.quickActions}>
                         <TouchableOpacity
                           style={styles.quickActionButton}
-                          onPress={() => sendMessage(t('show_best_quests'))}
+                          onPress={() => sendMessage(t('ai_coach.show_best_quests'))}
                         >
-                          <Text style={styles.quickActionText}>🎯 {t('show_best_quests')}</Text>
+                          <Text style={styles.quickActionText}>🎯 {t('ai_coach.show_best_quests')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.quickActionButton}
-                          onPress={() => sendMessage(t('how_to_earn_more'))}
+                          onPress={() => sendMessage(t('ai_coach.how_to_earn_more'))}
                         >
-                          <Text style={styles.quickActionText}>💰 {t('how_to_earn_more')}</Text>
+                          <Text style={styles.quickActionText}>💰 {t('ai_coach.how_to_earn_more')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.quickActionButton}
-                          onPress={() => sendMessage(t('whats_my_progress'))}
+                          onPress={() => sendMessage(t('ai_coach.whats_my_progress'))}
                         >
-                          <Text style={styles.quickActionText}>📊 {t('whats_my_progress')}</Text>
+                          <Text style={styles.quickActionText}>📊 {t('ai_coach.whats_my_progress')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -438,7 +438,7 @@ export default function UltimateAICoach() {
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={styles.input}
-                    placeholder={t('ask_ai_anything')}
+                    placeholder={t('ai_coach.ask_ai_anything')}
                     placeholderTextColor={COLORS.textSecondary}
                     value={inputText}
                     onChangeText={setInputText}
