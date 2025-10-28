@@ -1,5 +1,5 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Task, Message, UserRole, UserMode, Rating, Report, Purchase, PowerUp, ActivePowerUp, UnlockedFeature, RoleStats, ModeStats } from '@/types';
 import { SEED_USERS, SEED_TASKS } from '@/mocks/seedData';
@@ -47,12 +47,15 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [activePowerUps, setActivePowerUps] = useState<Record<string, ActivePowerUp[]>>({});
 
-  const hasCheckedStreakRef = useRef(false);
-  const lastCheckedUserIdRef = useRef<string | null>(null);
-
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      checkAndUpdateStreak();
+    }
+  }, [currentUser?.id]);
 
   const loadData = async () => {
     try {
@@ -94,25 +97,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   };
 
-  const updateUser = useCallback(async (updatedUser: User) => {
-    const isCurrentUser = currentUser?.id === updatedUser.id;
-    
-    if (isCurrentUser) {
-      setCurrentUser(updatedUser);
-    }
-    
-    const updatedUsers = users.map(u => u.id === updatedUser.id ? updatedUser : u);
-    setUsers(updatedUsers);
-
-    const promises = [AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers))];
-    
-    if (isCurrentUser) {
-      promises.push(AsyncStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedUser)));
-    }
-
-    await Promise.all(promises);
-  }, [users, currentUser]);
-
   const checkAndUpdateStreak = useCallback(async () => {
     if (!currentUser) return;
 
@@ -130,19 +114,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
         });
       }
     }
-  }, [currentUser, updateUser, addNotification]);
-
-  useEffect(() => {
-    if (currentUser && currentUser.id !== lastCheckedUserIdRef.current) {
-      lastCheckedUserIdRef.current = currentUser.id;
-      hasCheckedStreakRef.current = false;
-    }
-
-    if (currentUser && !hasCheckedStreakRef.current) {
-      hasCheckedStreakRef.current = true;
-      checkAndUpdateStreak();
-    }
-  }, [currentUser, checkAndUpdateStreak]);
+  }, [currentUser]);
 
   const completeOnboarding = useCallback(async (name: string, role: UserRole, location: { lat: number; lng: number; address: string }, email?: string, password?: string, mode?: UserMode, trades?: string[]) => {
     const initialMode = mode || (role === 'poster' ? 'business' : 'everyday');
@@ -236,6 +208,25 @@ export const [AppProvider, useApp] = createContextHook(() => {
       AsyncStorage.setItem(STORAGE_KEYS.HAS_ONBOARDED, JSON.stringify(true)),
     ]);
   }, [users]);
+
+  const updateUser = useCallback(async (updatedUser: User) => {
+    const isCurrentUser = currentUser?.id === updatedUser.id;
+    
+    if (isCurrentUser) {
+      setCurrentUser(updatedUser);
+    }
+    
+    const updatedUsers = users.map(u => u.id === updatedUser.id ? updatedUser : u);
+    setUsers(updatedUsers);
+
+    const promises = [AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers))];
+    
+    if (isCurrentUser) {
+      promises.push(AsyncStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedUser)));
+    }
+
+    await Promise.all(promises);
+  }, [users, currentUser]);
 
   const createTask = useCallback(async (taskData: Omit<Task, 'id' | 'status' | 'createdAt' | 'posterId'>) => {
     if (!currentUser) return;
