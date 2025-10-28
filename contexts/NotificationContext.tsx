@@ -54,8 +54,8 @@ export const [NotificationProvider, useNotifications] = createContextHook(() => 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [expoPushToken, setExpoPushToken] = useState<string>('');
-  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
-  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const notificationListener = useRef<Notifications.EventSubscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.EventSubscription | undefined>(undefined);
   const throttleMap = useRef<Map<NotificationType, number>>(new Map());
   const THROTTLE_MS = 5000;
 
@@ -63,20 +63,20 @@ export const [NotificationProvider, useNotifications] = createContextHook(() => 
     loadNotifications();
     registerForPushNotifications();
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('📬 Notification received:', notification);
-    });
+    if (Platform.OS !== 'web') {
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        console.log('📬 Notification received:', notification);
+      });
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('📬 Notification tapped:', response);
-    });
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log('📬 Notification tapped:', response);
+      });
+    }
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+      if (Platform.OS !== 'web') {
+        notificationListener.current?.remove();
+        responseListener.current?.remove();
       }
     };
   }, []);
