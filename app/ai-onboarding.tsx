@@ -1183,14 +1183,8 @@ export default function AIOnboardingScreen() {
     // Add message to local state
     setMessages(prev => [...prev, newMessage]);
     
-    // Update UltimateAICoach context for awareness
-    updateContext({
-      screen: 'onboarding',
-      step: step,
-      extractedData: extractedData,
-      progress: progress,
-      lastAIMessage: content,
-    });
+    // DON'T update context on every message - it causes infinite loop
+    // Only update on critical steps
     
     setCurrentStep(step);
     startMessageAnimation();
@@ -1208,13 +1202,7 @@ export default function AIOnboardingScreen() {
     // Add to local state
     setMessages(prev => [...prev, userMessage]);
     
-    // Update UltimateAICoach context with latest user input
-    updateContext({
-      screen: 'onboarding',
-      step: currentStep,
-      extractedData: extractedData,
-      lastUserInput: content,
-    });
+    // DON'T update context here - causes infinite loop
   };
 
   const handleSend = async () => {
