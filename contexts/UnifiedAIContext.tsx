@@ -1,5 +1,5 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from './AppContext';
 import { useLanguage } from './LanguageContext';
@@ -45,28 +45,18 @@ export interface AIContext {
 }
 
 export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
-  let currentUser: any = null;
-  let tasks: any[] = [];
-  let availableTasks: any[] = [];
-  let myAcceptedTasks: any[] = [];
-  let currentLanguage = 'en';
-  let translateText = async (text: string) => text;
+  let appContext: any = null;
+  let langContext: any = null;
 
   try {
-    const appContext = useApp();
-    currentUser = appContext.currentUser;
-    tasks = appContext.tasks;
-    availableTasks = appContext.availableTasks;
-    myAcceptedTasks = appContext.myAcceptedTasks;
-  } catch (error) {
+    appContext = useApp();
+  } catch {
     console.log('[UnifiedAI] AppContext not available (OK during onboarding)');
   }
 
   try {
-    const langContext = useLanguage();
-    currentLanguage = langContext.currentLanguage;
-    translateText = langContext.translateText;
-  } catch (error) {
+    langContext = useLanguage();
+  } catch {
     console.log('[UnifiedAI] LanguageContext not available');
   }
   
@@ -171,7 +161,7 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
   const sendMessage = useCallback(async (userInput: string, messageContext?: AIContext) => {
     if (!userInput.trim() || isProcessing) return;
 
-    const userMessage = addMessage({
+    addMessage({
       role: 'user',
       content: userInput.trim(),
       context: messageContext?.screen,
@@ -181,6 +171,12 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
     setIsProcessing(true);
 
     try {
+      const currentUser = appContext?.currentUser;
+      const availableTasks = appContext?.availableTasks || [];
+      const myAcceptedTasks = appContext?.myAcceptedTasks || [];
+      const currentLanguage = langContext?.currentLanguage || 'en';
+      const translateTextFn = langContext?.translateText || ((text: string) => Promise.resolve(text));
+
       const fullContext = {
         ...context,
         ...messageContext,
@@ -206,7 +202,7 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
       let aiContent = response.response;
       
       if (settings.autoTranslate && currentLanguage !== 'en') {
-        aiContent = await translateText(aiContent);
+        aiContent = await translateTextFn(aiContent);
       }
 
       const assistantMessage = addMessage({
@@ -225,9 +221,10 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
     } catch (error: any) {
       console.error('[UnifiedAI] Error in sendMessage:', error);
       
+      const translateTextFn = langContext?.translateText || ((text: string) => Promise.resolve(text));
       const errorContent = error?.message?.includes('Rate limit')
-        ? await translateText("I'm getting a lot of requests right now. Please wait a moment and try again.")
-        : await translateText("I'm having trouble right now. Please try again in a moment.");
+        ? await translateTextFn("I'm getting a lot of requests right now. Please wait a moment and try again.")
+        : await translateTextFn("I'm having trouble right now. Please try again in a moment.");
       
       addMessage({
         role: 'assistant',
@@ -242,12 +239,9 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
     isProcessing,
     addMessage,
     context,
-    currentUser,
-    availableTasks,
-    myAcceptedTasks,
-    currentLanguage,
-    settings,
-    translateText,
+    appContext,
+    langContext,
+    settings.autoTranslate,
     triggerHapticIfEnabled,
   ]);
 
@@ -282,7 +276,7 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
     return messages.filter(m => m.context === contextScreen);
   }, [messages]);
 
-  return useMemo(() => ({
+  return {
     messages,
     isProcessing,
     settings,
@@ -296,19 +290,5 @@ export const [UnifiedAIProvider, useUnifiedAI] = createContextHook(() => {
     updateContext,
     getMessagesForContext,
     triggerHaptic: triggerHapticIfEnabled,
-  }), [
-    messages,
-    isProcessing,
-    settings,
-    context,
-    backendStatus,
-    sendMessage,
-    addMessage,
-    addSystemMessage,
-    clearHistory,
-    updateSettings,
-    updateContext,
-    getMessagesForContext,
-    triggerHapticIfEnabled,
-  ]);
+  };
 });

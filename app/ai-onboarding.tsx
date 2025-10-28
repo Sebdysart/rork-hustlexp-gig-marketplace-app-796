@@ -281,8 +281,6 @@ export default function AIOnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { completeOnboarding, tasks: allTasks } = useApp();
   
-  const { updateContext, sendMessage: sendAIMessage, isLoading: isAILoading } = useUltimateAICoach();
-  
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [input, setInput] = useState('');
   const [extractedData, setExtractedData] = useState<ExtractedData>({});
@@ -350,6 +348,7 @@ export default function AIOnboardingScreen() {
     startBreatheAnimation();
     showWelcomeMessage();
     startMessageAnimation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -822,7 +821,7 @@ export default function AIOnboardingScreen() {
     ]).start();
   }, []);
 
-  const showWelcomeMessage = async () => {
+  const showWelcomeMessage = useCallback(async () => {
     changeAvatarExpression('happy');
     await new Promise(resolve => setTimeout(resolve, 500));
     addAIMessage("Hey there! I'm HUSTLEAI 👋", 'welcome');
@@ -835,9 +834,10 @@ export default function AIOnboardingScreen() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     showContextualBubble('You can use voice or text!', '🎙️', 4000);
     askForName();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const askForName = () => {
+  const askForName = useCallback(() => {
     changeAvatarExpression('neutral');
     addAIMessage("What's your real name? (We'll generate a cool gamertag for you!)", 'name');
     setPredictiveSuggestions([
@@ -845,7 +845,8 @@ export default function AIOnboardingScreen() {
     ]);
     setProgress(10);
     showContextualBubble('Your name builds trust with clients', '✨', 4000);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const generateGamertag = (name: string): string => {
     const adjectives = [
@@ -1168,7 +1169,7 @@ export default function AIOnboardingScreen() {
     router.replace('/welcome-tutorial?fromOnboarding=true');
   };
 
-  const addAIMessage = async (content: string, step: OnboardingStep, uiComponents?: UIComponent[]) => {
+  const addAIMessage = useCallback(async (content: string, step: OnboardingStep, uiComponents?: UIComponent[]) => {
     console.log('[AI_ONBOARDING] addAIMessage called:', content, step);
     
     // Create a local assistant message (this is pre-scripted, not AI-generated)
@@ -1183,14 +1184,11 @@ export default function AIOnboardingScreen() {
     // Add message to local state
     setMessages(prev => [...prev, newMessage]);
     
-    // DON'T update context on every message - it causes infinite loop
-    // Only update on critical steps
-    
     setCurrentStep(step);
-    startMessageAnimation();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const addUserMessage = async (content: string) => {
+  const addUserMessage = useCallback(async (content: string) => {
     // Create user message locally
     const userMessage: Message = {
       id: `user-${Date.now()}-${Math.random()}`,
@@ -1201,9 +1199,7 @@ export default function AIOnboardingScreen() {
     
     // Add to local state
     setMessages(prev => [...prev, userMessage]);
-    
-    // DON'T update context here - causes infinite loop
-  };
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() || isProcessing) return;
