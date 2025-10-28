@@ -47,30 +47,30 @@ export interface UserPattern {
 }
 
 export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook(() => {
-  let currentUser: any = null;
-  let tasks: any[] = [];
-  let availableTasks: any[] = [];
-  let myAcceptedTasks: any[] = [];
-  let currentLanguage = 'en';
-  let translateText = async (text: string) => text;
+  let appContext: any = null;
+  let langContext: any = null;
 
   try {
-    const appContext = useApp();
-    currentUser = appContext.currentUser;
-    tasks = appContext.tasks;
-    availableTasks = appContext.availableTasks;
-    myAcceptedTasks = appContext.myAcceptedTasks;
-  } catch (error) {
+    appContext = useApp();
+  } catch {
     console.log('[UltimateAI] AppContext not available yet (guest mode)');
   }
 
   try {
-    const langContext = useLanguage();
-    currentLanguage = langContext.currentLanguage;
-    translateText = langContext.translateText;
-  } catch (error) {
+    langContext = useLanguage();
+  } catch {
     console.log('[UltimateAI] LanguageContext not available yet');
   }
+
+  const currentUser = appContext?.currentUser || null;
+  const tasks = useMemo(() => appContext?.tasks || [], [appContext?.tasks]);
+  const availableTasks = useMemo(() => appContext?.availableTasks || [], [appContext?.availableTasks]);
+  const myAcceptedTasks = useMemo(() => appContext?.myAcceptedTasks || [], [appContext?.myAcceptedTasks]);
+  const currentLanguage = langContext?.currentLanguage || 'en';
+  const translateText = useCallback(
+    async (text: string) => langContext?.translateText ? langContext.translateText(text) : text,
+    [langContext?.translateText]
+  );
   
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<AIMessage[]>([]);
@@ -94,7 +94,6 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   useEffect(() => {
     loadHistory();
     loadSettings();
-    analyzeUserPatterns();
     
     backendHealth.initialize();
     const unsubscribe = backendHealth.subscribe(status => {
@@ -241,49 +240,56 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     }
   };
 
-  const analyzeUserPatterns = useCallback(async () => {
-    if (!currentUser || !tasks || tasks.length === 0) return;
+  useEffect(() => {
+    const analyzePatterns = async () => {
+      if (!currentUser || !tasks || tasks.length === 0) return;
 
-    const completedTasks = tasks.filter(t => t.status === 'completed' && t.workerId === currentUser.id);
-    
-    if (completedTasks.length === 0) return;
-
-    const categories: Record<string, number> = {};
-    let totalValue = 0;
-    const workHours: Record<number, number> = {};
-
-    completedTasks.forEach(task => {
-      categories[task.category] = (categories[task.category] || 0) + 1;
-      totalValue += task.payAmount;
+      const completedTasks = tasks.filter((t: any) => t.status === 'completed' && t.workerId === currentUser.id);
       
-      if (task.completedAt) {
-        const hour = new Date(task.completedAt).getHours();
-        workHours[hour] = (workHours[hour] || 0) + 1;
-      }
-    });
+      if (completedTasks.length === 0) return;
 
-    const avgValue = totalValue / completedTasks.length;
-    const favoriteCategories = Object.entries(categories)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-      .map(([cat]) => cat);
+      const categories: Record<string, number> = {};
+      let totalValue = 0;
+      const workHours: Record<number, number> = {};
 
-    const preferredWorkTimes = Object.entries(workHours)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([hour]) => parseInt(hour));
+      completedTasks.forEach((task: any) => {
+        categories[task.category] = (categories[task.category] || 0) + 1;
+        totalValue += task.payAmount;
+        
+        if (task.completedAt) {
+          const hour = new Date(task.completedAt).getHours();
+          workHours[hour] = (workHours[hour] || 0) + 1;
+        }
+      });
 
-    const streakConsciousness = currentUser.streaks.current > 7 ? 'high' : 
-                                 currentUser.streaks.current > 3 ? 'medium' : 'low';
+      const avgValue = totalValue / completedTasks.length;
+      const favoriteCategories = Object.entries(categories)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([cat]) => cat);
 
-    setUserPatterns({
-      preferredWorkTimes,
-      favoriteCategories,
-      averageTaskValue: avgValue,
-      completionSpeed: currentUser.tasksCompleted > 50 ? 'fast' : 'medium',
-      streakConsciousness,
-    });
-  }, [currentUser, tasks]);
+      const preferredWorkTimes = Object.entries(workHours)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([hour]) => parseInt(hour));
+
+      const streakConsciousness = currentUser.streaks.current > 7 ? 'high' : 
+                                   currentUser.streaks.current > 3 ? 'medium' : 'low';
+
+      setUserPatterns({
+        preferredWorkTimes,
+        favoriteCategories,
+        averageTaskValue: avgValue,
+        completionSpeed: currentUser.tasksCompleted > 50 ? 'fast' : 'medium',
+        streakConsciousness,
+      });
+    };
+
+    if (currentUser?.id && tasks.length > 0) {
+      analyzePatterns();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, tasks.length]);
 
 
 
@@ -651,5 +657,6 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     dismissTutorial,
     navigateWithFilters,
     backendStatus,
+    proactiveAlerts,
   ]);
 });
