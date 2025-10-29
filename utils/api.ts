@@ -42,6 +42,7 @@ export class ApiClient {
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: 'include',
         headers: {
           ...this.headers,
           ...options.headers,
@@ -121,6 +122,7 @@ export class ApiClient {
     try {
       const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           ...this.headers,
           'Content-Type': 'multipart/form-data',
