@@ -19,6 +19,7 @@ import {
 import { BlurView } from 'expo-blur';
 
 import { useApp } from '@/contexts/AppContext';
+import { useUnifiedAI } from '@/contexts/UnifiedAIContext';
 import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import { premiumColors } from '@/constants/designTokens';
 import Colors from '@/constants/colors';
@@ -30,6 +31,7 @@ import {
   QUEST_STREAK_MULTIPLIERS,
 } from '@/constants/quests';
 import QuestCard from '@/components/QuestCard';
+import { useEffect } from 'react';
 
 
 
@@ -37,6 +39,7 @@ type TabType = 'daily' | 'weekly' | 'seasonal' | 'ai';
 
 export default function QuestsScreen() {
   const { currentUser } = useApp();
+  const ai = useUnifiedAI();
   const [activeTab, setActiveTab] = useState<TabType>('daily');
   
   const translationKeys = [
@@ -199,6 +202,23 @@ export default function QuestsScreen() {
   const completedCount = currentQuests.filter((q) => q.completed).length;
   const totalCount = currentQuests.length;
   const completionPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  useEffect(() => {
+    if (currentUser) {
+      ai.updateContext({
+        screen: 'quests',
+        activeTab,
+        totalQuests: totalCount,
+        completedQuests: completedCount,
+        completionPercentage: Math.round(completionPercentage),
+        questStreak,
+        streakMultiplier,
+        userLevel: currentUser.level,
+        userXP: currentUser.xp,
+        tasksCompleted: currentUser.tasksCompleted,
+      });
+    }
+  }, [ai, currentUser, activeTab, totalCount, completedCount, completionPercentage, questStreak, streakMultiplier]);
 
   const tabs: { id: TabType; label: string; icon: any }[] = [
     { id: 'daily', label: translations[5] || 'Daily', icon: Zap },

@@ -4,6 +4,7 @@ import { Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles, MapPin, DollarSign, Plus, X, Wand2, Lightbulb } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useUnifiedAI } from '@/contexts/UnifiedAIContext';
 import Colors from '@/constants/colors';
 import { TaskCategory, PayType } from '@/types';
 import { TASK_TEMPLATES } from '@/constants/taskTemplates';
@@ -41,6 +42,7 @@ export default function PostTaskScreen() {
   const CATEGORIES = getCATEGORIES(translations);
   
   const { currentUser, createTask } = useApp();
+  const ai = useUnifiedAI();
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [category, setCategory] = useState<TaskCategory>('cleaning');
@@ -69,6 +71,22 @@ export default function PostTaskScreen() {
       triggerHaptic('light');
     }
   }, [category, title, setTitle, setDescription, setPayAmount]);
+
+  useEffect(() => {
+    if (currentUser) {
+      ai.updateContext({
+        screen: 'post-task',
+        category,
+        hasTitle: !!title,
+        hasDescription: !!description,
+        hasPayAmount: !!payAmount,
+        hasLocation: !!location,
+        extrasCount: extras.length,
+        payType,
+        isGeneratingAI,
+      });
+    }
+  }, [ai, currentUser, category, title, description, payAmount, location, extras.length, payType, isGeneratingAI]);
 
 
 

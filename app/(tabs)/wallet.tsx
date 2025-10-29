@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, TrendingUp, DollarSign, Download, Calendar, Clock, CheckCircle, X, TrendingDown, Sparkles, Target, Info } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
+import { useUnifiedAI } from '@/contexts/UnifiedAIContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import Colors from '@/constants/colors';
@@ -60,6 +61,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
 export default function WalletScreen() {
   const { currentUser, myAcceptedTasks } = useApp();
+  const ai = useUnifiedAI();
   
   const translationKeys = [
     'Available Balance', 'Pending', 'Instant Payout', 'This Week', 'This Month', 'All Time',
@@ -131,6 +133,21 @@ export default function WalletScreen() {
       weeklyHistory,
     };
   }, [currentUser, myAcceptedTasks]);
+
+  useEffect(() => {
+    if (currentUser && walletData) {
+      ai.updateContext({
+        screen: 'wallet',
+        availableBalance: walletData.available,
+        pendingBalance: walletData.pending,
+        thisWeek: walletData.thisWeek,
+        thisMonth: walletData.thisMonth,
+        weeklyHistory: walletData.weeklyHistory,
+        selectedPeriod,
+        hasPredictions: !!predictions,
+      });
+    }
+  }, [ai, currentUser, walletData, selectedPeriod, predictions]);
 
   useEffect(() => {
     if (currentUser && myAcceptedTasks.length > 0 && walletData && walletData.thisWeek !== undefined && walletData.thisMonth !== undefined) {
