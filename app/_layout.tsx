@@ -15,7 +15,6 @@ import { OfferContext } from "@/contexts/OfferContext";
 import { AIProfileProvider } from "@/contexts/AIProfileContext";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { UltimateAICoachProvider } from "@/contexts/UltimateAICoachContext";
-import { UnifiedAIProvider } from "@/contexts/UnifiedAIContext";
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
@@ -126,7 +125,6 @@ export default function RootLayout() {
                     <AnalyticsProvider>
                       <AppProvider>
                         <UltimateAICoachProvider>
-                          <UnifiedAIProvider>
                             <AIProfileProvider>
                               <TaskLifecycleProvider>
                                 <SquadContext>
@@ -137,7 +135,6 @@ export default function RootLayout() {
                                 </SquadContext>
                               </TaskLifecycleProvider>
                             </AIProfileProvider>
-                          </UnifiedAIProvider>
                         </UltimateAICoachProvider>
                       </AppProvider>
                     </AnalyticsProvider>
