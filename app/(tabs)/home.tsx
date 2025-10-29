@@ -191,39 +191,54 @@ export default function HomeScreen() {
   const fetchAIInsights = async () => {
     if (!currentUser) return;
     
-    // Use tier-based descriptions based on user level
-    const userLevel = currentUser.level;
-    let availDesc = "You're visible to nearby posters";
-    let insightText = 'AI watching for perfect matches';
-    
-    // Tier 1: Side Hustler (Levels 1-10)
-    if (userLevel >= 1 && userLevel <= 10) {
-      availDesc = 'Getting started - Learning your preferences';
-      insightText = 'Personalized guidance & step-by-step help';
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'https://LunchGarden.dycejr.replit.dev/api'}/ai/tier-info/${currentUser.id}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const tierInfo = await response.json();
+        console.log('[Home] AI Tier Info:', tierInfo);
+        
+        // Set AI-powered personalized texts
+        const behavior = tierInfo.behavior || {};
+        const tier = tierInfo.tier || {};
+        
+        // Generate personalized availability description based on tier
+        let availDesc = "You're visible to posters nearby";
+        if (tier.name === 'Prestige') {
+          availDesc = 'Elite visibility - Premium posters can see you first';
+        } else if (tier.name === 'The Architect') {
+          availDesc = 'Strategic mode active - High-value matches prioritized';
+        } else if (tier.name === 'Rainmaker') {
+          availDesc = 'Market-optimized visibility - Surge pricing tracked';
+        } else if (tier.name === 'The Operator') {
+          availDesc = 'Performance mode - Matched by efficiency metrics';
+        } else if (tier.name === 'Side Hustler') {
+          availDesc = 'Getting you started - Learning your preferences';
+        }
+        
+        setAvailabilityDescription(availDesc);
+        
+        // Set AI insights text based on tier personality
+        if (behavior.tone === 'expert') {
+          setAiInsightsText('Autonomous recommendations active');
+        } else if (behavior.tone === 'executive') {
+          setAiInsightsText('Strategic insights & forecasting');
+        } else if (behavior.tone === 'strategic') {
+          setAiInsightsText('Market analysis & earnings optimization');
+        } else if (behavior.tone === 'motivational') {
+          setAiInsightsText('Performance tracking & streak reminders');
+        } else {
+          setAiInsightsText('Personalized guidance & tutorials');
+        }
+      }
+    } catch (error) {
+      console.error('[Home] Failed to fetch AI insights:', error);
+      // Fallback to default text
+      setAvailabilityDescription("You're visible to posters nearby");
+      setAiInsightsText('Get personalized insights & recommendations');
     }
-    // Tier 2: The Operator (Levels 11-20)
-    else if (userLevel >= 11 && userLevel <= 20) {
-      availDesc = 'Performance mode - Efficiency-optimized matching';
-      insightText = 'Tracking streaks & performance metrics';
-    }
-    // Tier 3: Rainmaker (Levels 21-30)
-    else if (userLevel >= 21 && userLevel <= 30) {
-      availDesc = 'Market-optimized - Surge pricing tracked';
-      insightText = 'Market analysis & earnings optimization';
-    }
-    // Tier 4: The Architect (Levels 31-40)
-    else if (userLevel >= 31 && userLevel <= 40) {
-      availDesc = 'Strategic mode - High-value matches prioritized';
-      insightText = 'Strategic insights & revenue forecasting';
-    }
-    // Tier 5: Prestige (Levels 41+)
-    else if (userLevel >= 41) {
-      availDesc = 'Elite visibility - Premium posters see you first';
-      insightText = 'Autonomous recommendations & market intelligence';
-    }
-    
-    setAvailabilityDescription(availDesc);
-    setAiInsightsText(insightText);
   };
 
   const handleStreakPress = () => {
