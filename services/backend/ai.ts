@@ -547,11 +547,15 @@ export interface TranslateResponse {
 
 export class AIService {
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    return api.post<ChatResponse>('/ai/chat', request);
+    return api.post<ChatResponse>('/agent/chat', request);
   }
 
   async parseTask(request: TaskParseRequest): Promise<TaskParseResponse> {
-    return api.post<TaskParseResponse>('/ai/task-parse', request);
+    return api.post<TaskParseResponse>('/agent/chat', {
+      userId: request.userId,
+      message: request.input,
+      context: request.context
+    });
   }
 
   async matchWorkers(request: MatchWorkerRequest): Promise<MatchWorkerResponse> {
@@ -559,19 +563,23 @@ export class AIService {
   }
 
   async matchTasks(request: MatchTaskRequest): Promise<MatchTaskResponse> {
-    return api.post<MatchTaskResponse>('/ai/match-task', request);
+    return api.get<MatchTaskResponse>(`/dashboard/unified/${request.userId}`);
   }
 
   async analyzePatterns(request: AnalyzePatternsRequest): Promise<AnalyzePatternsResponse> {
-    return api.post<AnalyzePatternsResponse>('/ai/analyze-patterns', request);
+    return api.get<AnalyzePatternsResponse>(`/dashboard/progress/${request.userId}`);
   }
 
   async getRecommendations(request: RecommendationsRequest): Promise<RecommendationsResponse> {
-    return api.post<RecommendationsResponse>('/ai/recommendations', request);
+    return api.get<RecommendationsResponse>(`/dashboard/action-suggestions/${request.userId}`);
   }
 
   async sendFeedback(request: FeedbackRequest): Promise<FeedbackResponse> {
-    return api.post<FeedbackResponse>('/ai/feedback', request);
+    return api.post<FeedbackResponse>('/agent/chat', {
+      userId: request.userId,
+      message: `Feedback: ${JSON.stringify(request.data)}`,
+      context: { feedbackType: request.feedbackType }
+    });
   }
 
   async voiceToTask(request: VoiceToTaskRequest): Promise<VoiceToTaskResponse> {
@@ -593,6 +601,10 @@ export class AIService {
 
   async translate(request: TranslateRequest): Promise<TranslateResponse> {
     return api.post<TranslateResponse>('/ai/translate', request);
+  }
+
+  async getTierInfo(userId: string): Promise<any> {
+    return api.get<any>(`/ai/tier-info/${userId}`);
   }
 }
 
