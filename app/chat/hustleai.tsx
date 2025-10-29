@@ -20,7 +20,7 @@ import { useTranslatedTexts } from '@/hooks/useTranslatedText';
 import Colors from '@/constants/colors';
 import { triggerHaptic } from '@/utils/haptics';
 import { premiumColors } from '@/constants/designTokens';
-import { useRorkAgent } from '@rork/toolkit-sdk';
+import { useUnifiedAI } from '@/contexts/UnifiedAIContext';
 
 import GlassCard from '@/components/GlassCard';
 
@@ -41,9 +41,14 @@ export default function HustleAIChatScreen() {
   const translations = useTranslatedTexts(translationKeys);
   const flatListRef = useRef<FlatList>(null);
 
-  const { messages, error, sendMessage, status } = useRorkAgent({
-    tools: {},
-  });
+  const { sendMessage: sendAIMessage } = useUnifiedAI();
+  const [messages, setMessages] = useState<Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+  }>>([]);
+  const [error, setError] = useState<Error | null>(null);
+  const [status, setStatus] = useState<'idle' | 'submitted'>('idle');
 
   const isLoading = status === 'submitted';
 
@@ -56,7 +61,7 @@ export default function HustleAIChatScreen() {
   }, [messages.length]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !currentUser) return;
     
     const messageText = input.trim();
     
@@ -69,9 +74,45 @@ export default function HustleAIChatScreen() {
       return;
     }
     
+    const userMessage = {
+      id: Date.now().toString(),
+      role: 'user' as const,
+      content: messageText,
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
-    await sendMessage(messageText);
+    setStatus('submitted');
+    setError(null);
     triggerHaptic('light');
+    
+    try {
+      const response = await sendAIMessage(messageText, {
+        screen: 'chat',
+        language: 'en',
+      });
+      
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant' as const,
+        content: response.response,
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (err) {
+      console.error('[HustleAI Chat] Error:', err);
+      setError(err as Error);
+      
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant' as const,
+        content: "I'm having trouble connecting to the server. Please try again.",
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setStatus('idle');
+    }
   };
 
 
@@ -159,72 +200,20 @@ export default function HustleAIChatScreen() {
             </View>
           )}
           
-          <View style={{ flex: 1 }}>
-            {item.parts.map((part, i) => {
-              switch (part.type) {
-                case 'text':
-                  return (
-                    <View
-                      key={`${item.id}-${i}`}
-                      style={[
-                        styles.messageBubble,
-                        isUser ? styles.messageBubbleRight : styles.messageBubbleLeft,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.messageText,
-                          isUser ? styles.messageTextRight : styles.messageTextLeft,
-                        ]}
-                      >
-                        {part.text}
-                      </Text>
-                    </View>
-                  );
-
-                case 'tool':
-                  const toolName = part.toolName;
-
-                  switch (part.state) {
-                    case 'input-streaming':
-                    case 'input-available':
-                      return (
-                        <View key={`${item.id}-${i}`} style={styles.toolLoadingContainer}>
-                          <ActivityIndicator size="small" color={premiumColors.neonViolet} />
-                          <Text style={styles.toolLoadingText}>
-                            {translations[7]}
-                          </Text>
-                        </View>
-                      );
-
-                    case 'output-available':
-                      if (toolName === 'show_tasks' && part.output && typeof part.output === 'object') {
-                        const outputData = part.output as any;
-                        if (outputData.data?.tasks) {
-                          return (
-                            <View key={`${item.id}-${i}`}>
-                              {renderTasksAction(outputData.data.tasks)}
-                            </View>
-                          );
-                        }
-                      }
-                      return null;
-
-                    case 'output-error':
-                      return (
-                        <View key={`${item.id}-${i}`} style={styles.errorContainer}>
-                          <Text style={styles.errorText}>{translations[8]} {part.errorText}</Text>
-                        </View>
-                      );
-
-                    default:
-                      return null;
-                  }
-
-                default:
-                  return null;
-              }
-            })}
+          <View
+            style={[
+              styles.messageBubble,
+              isUser ? styles.messageBubbleRight : styles.messageBubbleLeft,
+            ]}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                isUser ? styles.messageTextRight : styles.messageTextLeft,
+              ]}
+            >
+              {item.content}
+            </Text>
           </View>
 
           {isUser && currentUser && (
@@ -301,7 +290,9 @@ export default function HustleAIChatScreen() {
 
         {error && (
           <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>{error.message}</Text>
+            <Text style={styles.errorBannerText}>
+              {error?.message || 'Failed to connect. Check your backend connection.'}
+            </Text>
           </View>
         )}
 
