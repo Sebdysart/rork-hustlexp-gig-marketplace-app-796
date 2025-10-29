@@ -50,6 +50,9 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
 
+  const [aiInsightsText, setAiInsightsText] = useState<string>('');
+  const [availabilityDescription, setAvailabilityDescription] = useState<string>('');
+
   const t = useTranslatedTexts([
     'Morning',
     'Afternoon',
@@ -180,9 +183,63 @@ export default function HomeScreen() {
     if (currentUser) {
       console.log('[Home] Fetching AI profile for user:', currentUser.id);
       fetchProfile(currentUser.id);
+      fetchAIInsights();
       setTimeout(() => setIsLoading(false), 800);
     }
   }, [currentUser, fetchProfile]);
+
+  const fetchAIInsights = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'https://LunchGarden.dycejr.replit.dev/api'}/ai/tier-info/${currentUser.id}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const tierInfo = await response.json();
+        console.log('[Home] AI Tier Info:', tierInfo);
+        
+        // Set AI-powered personalized texts
+        const behavior = tierInfo.behavior || {};
+        const tier = tierInfo.tier || {};
+        
+        // Generate personalized availability description based on tier
+        let availDesc = "You're visible to posters nearby";
+        if (tier.name === 'Prestige') {
+          availDesc = 'Elite visibility - Premium posters can see you first';
+        } else if (tier.name === 'The Architect') {
+          availDesc = 'Strategic mode active - High-value matches prioritized';
+        } else if (tier.name === 'Rainmaker') {
+          availDesc = 'Market-optimized visibility - Surge pricing tracked';
+        } else if (tier.name === 'The Operator') {
+          availDesc = 'Performance mode - Matched by efficiency metrics';
+        } else if (tier.name === 'Side Hustler') {
+          availDesc = 'Getting you started - Learning your preferences';
+        }
+        
+        setAvailabilityDescription(availDesc);
+        
+        // Set AI insights text based on tier personality
+        if (behavior.tone === 'expert') {
+          setAiInsightsText('Autonomous recommendations active');
+        } else if (behavior.tone === 'executive') {
+          setAiInsightsText('Strategic insights & forecasting');
+        } else if (behavior.tone === 'strategic') {
+          setAiInsightsText('Market analysis & earnings optimization');
+        } else if (behavior.tone === 'motivational') {
+          setAiInsightsText('Performance tracking & streak reminders');
+        } else {
+          setAiInsightsText('Personalized guidance & tutorials');
+        }
+      }
+    } catch (error) {
+      console.error('[Home] Failed to fetch AI insights:', error);
+      // Fallback to default text
+      setAvailabilityDescription("You're visible to posters nearby");
+      setAiInsightsText('Get personalized insights & recommendations');
+    }
+  };
 
   const handleStreakPress = () => {
     triggerHaptic('success');
@@ -625,7 +682,7 @@ export default function HomeScreen() {
                       <View style={styles.availabilityStatus}>
                         <View style={[styles.statusDot, { backgroundColor: isAvailable ? premiumColors.neonGreen : Colors.textSecondary }]} />
                         <Text style={[styles.statusText, { color: isAvailable ? premiumColors.neonGreen : Colors.textSecondary }]}>
-                          {isAvailable ? t[35] : t[36]}
+                          {isAvailable ? (availabilityDescription || t[35]) : t[36]}
                         </Text>
                       </View>
                     </View>
@@ -647,7 +704,7 @@ export default function HomeScreen() {
                     }),
                   }]}>
                     <Brain size={20} color={premiumColors.neonViolet} />
-                    <Text style={styles.hustleAIText}>{t[37]}</Text>
+                    <Text style={styles.hustleAIText}>{aiInsightsText || t[37]}</Text>
                   </Animated.View>
                 )}
               </LinearGradient>
