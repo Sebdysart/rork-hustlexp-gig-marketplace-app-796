@@ -144,7 +144,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile-max"
+          name="profile"
           options={{
             title: t('tabs.profile'),
             tabBarIcon: ({ color, focused }) => (
@@ -155,12 +155,6 @@ export default function TabLayout() {
                 glowColor={premiumColors.neonViolet}
               />
             ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            href: null,
           }}
         />
         <Tabs.Screen
@@ -258,7 +252,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile-max"
+          name="profile"
           options={{
             title: t('tabs.profile'),
             tabBarIcon: ({ color, focused }) => (
@@ -269,12 +263,6 @@ export default function TabLayout() {
                 glowColor={premiumColors.neonMagenta}
               />
             ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            href: null,
           }}
         />
         <Tabs.Screen
@@ -370,7 +358,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile-max"
+        name="profile"
         options={{
           title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
@@ -381,12 +369,6 @@ export default function TabLayout() {
               glowColor={premiumColors.neonViolet}
             />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          href: null,
         }}
       />
       <Tabs.Screen
