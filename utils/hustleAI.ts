@@ -3,7 +3,10 @@
  * Connects to your Replit-hosted AI engine
  */
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_HUSTLEAI_URL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const HUSTLEAI_PROD_URL = process.env.EXPO_PUBLIC_API_URL || 'https://LunchGarden.dycejr.replit.dev';
+const HUSTLEAI_DEV_URL = process.env.EXPO_PUBLIC_HUSTLEAI_URL || HUSTLEAI_PROD_URL;
+
+const API_BASE_URL = HUSTLEAI_PROD_URL;
 
 export interface ChatMessage {
   userId: string;
@@ -274,7 +277,6 @@ class HustleAIClient {
 
       const options: RequestInit = {
         method,
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -403,7 +405,7 @@ class HustleAIClient {
 
   async parseTask(userId: string, input: string): Promise<TaskParseResponse> {
     try {
-      const response = await this.makeRequest<any>('/api/tasks/parse', 'POST', {
+      const response = await this.makeRequest<any>('/tasks/parse', 'POST', {
         userId,
         input,
       }, false); // Don't cache task parsing
@@ -495,32 +497,32 @@ class HustleAIClient {
   }
 
   async getMatches(taskId: string): Promise<MatchResponse> {
-    return this.makeRequest<MatchResponse>(`/api/tasks/${taskId}/matches`);
+    return this.makeRequest<MatchResponse>(`/tasks/${taskId}/matches`);
   }
 
   async getCoaching(userId: string, context?: string): Promise<CoachingResponse> {
-    return this.makeRequest<CoachingResponse>(`/api/users/${userId}/coaching`, 'POST', {
+    return this.makeRequest<CoachingResponse>(`/users/${userId}/coaching`, 'POST', {
       context,
     });
   }
 
   async getSuggestions(userId: string): Promise<any> {
-    return this.makeRequest(`/api/users/${userId}/suggestions`);
+    return this.makeRequest(`/users/${userId}/suggestions`);
   }
 
   async getAnalytics(userId: string, period: 'day' | 'week' | 'month' = 'week'): Promise<any> {
-    return this.makeRequest(`/api/users/${userId}/analytics?period=${period}`);
+    return this.makeRequest(`/users/${userId}/analytics?period=${period}`);
   }
 
   async generateContent(type: 'title' | 'description' | 'quest', context: any): Promise<any> {
-    return this.makeRequest('/api/content/generate', 'POST', {
+    return this.makeRequest('/content/generate', 'POST', {
       type,
       context,
     });
   }
 
   async detectFraud(context: any): Promise<any> {
-    return this.makeRequest('/api/fraud/detect', 'POST', context);
+    return this.makeRequest('/fraud/detect', 'POST', context);
   }
 
   async checkHealth(): Promise<{ status: string; version: string }> {
@@ -542,7 +544,7 @@ class HustleAIClient {
       };
       
       console.log('[HUSTLEAI] Submitting feedback:', JSON.stringify(backendFeedback));
-      return await this.makeRequest<FeedbackResponse>('/api/feedback', 'POST', backendFeedback);
+      return await this.makeRequest<FeedbackResponse>('/feedback', 'POST', backendFeedback);
     } catch (error) {
       console.warn('[HUSTLEAI] Feedback submission failed:', error);
       return {
@@ -556,7 +558,7 @@ class HustleAIClient {
 
   async getUserProfileAI(userId: string): Promise<UserProfileAI> {
     try {
-      return await this.makeRequest<UserProfileAI>(`/api/users/${userId}/profile/ai`);
+      return await this.makeRequest<UserProfileAI>(`/users/${userId}/profile/ai`);
     } catch (error) {
       console.warn('[HUSTLEAI] Failed to fetch AI profile:', error);
       return {
@@ -574,7 +576,7 @@ class HustleAIClient {
 
   async trackExperiment(data: ExperimentTrackRequest): Promise<{ success: boolean }> {
     try {
-      return await this.makeRequest<{ success: boolean }>('/api/experiments/track', 'POST', data);
+      return await this.makeRequest<{ success: boolean }>('/experiments/track', 'POST', data);
     } catch (error) {
       console.warn('[HUSTLEAI] Experiment tracking failed:', error);
       return { success: false };
@@ -583,7 +585,7 @@ class HustleAIClient {
 
   async getSystemCalibration(): Promise<CalibrationResponse> {
     try {
-      return await this.makeRequest<CalibrationResponse>('/api/system/calibration');
+      return await this.makeRequest<CalibrationResponse>('/system/calibration');
     } catch (error) {
       console.warn('[HUSTLEAI] Failed to get system calibration:', error);
       return {
@@ -596,7 +598,7 @@ class HustleAIClient {
 
   async reportFraud(report: FraudReportRequest): Promise<FraudReportResponse> {
     try {
-      return await this.makeRequest<FraudReportResponse>('/api/fraud/report', 'POST', report);
+      return await this.makeRequest<FraudReportResponse>('/fraud/report', 'POST', report);
     } catch (error) {
       console.warn('[HUSTLEAI] Fraud report submission failed:', error);
       return {
@@ -611,7 +613,7 @@ class HustleAIClient {
 
   async parseTrade(userId: string, input: string): Promise<TradeParseResponse> {
     try {
-      return await this.makeRequest<TradeParseResponse>('/api/trades/parse', 'POST', {
+      return await this.makeRequest<TradeParseResponse>('/trades/parse', 'POST', {
         userId,
         input,
       });
@@ -623,7 +625,7 @@ class HustleAIClient {
 
   async getTradeMatches(tradeId: string): Promise<TradeMatchResponse> {
     try {
-      return await this.makeRequest<TradeMatchResponse>(`/api/trades/${tradeId}/matches`);
+      return await this.makeRequest<TradeMatchResponse>(`/trades/${tradeId}/matches`);
     } catch (error) {
       console.warn('[HUSTLEAI] Trade matching failed:', error);
       throw error;
@@ -632,7 +634,7 @@ class HustleAIClient {
 
   async suggestSquad(jobDescription: string): Promise<SquadSuggestionResponse> {
     try {
-      return await this.makeRequest<SquadSuggestionResponse>('/api/trades/squad/suggest', 'POST', {
+      return await this.makeRequest<SquadSuggestionResponse>('/trades/squad/suggest', 'POST', {
         jobDescription,
       });
     } catch (error) {
@@ -643,7 +645,7 @@ class HustleAIClient {
 
   async getTradeProgressionOptimization(userId: string): Promise<any> {
     try {
-      return await this.makeRequest(`/api/trades/${userId}/optimize`);
+      return await this.makeRequest(`/trades/${userId}/optimize`);
     } catch (error) {
       console.warn('[HUSTLEAI] Trade progression optimization failed:', error);
       throw error;
@@ -658,7 +660,7 @@ class HustleAIClient {
     isEmergency?: boolean;
   }): Promise<any> {
     try {
-      return await this.makeRequest('/api/trades/pricing', 'POST', params);
+      return await this.makeRequest('/trades/pricing', 'POST', params);
     } catch (error) {
       console.warn('[HUSTLEAI] Dynamic pricing failed:', error);
       throw error;
