@@ -1,2 +1,4 @@
 EXPO_PUBLIC_ENABLE_AI_FEATURES=true
-EXPO_PUBLIC_API_URL=https://LunchGarden.dycejr.replit.dev/api
+EXPO_PUBLIC_API_URL=https://LunchGarden.dycejr.replit.dev
+EXPO_PUBLIC_BACKEND_URL=https://LunchGarden.dycejr.replit.dev
+EXPO_PUBLIC_HUSTLEAI_URL=https://LunchGarden.dycejr.replit.dev
