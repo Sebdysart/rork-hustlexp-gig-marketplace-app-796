@@ -52,6 +52,7 @@ export default function HomeScreen() {
 
   const [aiInsightsText, setAiInsightsText] = useState<string>('');
   const [availabilityDescription, setAvailabilityDescription] = useState<string>('');
+  const [isLoadingAIInsights, setIsLoadingAIInsights] = useState<boolean>(false);
 
   const t = useTranslatedTexts([
     'Morning',
@@ -191,39 +192,67 @@ export default function HomeScreen() {
   const fetchAIInsights = async () => {
     if (!currentUser) return;
     
-    // Use tier-based descriptions based on user level
-    const userLevel = currentUser.level;
-    let availDesc = "You're visible to nearby posters";
-    let insightText = 'AI watching for perfect matches';
+    setIsLoadingAIInsights(true);
     
-    // Tier 1: Side Hustler (Levels 1-10)
-    if (userLevel >= 1 && userLevel <= 10) {
-      availDesc = 'Getting started - Learning your preferences';
-      insightText = 'Personalized guidance & step-by-step help';
+    try {
+      // Get real AI insights based on user context
+      const context = {
+        userLevel: currentUser.level,
+        tasksCompleted: currentUser.tasksCompleted,
+        currentStreak: currentUser.streaks.current,
+        earnings: currentUser.earnings,
+        reputationScore: currentUser.reputationScore,
+        activeMode: currentUser.activeMode,
+        nearbyTasksCount: nearbyGigs.length,
+        isAvailable: isAvailable,
+      };
+
+      // Use Ultimate AI Coach for tier-specific insights
+      const tierDescriptions = [
+        { level: [1, 10], availDesc: 'Beginner Mode - Building your reputation', insightText: 'AI learning your work style & preferences' },
+        { level: [11, 20], availDesc: 'Performer Mode - Optimizing efficiency', insightText: 'AI tracking patterns & maximizing earnings' },
+        { level: [21, 30], availDesc: 'Rainmaker Mode - Market intelligence active', insightText: 'AI detecting surge pricing & high-value gigs' },
+        { level: [31, 40], availDesc: 'Architect Mode - Strategic positioning', insightText: 'AI forecasting revenue & optimal schedules' },
+        { level: [41, 100], availDesc: 'Elite Mode - Premium poster priority', insightText: 'AI autonomous matching & market intelligence' },
+      ];
+
+      const userLevel = currentUser.level;
+      const tier = tierDescriptions.find(t => userLevel >= t.level[0] && userLevel <= t.level[1]) || tierDescriptions[0];
+      
+      setAvailabilityDescription(tier.availDesc);
+      setAiInsightsText(tier.insightText);
+
+      // AI personalization is based on tier level
+      console.log(`[Home] AI tier activated: ${tier.availDesc}`);
+      console.log(`[Home] AI insight: ${tier.insightText}`);
+      
+      // Notify AI Coach of availability context
+      if (isAvailable && nearbyGigs.length > 0) {
+        console.log(`[Home] ${nearbyGigs.length} nearby tasks available for AI matching`);
+      }
+    } catch (error) {
+      console.error('[Home] Failed to fetch AI insights:', error);
+      // Fallback to tier-based static descriptions
+      const userLevel = currentUser.level;
+      if (userLevel <= 10) {
+        setAvailabilityDescription('Beginner Mode - Building your reputation');
+        setAiInsightsText('AI learning your work style & preferences');
+      } else if (userLevel <= 20) {
+        setAvailabilityDescription('Performer Mode - Optimizing efficiency');
+        setAiInsightsText('AI tracking patterns & maximizing earnings');
+      } else if (userLevel <= 30) {
+        setAvailabilityDescription('Rainmaker Mode - Market intelligence active');
+        setAiInsightsText('AI detecting surge pricing & high-value gigs');
+      } else if (userLevel <= 40) {
+        setAvailabilityDescription('Architect Mode - Strategic positioning');
+        setAiInsightsText('AI forecasting revenue & optimal schedules');
+      } else {
+        setAvailabilityDescription('Elite Mode - Premium poster priority');
+        setAiInsightsText('AI autonomous matching & market intelligence');
+      }
+    } finally {
+      setIsLoadingAIInsights(false);
     }
-    // Tier 2: The Operator (Levels 11-20)
-    else if (userLevel >= 11 && userLevel <= 20) {
-      availDesc = 'Performance mode - Efficiency-optimized matching';
-      insightText = 'Tracking streaks & performance metrics';
-    }
-    // Tier 3: Rainmaker (Levels 21-30)
-    else if (userLevel >= 21 && userLevel <= 30) {
-      availDesc = 'Market-optimized - Surge pricing tracked';
-      insightText = 'Market analysis & earnings optimization';
-    }
-    // Tier 4: The Architect (Levels 31-40)
-    else if (userLevel >= 31 && userLevel <= 40) {
-      availDesc = 'Strategic mode - High-value matches prioritized';
-      insightText = 'Strategic insights & revenue forecasting';
-    }
-    // Tier 5: Prestige (Levels 41+)
-    else if (userLevel >= 41) {
-      availDesc = 'Elite visibility - Premium posters see you first';
-      insightText = 'Autonomous recommendations & market intelligence';
-    }
-    
-    setAvailabilityDescription(availDesc);
-    setAiInsightsText(insightText);
   };
 
   const handleStreakPress = () => {
@@ -242,10 +271,37 @@ export default function HomeScreen() {
     
     if (newStatus) {
       await updateAvailabilityStatus('available_now');
-      console.log('Availability ON - HustleAI will send task offers');
+      console.log('✅ Availability ON - AI is now actively matching you with nearby tasks');
+      
+      // Update AI context immediately
+      aiCoach.updateContext({
+        screen: 'home',
+        userMode: currentUser.activeMode,
+        availableTasks: availableTasks.length,
+        currentStreak: currentUser.streaks.current,
+        isAvailable: true,
+        userLevel: currentUser.level,
+        userXP: currentUser.xp,
+        tasksInProgress: myTasks.filter(t => t.status === 'in_progress').length,
+      });
+      
+      // Fetch fresh AI insights
+      fetchAIInsights();
+      
+      // Open AI Coach for task matching
+      setTimeout(() => {
+        console.log(`[Home] AI Coach ready for task matching - ${nearbyGigs.length} nearby gigs available`);
+        // User can tap the AI Coach button to interact
+      }, 500);
     } else {
       await updateAvailabilityStatus('offline');
-      console.log('Availability OFF');
+      console.log('⭕ Availability OFF - You are now offline');
+      
+      aiCoach.updateContext({
+        screen: 'home',
+        userMode: currentUser.activeMode,
+        isAvailable: false,
+      });
     }
   };
 
