@@ -3,7 +3,7 @@
  * Connects to your Replit-hosted AI engine
  */
 
-const HUSTLEAI_PROD_URL = process.env.EXPO_PUBLIC_API_URL || 'https://LunchGarden.dycejr.replit.dev/api';
+const HUSTLEAI_PROD_URL = process.env.EXPO_PUBLIC_API_URL || 'https://LunchGarden.dycejr.replit.dev';
 const HUSTLEAI_DEV_URL = process.env.EXPO_PUBLIC_HUSTLEAI_URL || HUSTLEAI_PROD_URL;
 
 const API_BASE_URL = HUSTLEAI_PROD_URL;
@@ -346,7 +346,7 @@ class HustleAIClient {
     }
     
     try {
-      return await this.makeRequest<ChatResponse>('/agent/chat', 'POST', {
+      return await this.makeRequest<ChatResponse>('/api/agent/chat', 'POST', {
         userId,
         message,
       }, false); // Don't cache chat responses
@@ -526,7 +526,7 @@ class HustleAIClient {
   }
 
   async checkHealth(): Promise<{ status: string; version: string }> {
-    return this.makeRequest('/health');
+    return this.makeRequest('/api/health');
   }
 
   async submitFeedback(feedback: FeedbackRequest): Promise<FeedbackResponse> {
