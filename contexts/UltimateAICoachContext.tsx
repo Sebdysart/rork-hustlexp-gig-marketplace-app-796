@@ -419,13 +419,19 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     const context = {
       user: currentUser ? {
+        id: currentUser.id,
+        role: currentUser.role,
         level: currentUser.level,
         xp: currentUser.xp,
         earnings: currentUser.earnings,
-        streak: currentUser.streaks.current,
+        streak: currentUser.streaks?.current || 0,
         tasksCompleted: currentUser.tasksCompleted,
         activeMode: currentUser.activeMode,
+        badges: currentUser.badges || [],
+        skills: currentUser.skills || [],
+        location: currentUser.location,
       } : null,
+      screen: 'ai-coach',
       availableTasks: availableTasks.length,
       activeTasks: myAcceptedTasks.length,
       patterns: userPatterns,
@@ -433,16 +439,45 @@ export const [UltimateAICoachProvider, useUltimateAICoach] = createContextHook((
     };
 
     try {
+      console.log('[AICoach] Sending message to backend AI:', {
+        userId: currentUser?.id,
+        messagePreview: userMessage.slice(0, 50),
+        contextKeys: Object.keys(context),
+      });
+
       const response = await hustleAI.chat(
         currentUser?.id || 'guest',
-        `${userMessage}\n\nContext: ${JSON.stringify(context)}`
+        userMessage
       );
 
+      console.log('[AICoach] Backend AI response received:', {
+        responsePreview: response.response.slice(0, 100),
+        confidence: response.confidence,
+        hasSuggestions: (response.suggestions?.length || 0) > 0,
+      });
+
       return response.response;
-    } catch (error) {
-      console.error('[AICoach] Error generating response:', error);
+    } catch (error: any) {
+      console.error('[AICoach] Error generating response:', {
+        error: error?.message || String(error),
+        userId: currentUser?.id,
+      });
+      
+      // Provide helpful fallback based on message intent
+      const lowerMessage = userMessage.toLowerCase();
+      if (lowerMessage.includes('task') || lowerMessage.includes('quest') || lowerMessage.includes('gig')) {
+        return await translateText(
+          "Want to earn more? Complete more tasks to level up and unlock higher-paying gigs. Your trust score and completion rate also help you get matched faster!"
+        );
+      }
+      if (lowerMessage.includes('help') || lowerMessage.includes('how')) {
+        return await translateText(
+          "I'm here to help! I can guide you through the app, show you the best quests, help you earn more, and answer any questions. Try asking 'show me nearby tasks' or 'how do I level up'."
+        );
+      }
+      
       return await translateText(
-        "I'm here to help! I can guide you through the app, show you the best quests, help you earn more, and answer any questions."
+        "I'm here to help! Try asking me about tasks nearby, your progress, or how to earn more. The AI backend is having trouble right now, but I can still help navigate the app!"
       );
     }
   };

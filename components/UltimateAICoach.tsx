@@ -297,7 +297,13 @@ export default function UltimateAICoach() {
                     </View>
                     <View>
                       <Text style={styles.headerTitle}>{t('ai_coach.ai_coach_title')}</Text>
-                      <Text style={styles.headerSubtitle}>{t('ai_coach.ai_coach_subtitle')}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={[
+                          styles.statusDot,
+                          { backgroundColor: isLoading ? '#FFA500' : '#10B981' }
+                        ]} />
+                        <Text style={styles.headerSubtitle}>{t('ai_coach.ai_coach_subtitle')}</Text>
+                      </View>
                     </View>
                   </View>
                   
@@ -608,6 +614,11 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   headerActions: {
     flexDirection: 'row',

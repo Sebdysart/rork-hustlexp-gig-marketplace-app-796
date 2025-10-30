@@ -547,11 +547,11 @@ export interface TranslateResponse {
 
 export class AIService {
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    return api.post<ChatResponse>('/agent/chat', request);
+    return api.post<ChatResponse>('/api/agent/chat', request);
   }
 
   async parseTask(request: TaskParseRequest): Promise<TaskParseResponse> {
-    return api.post<TaskParseResponse>('/agent/chat', {
+    return api.post<TaskParseResponse>('/api/agent/chat', {
       userId: request.userId,
       message: request.input,
       context: request.context
@@ -559,23 +559,23 @@ export class AIService {
   }
 
   async matchWorkers(request: MatchWorkerRequest): Promise<MatchWorkerResponse> {
-    return api.post<MatchWorkerResponse>('/ai/match-task', request);
+    return api.post<MatchWorkerResponse>('/api/ai/match-task', request);
   }
 
   async matchTasks(request: MatchTaskRequest): Promise<MatchTaskResponse> {
-    return api.get<MatchTaskResponse>(`/dashboard/unified/${request.userId}`);
+    return api.get<MatchTaskResponse>(`/api/dashboard/unified/${request.userId}`);
   }
 
   async analyzePatterns(request: AnalyzePatternsRequest): Promise<AnalyzePatternsResponse> {
-    return api.get<AnalyzePatternsResponse>(`/dashboard/progress/${request.userId}`);
+    return api.get<AnalyzePatternsResponse>(`/api/dashboard/progress/${request.userId}`);
   }
 
   async getRecommendations(request: RecommendationsRequest): Promise<RecommendationsResponse> {
-    return api.get<RecommendationsResponse>(`/dashboard/action-suggestions/${request.userId}`);
+    return api.get<RecommendationsResponse>(`/api/dashboard/action-suggestions/${request.userId}`);
   }
 
   async sendFeedback(request: FeedbackRequest): Promise<FeedbackResponse> {
-    return api.post<FeedbackResponse>('/agent/chat', {
+    return api.post<FeedbackResponse>('/api/agent/chat', {
       userId: request.userId,
       message: `Feedback: ${JSON.stringify(request.data)}`,
       context: { feedbackType: request.feedbackType }
@@ -589,22 +589,22 @@ export class AIService {
     if (request.language) {
       formData.append('language', request.language);
     }
-    return api.uploadFile('/ai/voice-to-task', formData as any);
+    return api.uploadFile('/api/ai/voice-to-task', formData as any);
   }
 
   async imageMatch(request: ImageMatchRequest): Promise<ImageMatchResponse> {
     const formData = new FormData();
     formData.append('imageFile', request.imageFile as any);
     formData.append('userId', request.userId);
-    return api.uploadFile('/ai/image-match', formData as any);
+    return api.uploadFile('/api/ai/image-match', formData as any);
   }
 
   async translate(request: TranslateRequest): Promise<TranslateResponse> {
-    return api.post<TranslateResponse>('/ai/translate', request);
+    return api.post<TranslateResponse>('/api/ai/translate', request);
   }
 
   async getTierInfo(userId: string): Promise<any> {
-    return api.get<any>(`/ai/tier-info/${userId}`);
+    return api.get<any>(`/api/ai/tier-info/${userId}`);
   }
 }
 

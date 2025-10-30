@@ -3,9 +3,9 @@ import { Platform } from 'react-native';
 
 export const API_URL = Constants.expoConfig?.extra?.apiUrl || 
   process.env.EXPO_PUBLIC_API_URL || 
-  'https://LunchGarden.dycejr.replit.dev/api';
+  'https://LunchGarden.dycejr.replit.dev';
 
-export const WS_URL = API_URL.replace('http', 'ws').replace('/api', '');
+export const WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
 export interface ApiError {
   message: string;
