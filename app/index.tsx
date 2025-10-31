@@ -35,7 +35,8 @@ interface Particle {
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { currentUser } = useUser();
+  const userContext = useUser();
+  const currentUser = userContext?.currentUser ?? null;
   const sensory = useSensory();
 
   const [showConfetti, setShowConfetti] = useState(false);
