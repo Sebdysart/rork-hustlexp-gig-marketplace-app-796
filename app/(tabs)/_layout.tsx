@@ -6,7 +6,6 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import Colors from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { premiumColors, neonGlow } from "@/constants/designTokens";
 
 interface TabIconProps {
@@ -44,10 +43,6 @@ function TabIcon({ color, focused, Icon, badge, glowColor }: TabIconProps) {
 
 export default function TabLayout() {
   const { myAcceptedTasks, myTasks, currentUser, messages, tasks } = useApp();
-  const { t, currentLanguage } = useLanguage();
-  const activeMode = currentUser?.activeMode || 'everyday';
-  const isPoster = activeMode === 'business';
-  const isTradesman = activeMode === 'tradesmen';
 
   const activeTasksCount = React.useMemo(() => {
     return myAcceptedTasks.filter(t => t.status === 'in_progress').length;
@@ -76,125 +71,12 @@ export default function TabLayout() {
     return hustleAIUnread + taskUnread;
   }, [currentUser, messages, tasks]);
 
-
-
-  if (isTradesman) {
-    return (
-      <Tabs
-        key={currentLanguage}
-        screenOptions={{
-          tabBarActiveTintColor: premiumColors.neonCyan,
-          tabBarInactiveTintColor: Colors.textSecondary,
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: premiumColors.richBlack,
-            borderTopColor: premiumColors.glassWhite,
-            borderTopWidth: 1,
-          },
-          headerStyle: {
-            backgroundColor: premiumColors.deepBlack,
-            borderBottomColor: premiumColors.glassWhite,
-            borderBottomWidth: 1,
-          },
-          headerTintColor: Colors.text,
-        }}
-      >
-        <Tabs.Screen
-          name="home"
-          options={{
-            title: t('tabs.home'),
-            headerTitle: "Tradesmen Pro",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon 
-                color={color} 
-                focused={focused} 
-                Icon={Home}
-                glowColor={premiumColors.neonCyan}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="tasks"
-          options={{
-            title: t('tabs.tasks'),
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon 
-                color={color} 
-                focused={focused} 
-                Icon={ClipboardList}
-                badge={activeTasksCount}
-                glowColor={premiumColors.neonAmber}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="roadmap"
-          options={{
-            title: t('tabs.roadmap'),
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon 
-                color={color} 
-                focused={focused} 
-                Icon={Trophy}
-                glowColor={premiumColors.neonMagenta}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile-max"
-          options={{
-            title: t('tabs.profile'),
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon 
-                color={color} 
-                focused={focused} 
-                Icon={User}
-                glowColor={premiumColors.neonViolet}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="chat"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="leaderboard"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="quests"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="wallet"
-          options={{
-            href: null,
-          }}
-        />
-      </Tabs>
-    );
-  }
+  const isHustler = !currentUser || currentUser.role === 'worker' || currentUser.role === 'both';
+  const isPoster = currentUser?.role === 'poster';
 
   if (isPoster) {
     return (
       <Tabs
-        key={currentLanguage}
         screenOptions={{
           tabBarActiveTintColor: premiumColors.neonCyan,
           tabBarInactiveTintColor: Colors.textSecondary,
@@ -215,8 +97,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="home"
           options={{
-            title: t('tabs.home'),
-            headerTitle: "HustleXP Poster",
+            title: "Home",
+            headerTitle: "HustleXP",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -230,7 +112,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="tasks"
           options={{
-            title: t('tabs.tasks'),
+            title: "Tasks",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -260,7 +142,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile-max"
           options={{
-            title: t('tabs.profile'),
+            title: "Profile",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon 
                 color={color} 
@@ -307,7 +189,6 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      key={currentLanguage}
       screenOptions={{
         tabBarActiveTintColor: premiumColors.neonCyan,
         tabBarInactiveTintColor: Colors.textSecondary,
@@ -328,7 +209,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: t('tabs.home'),
+          title: "Home",
           headerTitle: "HustleXP",
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
@@ -343,7 +224,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: t('tabs.tasks'),
+          title: "Tasks",
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
               color={color} 
@@ -356,15 +237,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="roadmap"
+        name="chat"
         options={{
-          title: t('tabs.roadmap'),
+          title: "Messages",
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
               color={color} 
               focused={focused} 
-              Icon={Trophy}
-              glowColor={premiumColors.neonMagenta}
+              Icon={MessageCircle}
+              badge={unreadMessagesCount}
+              glowColor={premiumColors.neonGreen}
             />
           ),
         }}
@@ -372,7 +254,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile-max"
         options={{
-          title: t('tabs.profile'),
+          title: "Profile",
           tabBarIcon: ({ color, focused }) => (
             <TabIcon 
               color={color} 
@@ -390,7 +272,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="roadmap"
         options={{
           href: null,
         }}
