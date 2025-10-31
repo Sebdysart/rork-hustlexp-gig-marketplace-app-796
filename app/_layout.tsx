@@ -3,21 +3,30 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { UserProvider, useUser } from "@/contexts/UserContext";
-import { TasksProvider, setTasksNotificationHandler } from "@/contexts/TasksContext";
-import { EconomyProvider, setEconomyNotificationHandler } from "@/contexts/EconomyContext";
+import { AppProvider, useApp } from "@/contexts/AppContext";
 import { BackendProvider } from "@/contexts/BackendContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
+
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { SquadContext } from "@/contexts/SquadContext";
+import { TaskLifecycleProvider } from "@/contexts/TaskLifecycleContext";
+import { OfferContext } from "@/contexts/OfferContext";
+
+import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 
 
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+
+
+
+
+
 import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
-
+import "@/utils/textNodePermanentFix";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -56,7 +65,13 @@ function RootLayoutNav() {
         <Stack.Screen name="admin" options={{ title: 'Admin Dashboard' }} />
         <Stack.Screen name="test-suite" options={{ presentation: 'modal', title: 'Test Suite' }} />
         <Stack.Screen name="test-dashboard" options={{ presentation: 'modal', title: 'Test Dashboard' }} />
-
+        <Stack.Screen name="tradesmen-dashboard" options={{ title: 'Tradesmen Pro' }} />
+        <Stack.Screen name="certification-upload" options={{ title: 'Upload Certification' }} />
+        <Stack.Screen name="portfolio" options={{ title: 'Portfolio' }} />
+        <Stack.Screen name="pro-quests" options={{ title: 'Pro Quests' }} />
+        <Stack.Screen name="pro-task-board" options={{ title: 'Pro Task Board' }} />
+        <Stack.Screen name="create-squad" options={{ presentation: 'modal', title: 'Create Squad' }} />
+        <Stack.Screen name="squad/[id]" options={{ title: 'Squad Details' }} />
         <Stack.Screen name="task-accept/[id]" options={{ presentation: 'modal', title: 'Accept Task' }} />
         <Stack.Screen name="task-active/[id]" options={{ title: 'Active Task' }} />
         <Stack.Screen name="task-verify/[id]" options={{ title: 'Verify Completion' }} />
@@ -64,7 +79,13 @@ function RootLayoutNav() {
         <Stack.Screen name="offers/index" options={{ title: 'My Offers' }} />
         <Stack.Screen name="offers/new" options={{ presentation: 'modal', title: 'Create Offer' }} />
         <Stack.Screen name="analytics-dashboard" options={{ title: 'Analytics' }} />
-
+        <Stack.Screen name="error-finder" options={{ title: 'Error Finder' }} />
+        <Stack.Screen name="text-node-scanner" options={{ title: 'Text Node Scanner' }} />
+        <Stack.Screen name="text-error-scanner" options={{ title: 'Text Error Scanner' }} />
+        <Stack.Screen name="diagnostic-center" options={{ title: 'Diagnostic Center' }} />
+        <Stack.Screen name="test-text-fix" options={{ title: 'Text Fix Test' }} />
+        <Stack.Screen name="backend-integration-test" options={{ title: 'Backend Test' }} />
+        <Stack.Screen name="test-option-a-complete" options={{ presentation: 'modal', title: 'Option A Tests' }} />
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
@@ -73,24 +94,13 @@ function RootLayoutNav() {
 }
 
 function SplashScreenManager() {
-  const { isLoading } = useUser();
+  const { isLoading } = useApp();
 
   useEffect(() => {
     if (!isLoading) {
       SplashScreen.hideAsync();
     }
   }, [isLoading]);
-
-  return null;
-}
-
-function NotificationBridge() {
-  const { addNotification } = useNotifications();
-
-  useEffect(() => {
-    setTasksNotificationHandler(addNotification);
-    setEconomyNotificationHandler(addNotification);
-  }, [addNotification]);
 
   return null;
 }
@@ -102,20 +112,23 @@ export default function RootLayout() {
         <BackendProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <ThemeProvider>
-              <SettingsProvider>
-                <NotificationProvider>
-                  <UserProvider>
-                    <TasksProvider>
-                      <EconomyProvider>
-                        <NotificationBridge />
-                        <SplashScreenManager />
-                        <RootLayoutNav />
-                      </EconomyProvider>
-                    </TasksProvider>
-                  </UserProvider>
-                </NotificationProvider>
-              </SettingsProvider>
-            </ThemeProvider>
+                <SettingsProvider>
+                  <NotificationProvider>
+                    <AnalyticsProvider>
+                      <AppProvider>
+                        <TaskLifecycleProvider>
+                          <SquadContext>
+                            <OfferContext>
+                              <SplashScreenManager />
+                              <RootLayoutNav />
+                            </OfferContext>
+                          </SquadContext>
+                        </TaskLifecycleProvider>
+                      </AppProvider>
+                    </AnalyticsProvider>
+                  </NotificationProvider>
+                </SettingsProvider>
+              </ThemeProvider>
           </GestureHandlerRootView>
         </BackendProvider>
       </QueryClientProvider>
