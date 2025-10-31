@@ -6,16 +6,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider, useUser } from "@/contexts/UserContext";
 import { TasksProvider, setTasksNotificationHandler } from "@/contexts/TasksContext";
 import { EconomyProvider, setEconomyNotificationHandler } from "@/contexts/EconomyContext";
-import { AppProvider } from "@/contexts/AppContext";
-import { BackendProvider } from "@/contexts/BackendContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
-
-
 import NotificationCenter from "@/components/NotificationCenter";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 
@@ -54,9 +48,7 @@ function RootLayoutNav() {
         <Stack.Screen name="kyc-verification" options={{ title: 'KYC Verification' }} />
         <Stack.Screen name="disputes" options={{ title: 'Dispute Resolution' }} />
         <Stack.Screen name="search" options={{ presentation: 'modal', title: 'Search' }} />
-        <Stack.Screen name="admin" options={{ title: 'Admin Dashboard' }} />
-        <Stack.Screen name="test-suite" options={{ presentation: 'modal', title: 'Test Suite' }} />
-        <Stack.Screen name="test-dashboard" options={{ presentation: 'modal', title: 'Test Dashboard' }} />
+
 
         <Stack.Screen name="task-accept/[id]" options={{ presentation: 'modal', title: 'Accept Task' }} />
         <Stack.Screen name="task-active/[id]" options={{ title: 'Active Task' }} />
@@ -68,7 +60,6 @@ function RootLayoutNav() {
 
       </Stack>
       <NotificationCenter />
-      <PWAInstallPrompt />
     </>
   );
 }
@@ -98,30 +89,24 @@ function NotificationBridge() {
 
 export default function RootLayout() {
   return (
-    <TextNodeErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BackendProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <ThemeProvider>
-              <SettingsProvider>
-                <NotificationProvider>
-                  <UserProvider>
-                    <TasksProvider>
-                      <EconomyProvider>
-                        <AppProvider>
-                          <NotificationBridge />
-                          <SplashScreenManager />
-                          <RootLayoutNav />
-                        </AppProvider>
-                      </EconomyProvider>
-                    </TasksProvider>
-                  </UserProvider>
-                </NotificationProvider>
-              </SettingsProvider>
-            </ThemeProvider>
-          </GestureHandlerRootView>
-        </BackendProvider>
-      </QueryClientProvider>
-    </TextNodeErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider>
+          <SettingsProvider>
+            <NotificationProvider>
+              <UserProvider>
+                <TasksProvider>
+                  <EconomyProvider>
+                    <NotificationBridge />
+                    <SplashScreenManager />
+                    <RootLayoutNav />
+                  </EconomyProvider>
+                </TasksProvider>
+              </UserProvider>
+            </NotificationProvider>
+          </SettingsProvider>
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }
