@@ -6,23 +6,23 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { BackendProvider } from "@/contexts/BackendContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { SquadContext } from "@/contexts/SquadContext";
 import { TaskLifecycleProvider } from "@/contexts/TaskLifecycleContext";
 import { OfferContext } from "@/contexts/OfferContext";
-import { AIProfileProvider } from "@/contexts/AIProfileContext";
+
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
-import { UltimateAICoachProvider } from "@/contexts/UltimateAICoachContext";
-import { UnifiedAIProvider } from "@/contexts/UnifiedAIContext";
+
+
 import NotificationCenter from "@/components/NotificationCenter";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import TranslationLoadingOverlay from "@/components/TranslationLoadingOverlay";
-import UltimateAICoach from "@/components/UltimateAICoach";
-import AIHighlightOverlay from "@/components/AIHighlightOverlay";
-import AIVisualGuidance from "@/components/AIVisualGuidance";
-import AIQuickActions from "@/components/AIQuickActions";
+
+
+
+
+
 import { TextNodeErrorBoundary } from "@/components/TextNodeErrorBoundary";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
@@ -34,8 +34,6 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const { currentUser } = useApp();
-  
   return (
     <>
       <Stack screenOptions={{
@@ -91,12 +89,6 @@ function RootLayoutNav() {
       </Stack>
       <NotificationCenter />
       <PWAInstallPrompt />
-      <TranslationLoadingOverlay />
-      
-      <UltimateAICoach />
-      <AIHighlightOverlay />
-      <AIVisualGuidance />
-      <AIQuickActions />
     </>
   );
 }
@@ -119,32 +111,24 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <BackendProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <LanguageProvider>
-              <ThemeProvider>
+            <ThemeProvider>
                 <SettingsProvider>
                   <NotificationProvider>
                     <AnalyticsProvider>
                       <AppProvider>
-                        <UltimateAICoachProvider>
-                          <UnifiedAIProvider>
-                            <AIProfileProvider>
-                              <TaskLifecycleProvider>
-                                <SquadContext>
-                                  <OfferContext>
-                                    <SplashScreenManager />
-                                    <RootLayoutNav />
-                                  </OfferContext>
-                                </SquadContext>
-                              </TaskLifecycleProvider>
-                            </AIProfileProvider>
-                          </UnifiedAIProvider>
-                        </UltimateAICoachProvider>
+                        <TaskLifecycleProvider>
+                          <SquadContext>
+                            <OfferContext>
+                              <SplashScreenManager />
+                              <RootLayoutNav />
+                            </OfferContext>
+                          </SquadContext>
+                        </TaskLifecycleProvider>
                       </AppProvider>
                     </AnalyticsProvider>
                   </NotificationProvider>
                 </SettingsProvider>
               </ThemeProvider>
-            </LanguageProvider>
           </GestureHandlerRootView>
         </BackendProvider>
       </QueryClientProvider>
