@@ -15,6 +15,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Zap, Sparkles, ArrowRight } from 'lucide-react-native';
 import { useUser } from '@/contexts/UserContext';
+import { useApp } from '@/contexts/AppContext';
 import { premiumColors, spacing, borderRadius } from '@/constants/designTokens';
 import { useSensory } from '@/hooks/useSensory';
 import ConfettiExplosion from '@/components/tierS/Celebrations/ConfettiExplosion';
@@ -35,8 +36,7 @@ interface Particle {
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const userContext = useUser();
-  const currentUser = userContext?.currentUser ?? null;
+  const { currentUser } = useApp();
   const sensory = useSensory();
 
   const [showConfetti, setShowConfetti] = useState(false);

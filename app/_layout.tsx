@@ -65,6 +65,7 @@ function RootLayoutNav() {
         <Stack.Screen name="offers/index" options={{ title: 'My Offers' }} />
         <Stack.Screen name="offers/new" options={{ presentation: 'modal', title: 'Create Offer' }} />
         <Stack.Screen name="analytics-dashboard" options={{ title: 'Analytics' }} />
+        <Stack.Screen name="verification-center" options={{ presentation: 'modal', headerShown: false }} />
 
       </Stack>
       <NotificationCenter />
