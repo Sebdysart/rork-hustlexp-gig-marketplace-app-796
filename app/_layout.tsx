@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider, useUser } from "@/contexts/UserContext";
 import { TasksProvider, setTasksNotificationHandler } from "@/contexts/TasksContext";
 import { EconomyProvider, setEconomyNotificationHandler } from "@/contexts/EconomyContext";
+import { AppProvider } from "@/contexts/AppContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
@@ -104,9 +105,11 @@ export default function RootLayout() {
               <UserProvider>
                 <TasksProvider>
                   <EconomyProvider>
-                    <NotificationBridge />
-                    <SplashScreenManager />
-                    <RootLayoutNav />
+                    <AppProvider>
+                      <NotificationBridge />
+                      <SplashScreenManager />
+                      <RootLayoutNav />
+                    </AppProvider>
                   </EconomyProvider>
                 </TasksProvider>
               </UserProvider>
