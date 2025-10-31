@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,7 @@ interface QuestCardProps {
   onComplete?: (questId: string) => void;
 }
 
-export default function QuestCard({
+function QuestCard({
   quest,
   index,
   streakMultiplier,
@@ -65,7 +65,7 @@ export default function QuestCard({
         ])
       ).start();
     }
-  }, [index, quest.progress, quest.target, quest.completed]);
+  }, [index, quest.progress, quest.target, quest.completed, scaleAnim, progressAnim, glowAnim]);
 
   const handlePress = () => {
     if (Platform.OS !== 'web') {
@@ -76,18 +76,19 @@ export default function QuestCard({
     }
   };
 
-  const IconComponent = (Icons as any)[quest.icon] || Icons.Zap;
-  const rarityStyle = RARITY_COLORS[quest.rarity];
-  const difficultyColor = DIFFICULTY_COLORS[quest.difficulty];
+  const IconComponent = useMemo(() => (Icons as any)[quest.icon] || Icons.Zap, [quest.icon]);
+  const rarityStyle = useMemo(() => RARITY_COLORS[quest.rarity], [quest.rarity]);
+  const difficultyColor = useMemo(() => DIFFICULTY_COLORS[quest.difficulty], [quest.difficulty]);
 
-  const progressPercentage = Math.round((quest.progress / quest.target) * 100);
-  const isComplete = quest.completed || quest.progress >= quest.target;
+  const progressPercentage = useMemo(() => Math.round((quest.progress / quest.target) * 100), [quest.progress, quest.target]);
+  const isComplete = useMemo(() => quest.completed || quest.progress >= quest.target, [quest.completed, quest.progress, quest.target]);
 
-  const adjustedGrit = quest.rewards.grit
-    ? Math.round(quest.rewards.grit * streakMultiplier)
-    : 0;
+  const adjustedGrit = useMemo(() => 
+    quest.rewards.grit ? Math.round(quest.rewards.grit * streakMultiplier) : 0,
+    [quest.rewards.grit, streakMultiplier]
+  );
 
-  const timeRemaining = getTimeRemaining(quest.expiresAt);
+  const timeRemaining = useMemo(() => getTimeRemaining(quest.expiresAt), [quest.expiresAt]);
 
   return (
     <Animated.View
@@ -268,6 +269,15 @@ export default function QuestCard({
     </Animated.View>
   );
 }
+
+export default memo(QuestCard, (prevProps, nextProps) => {
+  return (
+    prevProps.quest.id === nextProps.quest.id &&
+    prevProps.quest.progress === nextProps.quest.progress &&
+    prevProps.quest.completed === nextProps.quest.completed &&
+    prevProps.streakMultiplier === nextProps.streakMultiplier
+  );
+});
 
 function getTimeRemaining(expiresAt: string): string {
   const now = new Date().getTime();

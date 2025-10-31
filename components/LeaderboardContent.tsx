@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, memo, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,7 +27,7 @@ interface ListItemAnimations {
   [key: string]: Animated.Value;
 }
 
-export default function LeaderboardContent() {
+function LeaderboardContent() {
   const { leaderboard, currentUser } = useApp();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('weekly');
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -85,14 +85,17 @@ export default function LeaderboardContent() {
     });
   }, [shimmerAnim, floatAnim, particleAnims]);
 
-  const currentUserRank = leaderboard.findIndex(entry => entry.userId === currentUser?.id) + 1;
+  const currentUserRank = useMemo(() => 
+    leaderboard.findIndex(entry => entry.userId === currentUser?.id) + 1,
+    [leaderboard, currentUser?.id]
+  );
 
-  const getRankColor = (rank: number) => {
+  const getRankColor = useCallback((rank: number) => {
     if (rank === 1) return Colors.accent;
     if (rank === 2) return '#C0C0C0';
     if (rank === 3) return '#CD7F32';
     return Colors.textSecondary;
-  };
+  }, []);
 
   const renderParticles = (color: string) => (
     <View style={styles.particleContainer}>
@@ -388,6 +391,8 @@ export default function LeaderboardContent() {
     </>
   );
 }
+
+export default memo(LeaderboardContent);
 
 const styles = StyleSheet.create({
   subHeader: {

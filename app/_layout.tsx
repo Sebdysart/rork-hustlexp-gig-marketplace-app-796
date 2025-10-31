@@ -13,11 +13,17 @@ import NotificationCenter from "@/components/NotificationCenter";
 import { premiumColors } from "@/constants/designTokens";
 import Colors from "@/constants/colors";
 
-
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 1,
+    },
+  },
+});
 
 SplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
@@ -36,7 +42,8 @@ function RootLayoutNav() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="ai-onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome-max" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="post-task" options={{ presentation: 'modal', title: 'Post Quest' }} />
         <Stack.Screen name="adventure-map" options={{ presentation: 'modal', title: 'Adventure Map' }} />

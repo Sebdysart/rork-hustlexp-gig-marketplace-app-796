@@ -3,11 +3,9 @@ import { MapPin, DollarSign, Zap, Calendar, Radio, Shield, Clock, Brain } from '
 import { Task, User } from '@/types';
 import Colors from '@/constants/colors';
 import { premiumColors, neonGlow, spacing, borderRadius, typography } from '@/constants/designTokens';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, memo, useMemo } from 'react';
 import GlassCard from './GlassCard';
 import { useAIProfile } from '@/contexts/AIProfileContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { aiTranslationService } from '@/utils/aiTranslation';
 
 interface TaskCardProps {
   task: Task;
@@ -29,14 +27,10 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-export default function TaskCard({ task, onPress, poster, currentUserLocation, showAIInsight = true }: TaskCardProps) {
+function TaskCard({ task, onPress, poster, currentUserLocation, showAIInsight = true }: TaskCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const { getTaskInsight } = useAIProfile();
-  const { currentLanguage, useAITranslation } = useLanguage();
-  const [translatedTitle, setTranslatedTitle] = useState(task.title);
-  const [translatedDescription, setTranslatedDescription] = useState(task.description);
-  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     Animated.loop(
@@ -55,34 +49,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
     ).start();
   }, [glowAnim]);
 
-  useEffect(() => {
-    async function translateTaskContent() {
-      if (!useAITranslation || currentLanguage === 'en' || !task.title || !task.description) {
-        setTranslatedTitle(task.title);
-        setTranslatedDescription(task.description);
-        return;
-      }
 
-      setIsTranslating(true);
-      try {
-        const results = await aiTranslationService.translate(
-          [task.title, task.description],
-          currentLanguage,
-          'en'
-        );
-        setTranslatedTitle(results[0] || task.title);
-        setTranslatedDescription(results[1] || task.description);
-      } catch (error) {
-        console.error('[TaskCard] Translation failed:', error);
-        setTranslatedTitle(task.title);
-        setTranslatedDescription(task.description);
-      } finally {
-        setIsTranslating(false);
-      }
-    }
-
-    translateTaskContent();
-  }, [task.title, task.description, currentLanguage, useAITranslation]);
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -99,7 +66,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
       useNativeDriver: true,
     }).start();
   };
-  const getCategoryEmoji = (category: string) => {
+  const getCategoryEmoji = useMemo(() => {
     const emojiMap: Record<string, string> = {
       cleaning: '✨',
       errands: '🏃',
@@ -110,11 +77,11 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
       creative: '🎨',
       other: '⭐',
     };
-    return emojiMap[category] || '⭐';
-  };
+    return emojiMap[task.category] || '⭐';
+  }, [task.category]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = useMemo(() => {
+    const date = new Date(task.dateTime || '');
     const now = new Date();
     const diffMs = date.getTime() - now.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -123,9 +90,9 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
     if (diffDays === 1) return 'Tomorrow';
     if (diffDays < 7) return `In ${diffDays} days`;
     return date.toLocaleDateString();
-  };
+  }, [task.dateTime]);
 
-  const getUrgencyPill = () => {
+  const urgencyPill = useMemo(() => {
     const urgency = task.urgency || 'flexible';
     const colors = {
       today: { bg: Colors.error + '20', text: Colors.error },
@@ -138,19 +105,24 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
       flexible: 'Flexible',
     };
     return { color: colors[urgency], label: labels[urgency] };
-  };
+  }, [task.urgency]);
 
-  const distance = currentUserLocation
-    ? calculateDistance(
-        currentUserLocation.lat,
-        currentUserLocation.lng,
-        task.location.lat,
-        task.location.lng
-      )
-    : task.distance;
+  const distance = useMemo(() => 
+    currentUserLocation
+      ? calculateDistance(
+          currentUserLocation.lat,
+          currentUserLocation.lng,
+          task.location.lat,
+          task.location.lng
+        )
+      : task.distance,
+    [currentUserLocation, task.location, task.distance]
+  );
 
-  const urgencyPill = getUrgencyPill();
-  const aiInsight = showAIInsight ? getTaskInsight(task.category, task.payAmount) : null;
+  const aiInsight = useMemo(() => 
+    showAIInsight ? getTaskInsight(task.category, task.payAmount) : null,
+    [showAIInsight, task.category, task.payAmount, getTaskInsight]
+  );
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -167,7 +139,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
         <GlassCard variant="darkStrong" style={styles.container}>
         <View style={styles.header}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryEmoji}>{getCategoryEmoji(task.category)}</Text>
+            <Text style={styles.categoryEmoji}>{getCategoryEmoji}</Text>
           </View>
           <View style={styles.headerRight}>
             <View 
@@ -202,7 +174,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
         </View>
 
         <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={2}>{translatedTitle}</Text>
+          <Text style={styles.title} numberOfLines={2}>{task.title}</Text>
           {task.proofRequired && (
             <View 
               style={styles.proofBadge}
@@ -213,7 +185,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
             </View>
           )}
         </View>
-        <Text style={styles.description} numberOfLines={2}>{translatedDescription}</Text>
+        <Text style={styles.description} numberOfLines={2}>{task.description}</Text>
 
         {aiInsight && (
           <View style={styles.aiInsightRow}>
@@ -242,7 +214,7 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
               </>
             )}
             <Calendar size={14} color={Colors.textSecondary} />
-            <Text style={styles.infoText}>{formatDate(task.dateTime || '')}</Text>
+            <Text style={styles.infoText}>{formatDate}</Text>
           </View>
           <View 
             style={styles.payBadge}
@@ -258,6 +230,16 @@ export default function TaskCard({ task, onPress, poster, currentUserLocation, s
     </Animated.View>
   );
 }
+
+export default memo(TaskCard, (prevProps, nextProps) => {
+  return (
+    prevProps.task.id === nextProps.task.id &&
+    prevProps.task.status === nextProps.task.status &&
+    prevProps.showAIInsight === nextProps.showAIInsight &&
+    prevProps.currentUserLocation?.lat === nextProps.currentUserLocation?.lat &&
+    prevProps.currentUserLocation?.lng === nextProps.currentUserLocation?.lng
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
