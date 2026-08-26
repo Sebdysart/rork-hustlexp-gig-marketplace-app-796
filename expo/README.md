@@ -2,6 +2,8 @@
 
 > **Universal V1 alignment:** This is a client implementation for HustleXP, one managed local-work transaction network. The controlling business policy is the [HustleXP Business and Universal V1 Charter](https://github.com/Sebdysart/HUSTLEXP-DOCS/blob/main/governance/HUSTLEXP_BUSINESS_AND_UNIVERSAL_V1_CHARTER.md). This README describes this codebase only; it cannot authorize provider eligibility, payment creation, deployment, or production behavior. Production payment creation remains frozen.
 
+Charter v1.1.0 treats regulated trade businesses as first-class `ACTIVE_GATED` providers. The app may represent intake, credentialing, diagnostics, estimates, Provider OS, outcomes, and repeat relationships, but must fail closed on category-specific assignment and payment authority.
+
 ## Project info
 
 This is a native cross-platform mobile app created with [Rork](https://rork.com)
@@ -318,3 +320,4 @@ For mobile apps, you'll configure your app's deep linking scheme in `app.json`.
 Rork builds fully native mobile apps using React Native and Expo - the same technology stack used by Discord, Shopify, Coinbase, Instagram, and nearly 30% of the top 100 apps on the App Store.
 
 Your Rork app is production-ready and can be published to both the App Store and Google Play Store. You can also export your app to run on the web, making it truly cross-platform.
+
