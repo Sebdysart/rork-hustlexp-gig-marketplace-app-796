@@ -1,5 +1,7 @@
 # 🎯 HustleXP - Integration Ready
 
+> **STATUS: HISTORICAL IMPLEMENTATION ASSESSMENT.** “Production Ready” and score claims below are source-dated and do not establish current release authority. Use the [HustleXP Business and Universal V1 Charter](https://github.com/Sebdysart/HUSTLEXP-DOCS/blob/main/governance/HUSTLEXP_BUSINESS_AND_UNIVERSAL_V1_CHARTER.md) for company policy and exact repository/CI/environment evidence for implementation truth. Production payment creation remains frozen.
+
 > **Frontend Score: 98.5/100** ✅ | **Backend: Awaiting Connection** ⏳ | **Status: Production Ready** 🚀
 
 ---

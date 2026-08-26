@@ -1,5 +1,7 @@
 # Welcome to your Rork app
 
+> **Universal V1 alignment:** This is a client implementation for HustleXP, one managed local-work transaction network. The controlling business policy is the [HustleXP Business and Universal V1 Charter](https://github.com/Sebdysart/HUSTLEXP-DOCS/blob/main/governance/HUSTLEXP_BUSINESS_AND_UNIVERSAL_V1_CHARTER.md). This README describes this codebase only; it cannot authorize provider eligibility, payment creation, deployment, or production behavior. Production payment creation remains frozen.
+
 ## Project info
 
 This is a native cross-platform mobile app created with [Rork](https://rork.com)
